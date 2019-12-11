@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="python,aliyun,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="小胖鱼@Think" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="最近在写阿里云相关API,看官方文档，其中比较重要的就是签名机制，为了在SLB和ECS中使用,封装了相关类备用 123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767">
+<meta name="keywords" content="python,aliyun">
+<meta property="og:type" content="article">
+<meta property="og:title" content="AliYun阿里云API签名机制（Python）">
+<meta property="og:url" content="http://yoursite.com/2019/01/21/aliyun-api-Signature-base-on-python/index.html">
+<meta property="og:site_name" content="小胖鱼@Think">
+<meta property="og:description" content="最近在写阿里云相关API,看官方文档，其中比较重要的就是签名机制，为了在SLB和ECS中使用,封装了相关类备用 123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767">
+<meta property="og:locale" content="zh">
+<meta property="og:updated_time" content="2019-01-21T08:37:46.576Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="AliYun阿里云API签名机制（Python）">
+<meta name="twitter:description" content="最近在写阿里云相关API,看官方文档，其中比较重要的就是签名机制，为了在SLB和ECS中使用,封装了相关类备用 123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/01/21/aliyun-api-Signature-base-on-python/">
+
+
+
+
+
+  <title>AliYun阿里云API签名机制（Python） | 小胖鱼@Think</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">小胖鱼@Think</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/01/21/aliyun-api-Signature-base-on-python/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Just Think">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="小胖鱼@Think">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">AliYun阿里云API签名机制（Python）</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-01-21T16:37:46+08:00">
+                2019-01-21
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/python/" itemprop="url" rel="index">
+                    <span itemprop="name">python</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>最近在写阿里云相关<code>API</code>,看<a href="https://help.aliyun.com/document_detail/27572.html?spm=5176.doc27577.6.112.jzBpJ7" target="_blank" rel="noopener">官方文档</a>，其中比较重要的就是签名机制，为了在<code>SLB</code>和<code>ECS</code>中使用,封装了相关类备用</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#!/usr/bin/env python</span></span><br><span class="line"><span class="comment">#coding: utf-8</span></span><br><span class="line"><span class="comment">#python v2.7.6</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> sys, os</span><br><span class="line"><span class="keyword">import</span> urllib, urllib2</span><br><span class="line"><span class="keyword">import</span> base64</span><br><span class="line"><span class="keyword">import</span> hmac</span><br><span class="line"><span class="keyword">import</span> hashlib</span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line"><span class="keyword">import</span> uuid</span><br><span class="line"><span class="keyword">import</span> json</span><br><span class="line"><span class="keyword">import</span> ConfigParser</span><br><span class="line"></span><br><span class="line">cf = ConfigParser.ConfigParser()</span><br><span class="line">cf.read(<span class="string">'conf.ini'</span>)</span><br><span class="line"></span><br><span class="line">access_key_id = cf.get(<span class="string">"aliyun"</span>, <span class="string">"access_key_id"</span>)</span><br><span class="line">access_key_secret = cf.get(<span class="string">"aliyun"</span>, <span class="string">"access_key_secret"</span>)</span><br><span class="line"></span><br><span class="line">slb_address = cf.get(<span class="string">"aliyun"</span>, <span class="string">"slb_address"</span>)</span><br><span class="line">ecs_address = cf.get(<span class="string">"aliyun"</span>, <span class="string">"ecs_address"</span>)</span><br><span class="line"></span><br><span class="line">slb_api_version = cf.get(<span class="string">"aliyun"</span>, <span class="string">"slb_api_version"</span>)</span><br><span class="line">ecs_api_version = cf.get(<span class="string">"aliyun"</span>, <span class="string">"ecs_api_version"</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ALIYUN</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self, user_params, Host, Version=slb_api_version)</span>:</span></span><br><span class="line">        self.user_params = user_params</span><br><span class="line">        <span class="comment">#self.user_params= &#123;'Action': self.Action, 'LoadBalancerId': self.LoadBalancerId,'BackendServers':self.BackendServers&#125;</span></span><br><span class="line">        self.server_address = Host</span><br><span class="line">        self.version = Version</span><br><span class="line"></span><br><span class="line"><span class="meta">    @staticmethod</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">percent_encode</span><span class="params">(str)</span>:</span></span><br><span class="line">        res = urllib.quote(str.decode(sys.stdin.encoding).encode(<span class="string">'utf8'</span>), <span class="string">''</span>)</span><br><span class="line">        res = res.replace(<span class="string">'+'</span>, <span class="string">'%20'</span>)</span><br><span class="line">        res = res.replace(<span class="string">'\''</span>, <span class="string">'%27'</span>)</span><br><span class="line">        res = res.replace(<span class="string">'\"'</span>, <span class="string">'%22'</span>)</span><br><span class="line">        res = res.replace(<span class="string">'*'</span>, <span class="string">'%2A'</span>)</span><br><span class="line">        res = res.replace(<span class="string">'%7E'</span>, <span class="string">'~'</span>)</span><br><span class="line">        <span class="keyword">return</span> res</span><br><span class="line"></span><br><span class="line"><span class="meta">    @staticmethod</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">compute_signature</span><span class="params">(parameters, access_key_secret)</span>:</span></span><br><span class="line">        sortedParameters = sorted(parameters.items(),</span><br><span class="line">                                  key=<span class="keyword">lambda</span> parameters: parameters[<span class="number">0</span>])</span><br><span class="line">        canonicalizedQueryString = <span class="string">''</span></span><br><span class="line">        <span class="keyword">for</span> (k, v) <span class="keyword">in</span> sortedParameters:</span><br><span class="line">            canonicalizedQueryString += <span class="string">'&amp;'</span> + ALIYUN.percent_encode(</span><br><span class="line">                k) + <span class="string">'='</span> + ALIYUN.percent_encode(str(v))</span><br><span class="line">        stringToSign = <span class="string">'GET&amp;%2F&amp;'</span> + ALIYUN.percent_encode(</span><br><span class="line">            canonicalizedQueryString[<span class="number">1</span>:])</span><br><span class="line">        h = hmac.new(access_key_secret + <span class="string">"&amp;"</span>, stringToSign, sha1)</span><br><span class="line">        signature = base64.encodestring(h.digest()).strip()</span><br><span class="line">        <span class="keyword">return</span> signature</span><br><span class="line"></span><br><span class="line"><span class="meta">    @staticmethod</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">compose_url</span><span class="params">(server_address, user_params, version)</span>:</span></span><br><span class="line">        timestamp = time.strftime(<span class="string">"%Y-%m-%dT%H:%M:%SZ"</span>, time.gmtime())</span><br><span class="line">        parameters = &#123; \</span><br><span class="line">                <span class="string">'Format'</span>        : <span class="string">'JSON'</span>, \</span><br><span class="line">                <span class="string">'Version'</span>       : version, \</span><br><span class="line">                <span class="string">'AccessKeyId'</span>   : access_key_id, \</span><br><span class="line">                <span class="string">'SignatureVersion'</span>  : <span class="string">'1.0'</span>, \</span><br><span class="line">                <span class="string">'SignatureMethod'</span>   : <span class="string">'HMAC-SHA1'</span>, \</span><br><span class="line">                <span class="string">'SignatureNonce'</span>    : str(uuid.uuid1()), \</span><br><span class="line">                <span class="string">'TimeStamp'</span>         : timestamp, \</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">for</span> key <span class="keyword">in</span> user_params.keys():</span><br><span class="line">            parameters[key] = user_params[key]</span><br><span class="line">        signature = ALIYUN.compute_signature(parameters, access_key_secret)</span><br><span class="line">        parameters[<span class="string">'Signature'</span>] = signature</span><br><span class="line">        url = server_address + <span class="string">"/?"</span> + urllib.urlencode(parameters)</span><br><span class="line">        <span class="keyword">print</span> url</span><br><span class="line">        <span class="keyword">return</span> url</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">make_request</span><span class="params">(self, quiet=False)</span>:</span></span><br><span class="line">        url = ALIYUN.compose_url(self.server_address, self.user_params,</span><br><span class="line">                                 self.version)</span><br><span class="line">        request = urllib2.Request(url)</span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            conn = urllib2.urlopen(request)</span><br><span class="line">            response = conn.read()</span><br><span class="line">        <span class="keyword">except</span> urllib2.HTTPError, e:</span><br><span class="line">            print(e.read().strip())</span><br><span class="line">            <span class="keyword">raise</span> SystemExit(e)</span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            obj = json.loads(response)</span><br><span class="line">            <span class="keyword">if</span> quiet:</span><br><span class="line">                <span class="keyword">return</span> obj</span><br><span class="line">        <span class="keyword">except</span> ValueError, e:</span><br><span class="line">            <span class="keyword">raise</span> SystemExit(e)</span><br><span class="line">        json.dump(obj, sys.stdout, sort_keys=<span class="literal">True</span>, indent=<span class="number">2</span>)</span><br><span class="line">        sys.stdout.write(<span class="string">'\n'</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">"__main__"</span>:</span><br><span class="line">    testAdd=ALIYUN( \</span><br><span class="line">            &#123;<span class="string">'Action'</span>:<span class="string">'AddBackendServers'</span>,\</span><br><span class="line">            <span class="string">'LoadBalancerId'</span>:<span class="string">'139a00604ad-cn-east-hangzhou-01'</span>,\</span><br><span class="line">            <span class="string">'BackendServers'</span>:[&#123;<span class="string">"ServerId"</span>:<span class="string">"vm-233"</span>,<span class="string">"Weight"</span>:<span class="string">"0"</span>&#125;,&#123;<span class="string">"ServerId"</span>:<span class="string">"vm-234"</span>,<span class="string">"Weight"</span>:<span class="string">"0"</span>&#125;]\</span><br><span class="line">            &#125;,slb_address</span><br><span class="line">            )</span><br><span class="line">    testRemove=ALIYUN( \</span><br><span class="line">            &#123;</span><br><span class="line">            <span class="string">'Action'</span>:<span class="string">'RemoveBackendServers'</span>,\</span><br><span class="line">            <span class="string">'LoadBalancerId'</span>:<span class="string">'139a00604ad-cn-east-hangzhou-01'</span>,\</span><br><span class="line">            <span class="string">'BackendServers'</span>:[<span class="string">" vm-233"</span>,<span class="string">" vm-234"</span>]\</span><br><span class="line">            &#125;,slb_address</span><br><span class="line">            )</span><br><span class="line">    testSet=ALIYUN( \</span><br><span class="line">            &#123;</span><br><span class="line">            <span class="string">'Action'</span>:<span class="string">'SetBackendServers'</span>,\</span><br><span class="line">            <span class="string">'LoadBalancerId'</span>:<span class="string">'139a00604ad-cn-east-hangzhou-01'</span>,\</span><br><span class="line">            <span class="string">'BackendServers'</span>:[&#123;<span class="string">"ServerId"</span>:<span class="string">"vm-233"</span>,<span class="string">"Weight"</span>:<span class="string">"0"</span>&#125;,&#123;<span class="string">"ServerId"</span>:<span class="string">"vm-234"</span>,<span class="string">"Weight"</span>:<span class="string">"0"</span>&#125;]\</span><br><span class="line">            &#125;,slb_address</span><br><span class="line">            )</span><br><span class="line">    testEcs=ALIYUN( \</span><br><span class="line">            &#123;</span><br><span class="line">            <span class="string">'Action'</span>:<span class="string">'DescribeInstances'</span>,\</span><br><span class="line">            <span class="string">'RegionId'</span>:<span class="string">'cn-hangzhou'</span>,\</span><br><span class="line">            &#125;,ecs_address,</span><br><span class="line">            Version=ecs_api_version</span><br><span class="line">            )</span><br><span class="line">    testSLBd = ALIYUN(&#123;<span class="string">'Action'</span>: <span class="string">'DescribeRegions'</span>&#125;, slb_address)</span><br><span class="line">    testSLBd1 = ALIYUN(</span><br><span class="line">        &#123;<span class="string">'Action'</span>: <span class="string">'DescribeLoadBalancers'</span>,</span><br><span class="line">         <span class="string">'RegionId'</span>: <span class="string">'cn-hangzhou'</span>&#125;, slb_address)</span><br><span class="line">    testSLBd2 = ALIYUN(</span><br><span class="line">        &#123;<span class="string">'Action'</span>: <span class="string">'DescribeLoadBalancers'</span>,</span><br><span class="line">         <span class="string">'RegionId'</span>: <span class="string">'cn-beijing'</span>&#125;, slb_address)</span><br><span class="line">    testSLBd.make_request()</span><br><span class="line">    testSLBd1.make_request()</span><br><span class="line">    <span class="keyword">print</span> testSLBd2.make_request(quiet=<span class="literal">True</span>)</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/python/" rel="tag"># python</a>
+          
+            <a href="/tags/aliyun/" rel="tag"># aliyun</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/01/21/python_setattr/" rel="next" title="python的属性设置">
+                <i class="fa fa-chevron-left"></i> python的属性设置
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/01/21/Flask记录log/" rel="prev" title="Flask日志记录">
+                Flask日志记录 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Just Think</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">12</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                
+                  <span class="site-state-item-count">6</span>
+                  <span class="site-state-item-name">categories</span>
+                
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">10</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Just Think</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
