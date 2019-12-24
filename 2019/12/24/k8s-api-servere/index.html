@@ -81,15 +81,18 @@
 
 
 
+<meta name="description" content="需要知道go-restfulcobra kubernetes的库使用cobra，所以一般都是经过Complete、Valiate、Run RunRun –&amp;gt; CreateServerChain –&amp;gt; CreateKubeAPIServer                        |                        | ———&amp;gt; createAggregator">
 <meta name="keywords" content="go,k8s">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Kubernetes kube-apiserver 源码分析">
-<meta property="og:url" content="http://yoursite.com/2019/12/18/k8s-api-servere/index.html">
+<meta property="og:url" content="http://yoursite.com/2019/12/24/k8s-api-servere/index.html">
 <meta property="og:site_name" content="小胖鱼@Think">
+<meta property="og:description" content="需要知道go-restfulcobra kubernetes的库使用cobra，所以一般都是经过Complete、Valiate、Run RunRun –&amp;gt; CreateServerChain –&amp;gt; CreateKubeAPIServer                        |                        | ———&amp;gt; createAggregator">
 <meta property="og:locale" content="zh">
-<meta property="og:updated_time" content="2019-12-18T11:49:57.638Z">
+<meta property="og:updated_time" content="2019-12-24T11:15:16.335Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Kubernetes kube-apiserver 源码分析">
+<meta name="twitter:description" content="需要知道go-restfulcobra kubernetes的库使用cobra，所以一般都是经过Complete、Valiate、Run RunRun –&amp;gt; CreateServerChain –&amp;gt; CreateKubeAPIServer                        |                        | ———&amp;gt; createAggregator">
 
 
 
@@ -119,7 +122,7 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2019/12/18/k8s-api-servere/">
+  <link rel="canonical" href="http://yoursite.com/2019/12/24/k8s-api-servere/">
 
 
 
@@ -232,7 +235,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/12/18/k8s-api-servere/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/12/24/k8s-api-servere/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Just Think">
@@ -261,8 +264,8 @@
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-12-18T19:49:57+08:00">
-                2019-12-18
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-12-24T19:15:16+08:00">
+                2019-12-24
               </time>
             
 
@@ -321,7 +324,10 @@
       
 
       
-        
+        <h4 id="需要知道"><a href="#需要知道" class="headerlink" title="需要知道"></a>需要知道</h4><p><code>go-restful</code><br><code>cobra</code></p>
+<p><code>kubernetes</code>的库使用<code>cobra</code>，所以一般都是经过<code>Complete</code>、<code>Valiate</code>、<code>Run</code></p>
+<h3 id="Run"><a href="#Run" class="headerlink" title="Run"></a>Run</h3><p><code>Run</code> –&gt; <code>CreateServerChain</code> –&gt; <code>CreateKubeAPIServer</code><br>                        |<br>                        | ———&gt; <code>createAggregatorConfig</code>  </p>
+
       
     </div>
     
@@ -353,8 +359,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2019/12/10/cri-oci-runtime/" rel="next" title="CRI-OCI Runtime">
-                <i class="fa fa-chevron-left"></i> CRI-OCI Runtime
+              <a href="/2019/12/20/go-mem/" rel="next" title="go内存逃逸">
+                <i class="fa fa-chevron-left"></i> go内存逃逸
               </a>
             
           </div>
@@ -362,10 +368,6 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2019/12/20/go-mem/" rel="prev" title="go内存逃逸">
-                go内存逃逸 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -417,8 +419,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
 
-      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+      <section class="site-overview-wrap sidebar-panel">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
@@ -485,6 +496,22 @@
         </div>
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#需要知道"><span class="nav-number">1.</span> <span class="nav-text">需要知道</span></a></li></ol><li class="nav-item nav-level-3"><a class="nav-link" href="#Run"><span class="nav-number"></span> <span class="nav-text">Run</span></a></li></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       
