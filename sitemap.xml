@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://yoursite.com/2019/12/27/k8s-kubelet/</loc>
+    
+    <lastmod>2019-12-27T10:52:59.895Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://yoursite.com/2019/12/25/k8s-api-servere/</loc>
     
     <lastmod>2019-12-25T08:55:16.023Z</lastmod>
@@ -44,7 +51,7 @@
   </url>
   
   <url>
-    <loc>http://yoursite.com/2019/01/21/docker-update/</loc>
+    <loc>http://yoursite.com/2019/01/21/CAS-compile-plugin3/</loc>
     
     <lastmod>2019-01-21T08:37:46.576Z</lastmod>
     
@@ -58,21 +65,7 @@
   </url>
   
   <url>
-    <loc>http://yoursite.com/2019/01/21/CAS-compile-plugin3/</loc>
-    
-    <lastmod>2019-01-21T08:37:46.576Z</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>http://yoursite.com/2019/01/21/Flask%E8%AE%B0%E5%BD%95log/</loc>
-    
-    <lastmod>2019-01-21T08:37:46.576Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://yoursite.com/tags/index.html</loc>
     
     <lastmod>2019-01-21T08:37:46.576Z</lastmod>
     
@@ -86,7 +79,21 @@
   </url>
   
   <url>
+    <loc>http://yoursite.com/tags/index.html</loc>
+    
+    <lastmod>2019-01-21T08:37:46.576Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://yoursite.com/2019/01/21/k8s_install_in_aliyun_vpc/</loc>
+    
+    <lastmod>2019-01-21T08:37:46.576Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://yoursite.com/2019/01/21/docker-update/</loc>
     
     <lastmod>2019-01-21T08:37:46.576Z</lastmod>
     
