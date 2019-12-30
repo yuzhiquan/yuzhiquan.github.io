@@ -2,16 +2,16 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>http://yoursite.com/2019/12/27/k8s-kubelet/</loc>
+    <loc>http://yoursite.com/2019/12/30/k8s-kubelet/</loc>
     
-    <lastmod>2019-12-27T10:52:59.895Z</lastmod>
+    <lastmod>2019-12-30T09:09:31.663Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yoursite.com/2019/12/25/k8s-api-servere/</loc>
+    <loc>http://yoursite.com/2019/12/30/k8s-api-servere/</loc>
     
-    <lastmod>2019-12-25T08:55:16.023Z</lastmod>
+    <lastmod>2019-12-30T09:09:31.647Z</lastmod>
     
   </url>
   
@@ -51,14 +51,7 @@
   </url>
   
   <url>
-    <loc>http://yoursite.com/2019/01/21/CAS-compile-plugin3/</loc>
-    
-    <lastmod>2019-01-21T08:37:46.576Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://yoursite.com/2019/01/21/CAS-compile-plugin2/</loc>
+    <loc>http://yoursite.com/2019/01/21/aliyun-api-Signature-base-on-python/</loc>
     
     <lastmod>2019-01-21T08:37:46.576Z</lastmod>
     
@@ -72,21 +65,21 @@
   </url>
   
   <url>
-    <loc>http://yoursite.com/2019/01/21/aliyun-api-Signature-base-on-python/</loc>
-    
-    <lastmod>2019-01-21T08:37:46.576Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://yoursite.com/tags/index.html</loc>
-    
-    <lastmod>2019-01-21T08:37:46.576Z</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>http://yoursite.com/2019/01/21/k8s_install_in_aliyun_vpc/</loc>
+    
+    <lastmod>2019-01-21T08:37:46.576Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://yoursite.com/2019/01/21/CAS-compile-plugin2/</loc>
+    
+    <lastmod>2019-01-21T08:37:46.576Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://yoursite.com/2019/01/21/python_setattr/</loc>
     
     <lastmod>2019-01-21T08:37:46.576Z</lastmod>
     
@@ -100,7 +93,14 @@
   </url>
   
   <url>
-    <loc>http://yoursite.com/2019/01/21/python_setattr/</loc>
+    <loc>http://yoursite.com/2019/01/21/CAS-compile-plugin3/</loc>
+    
+    <lastmod>2019-01-21T08:37:46.576Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://yoursite.com/tags/index.html</loc>
     
     <lastmod>2019-01-21T08:37:46.576Z</lastmod>
     

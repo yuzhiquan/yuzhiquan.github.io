@@ -81,19 +81,19 @@
 
 
 
-<meta name="description" content="graph">
+<meta name="description" content="need to know kubelet启动过程及其启动了哪些组件？ kubelet对于cri或者oci的调用 kubelet对pod的lifecycle管理，比如生成和删除 kubelet的syncloop  graph">
 <meta name="keywords" content="go,k8s">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Kubernetes kubelet 源码分析[WIP]">
-<meta property="og:url" content="http://yoursite.com/2019/12/27/k8s-kubelet/index.html">
+<meta property="og:url" content="http://yoursite.com/2019/12/30/k8s-kubelet/index.html">
 <meta property="og:site_name" content="小胖鱼@Think">
-<meta property="og:description" content="graph">
+<meta property="og:description" content="need to know kubelet启动过程及其启动了哪些组件？ kubelet对于cri或者oci的调用 kubelet对pod的lifecycle管理，比如生成和删除 kubelet的syncloop  graph">
 <meta property="og:locale" content="zh">
 <meta property="og:image" content="http://yoursite.com/images/kubelet.png">
-<meta property="og:updated_time" content="2019-12-27T10:52:59.895Z">
+<meta property="og:updated_time" content="2019-12-30T09:09:31.663Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Kubernetes kubelet 源码分析[WIP]">
-<meta name="twitter:description" content="graph">
+<meta name="twitter:description" content="need to know kubelet启动过程及其启动了哪些组件？ kubelet对于cri或者oci的调用 kubelet对pod的lifecycle管理，比如生成和删除 kubelet的syncloop  graph">
 <meta name="twitter:image" content="http://yoursite.com/images/kubelet.png">
 
 
@@ -124,7 +124,7 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2019/12/27/k8s-kubelet/">
+  <link rel="canonical" href="http://yoursite.com/2019/12/30/k8s-kubelet/">
 
 
 
@@ -237,7 +237,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/12/27/k8s-kubelet/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/12/30/k8s-kubelet/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Just Think">
@@ -266,8 +266,8 @@
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-12-27T18:52:59+08:00">
-                2019-12-27
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-12-30T17:09:31+08:00">
+                2019-12-30
               </time>
             
 
@@ -326,7 +326,13 @@
       
 
       
-        <h3 id="graph"><a href="#graph" class="headerlink" title="graph"></a>graph</h3><p><img src="/images/kubelet.png" alt="kube-kubelet"> </p>
+        <h3 id="need-to-know"><a href="#need-to-know" class="headerlink" title="need to know"></a>need to know</h3><ul>
+<li>kubelet启动过程及其启动了哪些组件？</li>
+<li>kubelet对于cri或者oci的调用</li>
+<li>kubelet对pod的lifecycle管理，比如生成和删除</li>
+<li>kubelet的syncloop</li>
+</ul>
+<h3 id="graph"><a href="#graph" class="headerlink" title="graph"></a>graph</h3><p><img src="/images/kubelet.png" alt="kube-kubelet"> </p>
 
       
     </div>
@@ -359,7 +365,7 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2019/12/25/k8s-api-servere/" rel="next" title="Kubernetes kube-apiserver 源码分析">
+              <a href="/2019/12/30/k8s-api-servere/" rel="next" title="Kubernetes kube-apiserver 源码分析">
                 <i class="fa fa-chevron-left"></i> Kubernetes kube-apiserver 源码分析
               </a>
             
@@ -506,7 +512,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#graph"><span class="nav-number">1.</span> <span class="nav-text">graph</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#need-to-know"><span class="nav-number">1.</span> <span class="nav-text">need to know</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#graph"><span class="nav-number">2.</span> <span class="nav-text">graph</span></a></li></ol></div>
             
 
           </div>

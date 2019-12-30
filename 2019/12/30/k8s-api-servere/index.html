@@ -81,19 +81,19 @@
 
 
 
-<meta name="description" content="需要知道go-restfulcobra kubernetes的库使用cobra，所以一般都是经过Complete、Valiate、Run graph">
+<meta name="description" content="需要知道go-restfulcobra kubernetes的库使用cobra，所以一般都是经过Complete、Valiate、Run need to know apiserver的启动以及启动组件 apiserver的restful uri注册以及资源对应 apiserver的存储(etcd3)  graph">
 <meta name="keywords" content="go,k8s">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Kubernetes kube-apiserver 源码分析">
-<meta property="og:url" content="http://yoursite.com/2019/12/25/k8s-api-servere/index.html">
+<meta property="og:url" content="http://yoursite.com/2019/12/30/k8s-api-servere/index.html">
 <meta property="og:site_name" content="小胖鱼@Think">
-<meta property="og:description" content="需要知道go-restfulcobra kubernetes的库使用cobra，所以一般都是经过Complete、Valiate、Run graph">
+<meta property="og:description" content="需要知道go-restfulcobra kubernetes的库使用cobra，所以一般都是经过Complete、Valiate、Run need to know apiserver的启动以及启动组件 apiserver的restful uri注册以及资源对应 apiserver的存储(etcd3)  graph">
 <meta property="og:locale" content="zh">
 <meta property="og:image" content="http://yoursite.com/images/kube-apiserver.png">
-<meta property="og:updated_time" content="2019-12-25T08:55:16.023Z">
+<meta property="og:updated_time" content="2019-12-30T09:09:31.647Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Kubernetes kube-apiserver 源码分析">
-<meta name="twitter:description" content="需要知道go-restfulcobra kubernetes的库使用cobra，所以一般都是经过Complete、Valiate、Run graph">
+<meta name="twitter:description" content="需要知道go-restfulcobra kubernetes的库使用cobra，所以一般都是经过Complete、Valiate、Run need to know apiserver的启动以及启动组件 apiserver的restful uri注册以及资源对应 apiserver的存储(etcd3)  graph">
 <meta name="twitter:image" content="http://yoursite.com/images/kube-apiserver.png">
 
 
@@ -124,7 +124,7 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2019/12/25/k8s-api-servere/">
+  <link rel="canonical" href="http://yoursite.com/2019/12/30/k8s-api-servere/">
 
 
 
@@ -237,7 +237,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/12/25/k8s-api-servere/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/12/30/k8s-api-servere/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Just Think">
@@ -266,8 +266,8 @@
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-12-25T16:55:16+08:00">
-                2019-12-25
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-12-30T17:09:31+08:00">
+                2019-12-30
               </time>
             
 
@@ -328,6 +328,11 @@
       
         <h4 id="需要知道"><a href="#需要知道" class="headerlink" title="需要知道"></a>需要知道</h4><p><code>go-restful</code><br><code>cobra</code></p>
 <p><code>kubernetes</code>的库使用<code>cobra</code>，所以一般都是经过<code>Complete</code>、<code>Valiate</code>、<code>Run</code></p>
+<h3 id="need-to-know"><a href="#need-to-know" class="headerlink" title="need to know"></a>need to know</h3><ul>
+<li>apiserver的启动以及启动组件</li>
+<li>apiserver的restful uri注册以及资源对应</li>
+<li>apiserver的存储(etcd3)</li>
+</ul>
 <h3 id="graph"><a href="#graph" class="headerlink" title="graph"></a>graph</h3><p><img src="/images/kube-apiserver.png" alt="kube-apiserver"> </p>
 
       
@@ -371,7 +376,7 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2019/12/27/k8s-kubelet/" rel="prev" title="Kubernetes kubelet 源码分析[WIP]">
+              <a href="/2019/12/30/k8s-kubelet/" rel="prev" title="Kubernetes kubelet 源码分析[WIP]">
                 Kubernetes kubelet 源码分析[WIP] <i class="fa fa-chevron-right"></i>
               </a>
             
@@ -512,7 +517,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#需要知道"><span class="nav-number">1.</span> <span class="nav-text">需要知道</span></a></li></ol><li class="nav-item nav-level-3"><a class="nav-link" href="#graph"><span class="nav-number"></span> <span class="nav-text">graph</span></a></li></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#需要知道"><span class="nav-number">1.</span> <span class="nav-text">需要知道</span></a></li></ol><li class="nav-item nav-level-3"><a class="nav-link" href="#need-to-know"><span class="nav-number"></span> <span class="nav-text">need to know</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#graph"><span class="nav-number"></span> <span class="nav-text">graph</span></a></li></div>
             
 
           </div>
