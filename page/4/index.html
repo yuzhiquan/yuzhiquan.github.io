@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="IT,CAS,">
+  <meta name="keywords" content="Hexo, NexT">
 
 
 
@@ -81,18 +81,13 @@
 
 
 
-<meta name="description" content="依赖测试环境: ubuntu14.04JDK: jdk1.8.0_121tomacat: apache-tomcat-8.5.13(cas5.x需要tomcat8.0以上)安装依赖：jdk安装 1234567mv jdk1.8.0_121 /usr/localcat&amp;lt;&amp;lt; EOF &amp;gt;&amp;gt;/etc/profileexport JAVA_HOME=/usr/local/jdk1.8">
-<meta name="keywords" content="IT,CAS">
-<meta property="og:type" content="article">
-<meta property="og:title" content="CAS5.x编译、部署(1)-LDAP支持">
-<meta property="og:url" content="http://yoursite.com/2019/01/21/CAS-compile-plugin/index.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="小胖鱼@Think">
+<meta property="og:url" content="http://yoursite.com/page/4/index.html">
 <meta property="og:site_name" content="小胖鱼@Think">
-<meta property="og:description" content="依赖测试环境: ubuntu14.04JDK: jdk1.8.0_121tomacat: apache-tomcat-8.5.13(cas5.x需要tomcat8.0以上)安装依赖：jdk安装 1234567mv jdk1.8.0_121 /usr/localcat&amp;lt;&amp;lt; EOF &amp;gt;&amp;gt;/etc/profileexport JAVA_HOME=/usr/local/jdk1.8">
 <meta property="og:locale" content="zh">
-<meta property="og:updated_time" content="2019-01-21T08:37:46.572Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="CAS5.x编译、部署(1)-LDAP支持">
-<meta name="twitter:description" content="依赖测试环境: ubuntu14.04JDK: jdk1.8.0_121tomacat: apache-tomcat-8.5.13(cas5.x需要tomcat8.0以上)安装依赖：jdk安装 1234567mv jdk1.8.0_121 /usr/localcat&amp;lt;&amp;lt; EOF &amp;gt;&amp;gt;/etc/profileexport JAVA_HOME=/usr/local/jdk1.8">
+<meta name="twitter:title" content="小胖鱼@Think">
 
 
 
@@ -122,13 +117,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2019/01/21/CAS-compile-plugin/">
+  <link rel="canonical" href="http://yoursite.com/page/4/">
 
 
 
 
 
-  <title>CAS5.x编译、部署(1)-LDAP支持 | 小胖鱼@Think</title>
+  <title>小胖鱼@Think</title>
   
 
 
@@ -147,7 +142,8 @@
     
   
 
-  <div class="container sidebar-position-left page-post-detail">
+  <div class="container sidebar-position-left 
+  page-home">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
@@ -220,9 +216,9 @@
         <div class="content-wrap">
           <div id="content" class="content">
             
-
-  <div id="posts" class="posts-expand">
+  <section id="posts" class="posts-expand">
     
+      
 
   
 
@@ -252,7 +248,9 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">CAS5.x编译、部署(1)-LDAP支持</h1>
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/01/21/CAS-compile-plugin/" itemprop="url">CAS5.x编译、部署(1)-LDAP支持</a></h1>
         
 
         <div class="post-meta">
@@ -324,7 +322,9 @@
       
 
       
-        <h2 id="依赖"><a href="#依赖" class="headerlink" title="依赖"></a>依赖</h2><p>测试环境: <code>ubuntu14.04</code><br><code>JDK</code>: <code>jdk1.8.0_121</code><br><code>tomacat</code>: <code>apache-tomcat-8.5.13</code>(<strong>cas5.x需要tomcat8.0以上</strong>)<br>安装依赖：<br><code>jdk</code>安装</p>
+        
+          
+            <h2 id="依赖"><a href="#依赖" class="headerlink" title="依赖"></a>依赖</h2><p>测试环境: <code>ubuntu14.04</code><br><code>JDK</code>: <code>jdk1.8.0_121</code><br><code>tomacat</code>: <code>apache-tomcat-8.5.13</code>(<strong>cas5.x需要tomcat8.0以上</strong>)<br>安装依赖：<br><code>jdk</code>安装</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">mv jdk1.8.0_121 /usr/<span class="built_in">local</span></span><br><span class="line">cat&lt;&lt; EOF &gt;&gt;/etc/profile</span><br><span class="line"><span class="built_in">export</span> JAVA_HOME=/usr/<span class="built_in">local</span>/jdk1.8.0_121</span><br><span class="line"><span class="built_in">export</span> CLASSPATH=.:<span class="variable">$JAVA_HOME</span>/lib/dt.jar:<span class="variable">$JAVA_HOME</span>/lib/tools.jar</span><br><span class="line"><span class="built_in">export</span> PATH=<span class="variable">$JAVA_HOME</span>/bin:<span class="variable">$PATH</span></span><br><span class="line">EOF</span><br><span class="line"><span class="built_in">source</span> /etc/profile</span><br></pre></td></tr></table></figure>
 <p><code>tomcat</code>安装<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">tar zxf apache-tomcat-8.5.13.tar.gz</span><br><span class="line">mv apache-tomcat-8.5.13 /usr/<span class="built_in">local</span></span><br><span class="line">ln -s /usr/<span class="built_in">local</span>/apache-tomcat-8.5.13  /usr/<span class="built_in">local</span>/tomcat</span><br></pre></td></tr></table></figure></p>
 <h2 id="编译"><a href="#编译" class="headerlink" title="编译"></a>编译</h2><p>注意，编译某个分支不要直接拉代码编，出问题的可能性很大<br><strong><code>CAS5.x</code>之后，只支持<code>gradle</code>编译方式</strong><br>可以使用官方提供的模板来进行编译<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">wget https://github.com/apereo/cas-gradle-overlay-template/archive/master.zip</span><br><span class="line">unzip master.zip</span><br><span class="line">cp -r cas-gradle-overlay-template-master /etc/cas</span><br><span class="line"><span class="built_in">cd</span> /etc/cas &amp;&amp; ./gradlew clean build</span><br></pre></td></tr></table></figure></p>
@@ -337,6 +337,8 @@
 <h3 id="ldap配置"><a href="#ldap配置" class="headerlink" title="ldap配置"></a><code>ldap</code>配置</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br></pre></td><td class="code"><pre><span class="line">cas.authn.accept.users= <span class="comment">#去掉默认的账号密码</span></span><br><span class="line"><span class="comment">#配置LDAP认证方式</span></span><br><span class="line">cas.authn.attributeRepository.ldap.ldapUrl= <span class="comment">#修改ldap地址</span></span><br><span class="line">cas.authn.attributeRepository.ldap.useSsl=<span class="literal">false</span></span><br><span class="line">cas.authn.attributeRepository.ldap.useStartTls=<span class="literal">false</span></span><br><span class="line">cas.authn.attributeRepository.ldap.connectTimeout=5000</span><br><span class="line">cas.authn.attributeRepository.ldap.baseDn= <span class="comment">#修改用户bashDn</span></span><br><span class="line">cas.authn.attributeRepository.ldap.userFilter=user=&#123;user&#125; <span class="comment">#修改用户查询方式</span></span><br><span class="line">cas.authn.attributeRepository.ldap.subtreeSearch=<span class="literal">true</span></span><br><span class="line">cas.authn.attributeRepository.ldap.bindDn= <span class="comment">#填写bindDn</span></span><br><span class="line">cas.authn.attributeRepository.ldap.bindCredential=******* <span class="comment">#填写密码</span></span><br><span class="line">cas.authn.attributeRepository.ldap.trustCertificates=</span><br><span class="line">cas.authn.attributeRepository.ldap.keystore=</span><br><span class="line">cas.authn.attributeRepository.ldap.keystorePassword=</span><br><span class="line">cas.authn.attributeRepository.ldap.keystoreType=JKS</span><br><span class="line">cas.authn.attributeRepository.ldap.minPoolSize=3</span><br><span class="line">cas.authn.attributeRepository.ldap.maxPoolSize=10</span><br><span class="line">cas.authn.attributeRepository.ldap.validateOnCheckout=<span class="literal">true</span></span><br><span class="line">cas.authn.attributeRepository.ldap.validatePeriodically=<span class="literal">true</span></span><br><span class="line">cas.authn.attributeRepository.ldap.validatePeriod=600</span><br><span class="line">cas.authn.attributeRepository.ldap.failFast=<span class="literal">true</span></span><br><span class="line">cas.authn.attributeRepository.ldap.idleTime=500</span><br><span class="line">cas.authn.attributeRepository.ldap.prunePeriod=600</span><br><span class="line">cas.authn.attributeRepository.ldap.blockWaitTime=5000</span><br><span class="line">cas.authn.attributeRepository.attributes.samaccountname=samaccountname <span class="comment">#查询主键</span></span><br><span class="line">cas.authn.attributeRepository.attributes.displayName=displayName</span><br><span class="line">cas.authn.attributeRepository.attributes.cn=cn</span><br><span class="line">  </span><br><span class="line"><span class="comment">#配置ldap认证服务器</span></span><br><span class="line"><span class="comment">##</span></span><br><span class="line"><span class="comment"># LDAP</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment"># Interesting part for Active Directory:</span></span><br><span class="line">cas.authn.ldap[0].<span class="built_in">type</span>=AD <span class="comment">#ldap服务类型</span></span><br><span class="line">cas.authn.ldap[0].ldapUrl= <span class="comment">#修改ldap地址</span></span><br><span class="line">cas.authn.ldap[0].useSsl=<span class="literal">false</span></span><br><span class="line">cas.authn.ldap[0].useStartTls=<span class="literal">false</span></span><br><span class="line">cas.authn.ldap[0].connectTimeout=5000</span><br><span class="line">cas.authn.ldap[0].baseDn= <span class="comment">#修改用户bashDn</span></span><br><span class="line">cas.authn.ldap[0].userFilter=user=&#123;user&#125; <span class="comment">#修改用户查询方式</span></span><br><span class="line">cas.authn.ldap[0].subtreeSearch=<span class="literal">true</span></span><br><span class="line">cas.authn.ldap[0].bindDn= <span class="comment">#配置账户</span></span><br><span class="line">cas.authn.ldap[0].bindCredential=*********<span class="comment">#配置密码</span></span><br><span class="line"> </span><br><span class="line">cas.authn.ldap[0].dnFormat=cn=%s,OU=Users,OU=,DC=,dc=com <span class="comment">#配置查询语句</span></span><br><span class="line">cas.authn.ldap[0].principalAttributeId=samaccountname <span class="comment">#配置属性查询</span></span><br><span class="line">cas.authn.ldap[0].principalAttributePassword=</span><br><span class="line">cas.authn.ldap[0].principalAttributeList=samaccountname,sn,cn,givenName,displayName  <span class="comment">#配置返回属性</span></span><br><span class="line">cas.authn.ldap[0].failFast=<span class="literal">false</span></span><br><span class="line"><span class="comment"># Default values:</span></span><br><span class="line">cas.authn.ldap[0].minPoolSize=3</span><br><span class="line">cas.authn.ldap[0].maxPoolSize=10</span><br><span class="line">cas.authn.ldap[0].validateOnCheckout=<span class="literal">true</span></span><br><span class="line">cas.authn.ldap[0].validatePeriodically=<span class="literal">true</span></span><br><span class="line">cas.authn.ldap[0].validatePeriod=600</span><br><span class="line">cas.authn.ldap[0].idleTime=5000</span><br><span class="line">cas.authn.ldap[0].prunePeriod=5000</span><br><span class="line">cas.authn.ldap[0].blockWaitTime=5000</span><br></pre></td></tr></table></figure>
 <h3 id="SAML配置"><a href="#SAML配置" class="headerlink" title="SAML配置"></a><code>SAML</code>配置</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#saml</span></span><br><span class="line">cas.samlCore.ticketidSaml2=<span class="literal">false</span></span><br><span class="line">cas.samlCore.skewAllowance=0</span><br><span class="line">cas.samlCore.attributeNamespace=http://www.ja-sig.org/products/cas/</span><br><span class="line">cas.samlCore.issuer=</span><br><span class="line">cas.authn.samlIdp.entityId= <span class="comment">#配置地址</span></span><br><span class="line">cas.authn.samlIdp.hostName= <span class="comment">#配置域名</span></span><br><span class="line">cas.authn.samlIdp.scope= <span class="comment">#配置域</span></span><br><span class="line">cas.authn.samlIdp.metadata.cacheExpirationMinutes=30</span><br><span class="line">cas.authn.samlIdp.metadata.failFast=<span class="literal">true</span></span><br><span class="line">cas.authn.samlIdp.metadata.location=/etc/cas/saml <span class="comment">#配置 file:/etc/cas/saml</span></span><br><span class="line">cas.authn.samlIdp.metadata.privateKeyAlgName=RSA</span><br><span class="line">cas.authn.samlIdp.metadata.requireValidMetadata=<span class="literal">true</span></span><br><span class="line"> </span><br><span class="line">cas.authn.samlIdp.metadata.basicAuthnUsername=</span><br><span class="line">cas.authn.samlIdp.metadata.basicAuthnPassword=</span><br><span class="line">cas.authn.samlIdp.metadata.supportedContentTypes=</span><br><span class="line">cas.authn.samlIdp.logout.forceSignedLogoutRequests=<span class="literal">true</span></span><br><span class="line">cas.authn.samlIdp.logout.singleLogoutCallbacksDisabled=<span class="literal">false</span></span><br><span class="line">cas.authn.samlIdp.response.skewAllowance=0</span><br><span class="line">cas.authn.samlIdp.response.signError=<span class="literal">false</span></span><br><span class="line">cas.authn.samlIdp.response.overrideSignatureCanonicalizationAlgorithm=</span><br><span class="line">cas.authn.samlIdp.response.useAttributeFriendlyName=<span class="literal">true</span></span><br></pre></td></tr></table></figure>
 
+          
+        
       
     </div>
     
@@ -351,38 +353,14 @@
 
     <footer class="post-footer">
       
-        <div class="post-tags">
-          
-            <a href="/tags/IT/" rel="tag"># IT</a>
-          
-            <a href="/tags/CAS/" rel="tag"># CAS</a>
-          
-        </div>
+
+      
+
       
 
       
       
-      
-
-      
-        <div class="post-nav">
-          <div class="post-nav-next post-nav-item">
-            
-          </div>
-
-          <span class="post-nav-divider"></span>
-
-          <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2019/01/21/CAS-compile-plugin3/" rel="prev" title="CAS5.x编译、部署(3)-登录页定制">
-                CAS5.x编译、部署(3)-登录页定制 <i class="fa fa-chevron-right"></i>
-              </a>
-            
-          </div>
-        </div>
-      
-
-      
+        <div class="post-eof"></div>
       
     </footer>
   </div>
@@ -392,11 +370,14 @@
   </article>
 
 
+    
+  </section>
 
-    <div class="post-spread">
-      
-    </div>
-  </div>
+  
+  <nav class="pagination">
+    <a class="extend prev" rel="prev" href="/page/3/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/3/">3</a><span class="page-number current">4</span>
+  </nav>
+
 
 
           </div>
@@ -404,10 +385,6 @@
 
 
           
-
-  
-
-
 
         </div>
         
@@ -428,17 +405,8 @@
       
 
       
-        <ul class="sidebar-nav motion-element">
-          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
-            Table of Contents
-          </li>
-          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
-            Overview
-          </li>
-        </ul>
-      
 
-      <section class="site-overview-wrap sidebar-panel">
+      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
@@ -505,22 +473,6 @@
         </div>
       </section>
 
-      
-      <!--noindex-->
-        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
-          <div class="post-toc">
-
-            
-              
-            
-
-            
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#依赖"><span class="nav-number">1.</span> <span class="nav-text">依赖</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#编译"><span class="nav-number">2.</span> <span class="nav-text">编译</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#服务启动"><span class="nav-number">3.</span> <span class="nav-text">服务启动</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#插件配置"><span class="nav-number">4.</span> <span class="nav-text">插件配置</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#ldap配置"><span class="nav-number">4.1.</span> <span class="nav-text">ldap配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SAML配置"><span class="nav-number">4.2.</span> <span class="nav-text">SAML配置</span></a></li></ol></li></ol></div>
-            
-
-          </div>
-        </section>
-      <!--/noindex-->
       
 
       
@@ -654,10 +606,6 @@
   
 
   
-  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
-<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
-
-
 
   
 
