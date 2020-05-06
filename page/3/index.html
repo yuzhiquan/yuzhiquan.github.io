@@ -231,174 +231,6 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/01/21/docker-update/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Just Think">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="小胖鱼@Think">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2019/01/21/docker-update/" itemprop="url">ubuntu14.04 docker安装与升级</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-01-21T16:37:46+08:00">
-                2019-01-21
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/docker-go/" itemprop="url" rel="index">
-                    <span itemprop="name">docker go</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>近期用<code>go</code>开发发布平台整合<code>k8s</code>，在<code>mac</code>上编译好的<code>linux binary</code>放在<code>测试机</code>上却报<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">k8s Error response from daemon: client is newer than server (client API version: 1.32, server API version: 1.21</span><br></pre></td></tr></table></figure></p>
-<p>看起来是版本太低，需要进行升级，之前是通过<code>docker-engine</code>安装的<br>大概步骤是：</p>
-<ol>
-<li>安装依赖：</li>
-</ol>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">apt-get install apt-transport-https ca-certificates</span><br></pre></td></tr></table></figure>
-<ol start="2">
-<li>加装<code>docker repo</code>   </li>
-</ol>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">echo "deb https://apt.dockerproject.org/repo ubuntu-trusty main" | sudo tee /etc/apt/sources.list.d/docker.list</span><br></pre></td></tr></table></figure>
-<ol start="3">
-<li>加<code>key</code> </li>
-</ol>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 36A1D7869245C8950F966E92D8576A8BA88D21E9</span><br></pre></td></tr></table></figure>
-<ol start="4">
-<li>更新</li>
-</ol>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">apt-get update</span><br></pre></td></tr></table></figure>
-<ol start="5">
-<li>安装<br>发现<code>ubuntu</code>下有几种安装方法</li>
-</ol>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">apt-get install -y docker-engine</span><br><span class="line">apt-get install -y lxc-docker</span><br><span class="line">apt-get install -y docker.io</span><br></pre></td></tr></table></figure>
-<p>但是坑爹的是一个比一个版本老<br>要想更新至最新版本需要</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wget -qO- https://get.docker.com/ | sh</span><br></pre></td></tr></table></figure>
-<p>这个安装的是最新的<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">Client:</span><br><span class="line"> Version:      17.09.0-ce</span><br><span class="line"> API version:  1.32</span><br><span class="line"> Go version:   go1.8.3</span><br><span class="line"> Git commit:   afdb6d4</span><br><span class="line"> Built:        Tue Sep 26 22:42:38 2017</span><br><span class="line"> OS/Arch:      linux/amd64</span><br><span class="line"></span><br><span class="line">Server:</span><br><span class="line"> Version:      17.09.0-ce</span><br><span class="line"> API version:  1.32 (minimum version 1.12)</span><br><span class="line"> Go version:   go1.8.3</span><br><span class="line"> Git commit:   afdb6d4</span><br><span class="line"> Built:        Tue Sep 26 22:41:20 2017</span><br><span class="line"> OS/Arch:      linux/amd64</span><br><span class="line"> Experimental: false</span><br></pre></td></tr></table></figure></p>
-<p>在这种情况下可以<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">export DOCKER_API_VERSION=1.23</span><br></pre></td></tr></table></figure></p>
-<p>指定使用的版本<br><code>ubuntu</code>的<code>repo</code>真的有人维护吗？</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/01/21/aliyun-api-Signature-base-on-python/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -694,7 +526,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/01/21/k8s_install_in_aliyun_vpc/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/01/21/docker-update/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Just Think">
@@ -713,7 +545,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2019/01/21/k8s_install_in_aliyun_vpc/" itemprop="url">阿里云部署高可用K8S集群</a></h1>
+                <a class="post-title-link" href="/2019/01/21/docker-update/" itemprop="url">ubuntu14.04 docker安装与升级</a></h1>
         
 
         <div class="post-meta">
@@ -748,8 +580,8 @@
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/docker-go-k8s/" itemprop="url" rel="index">
-                    <span itemprop="name">docker go k8s</span>
+                  <a href="/categories/docker-go/" itemprop="url" rel="index">
+                    <span itemprop="name">docker go</span>
                   </a>
                 </span>
 
@@ -787,59 +619,33 @@
       
         
           
-            <h1 id="阿里云部署高可用K8S集群"><a href="#阿里云部署高可用K8S集群" class="headerlink" title="阿里云部署高可用K8S集群"></a>阿里云部署高可用K8S集群</h1><h2 id="环境："><a href="#环境：" class="headerlink" title="环境："></a>环境：</h2><ul>
-<li>阿里云<code>ECS</code>，<code>Ubuntu 16.04.3 LTS</code>,共6台，其中三台<code>master</code>,三台<code>node</code></li>
-<li>阿里云<code>VPC</code>网络环境</li>
-<li><p><code>k8s</code>版本</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">kubectl  version</span><br><span class="line">Client Version: version.Info&#123;Major:<span class="string">"1"</span>, Minor:<span class="string">"8"</span>, GitVersion:<span class="string">"v1.8.4"</span>, GitCommit:<span class="string">"9befc2b8928a9426501d3bf62f72849d5cbcd5a3"</span>, GitTreeState:<span class="string">"clean"</span>, BuildDate:<span class="string">"2017-11-20T05:28:34Z"</span>, GoVersion:<span class="string">"go1.8.3"</span>, Compiler:<span class="string">"gc"</span>, Platform:<span class="string">"linux/amd64"</span>&#125;</span><br><span class="line">Server Version: version.Info&#123;Major:<span class="string">"1"</span>, Minor:<span class="string">"8"</span>, GitVersion:<span class="string">"v1.8.4"</span>, GitCommit:<span class="string">"9befc2b8928a9426501d3bf62f72849d5cbcd5a3"</span>, GitTreeState:<span class="string">"clean"</span>, BuildDate:<span class="string">"2017-11-20T05:17:43Z"</span>, GoVersion:<span class="string">"go1.8.3"</span>, Compiler:<span class="string">"gc"</span>, Platform:<span class="string">"linux/amd64"</span>&#125;</span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-<h2 id="部署主集群"><a href="#部署主集群" class="headerlink" title="部署主集群"></a>部署主集群</h2><ul>
-<li>部署参考<a href="https://github.com/gjmzj/kubeasz" target="_blank" rel="noopener">https://github.com/gjmzj/kubeasz</a></li>
-<li>部署所使用配置</li>
-</ul>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 部署节点：运行这份 ansible 脚本的节点</span></span><br><span class="line">[deploy]</span><br><span class="line">10.102.54.42</span><br><span class="line"></span><br><span class="line"><span class="comment"># etcd集群请提供如下NODE_NAME、NODE_IP变量</span></span><br><span class="line"><span class="comment"># 请注意etcd集群必须是1,3,5,7...奇数个节点</span></span><br><span class="line">[etcd]</span><br><span class="line">10.102.54.42 NODE_NAME=etcd1 NODE_IP=<span class="string">"10.102.54.42"</span></span><br><span class="line">10.102.54.43 NODE_NAME=etcd2 NODE_IP=<span class="string">"10.102.54.43"</span></span><br><span class="line">10.102.54.44 NODE_NAME=etcd3 NODE_IP=<span class="string">"10.102.54.44"</span></span><br><span class="line"></span><br><span class="line">[kube-master]</span><br><span class="line">10.102.54.42 NODE_IP=<span class="string">"10.102.54.42"</span></span><br><span class="line">10.102.54.43 NODE_IP=<span class="string">"10.102.54.43"</span></span><br><span class="line">10.102.54.44 NODE_IP=<span class="string">"10.102.54.44"</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 负载均衡至少两个节点，安装 haproxy+keepalived</span></span><br><span class="line"><span class="comment"># 根据master节点数量同步修改roles/lb/templates/haproxy.cfg.j2</span></span><br><span class="line">[lb]</span><br><span class="line">10.102.54.43 LB_IF=<span class="string">"eth0"</span> LB_ROLE=backup</span><br><span class="line">10.102.54.42 LB_IF=<span class="string">"eth0"</span> LB_ROLE=master</span><br><span class="line">[lb:vars]</span><br><span class="line">LB_EP1=<span class="string">"10.102.54.42:6443"</span>	<span class="comment"># api-server 实际成员地址端口</span></span><br><span class="line">LB_EP2=<span class="string">"10.102.54.43:6443"</span>	<span class="comment"># api-server 实际成员地址端口</span></span><br><span class="line">LB_EP3=<span class="string">"10.102.54.44:6443"</span>	<span class="comment"># api-server 实际成员地址端口</span></span><br><span class="line">MASTER_IP=<span class="string">"10.102.54.222"</span>  	<span class="comment"># api-server 虚地址</span></span><br><span class="line">MASTER_PORT=<span class="string">"8443"</span>		<span class="comment"># api-server 服务端口</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#确保node节点有变量NODE_ID=node1</span></span><br><span class="line">[kube-node]</span><br><span class="line">10.102.54.45 NODE_ID=node1 NODE_IP=<span class="string">"10.102.54.45"</span></span><br><span class="line">10.102.54.46 NODE_ID=node2 NODE_IP=<span class="string">"10.102.54.46"</span></span><br><span class="line">10.102.54.47 NODE_ID=node3 NODE_IP=<span class="string">"10.102.54.47"</span></span><br><span class="line"></span><br><span class="line">[kube-cluster:children]</span><br><span class="line">kube-node</span><br><span class="line">kube-master</span><br><span class="line"></span><br><span class="line"><span class="comment"># 预留组，后续添加node节点使用</span></span><br><span class="line">[new-node]</span><br><span class="line"><span class="comment">#10.102.54.xx NODE_ID=node6 NODE_IP="10.102.54.xx"</span></span><br><span class="line"><span class="comment">#10.102.54.xx NODE_ID=node7 NODE_IP="10.102.54.xx"</span></span><br><span class="line"></span><br><span class="line">[all:vars]</span><br><span class="line"><span class="comment"># ---------集群主要参数---------------</span></span><br><span class="line"><span class="comment">#集群 MASTER IP, 需要负载均衡，一般为VIP地址</span></span><br><span class="line">MASTER_IP=<span class="string">"10.102.54.222"</span></span><br><span class="line">KUBE_APISERVER=<span class="string">"https://10.102.54.222:8443"</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#TLS Bootstrapping 使用的 Token，使用 head -c 16 /dev/urandom | od -An -t x | tr -d ' ' 生成</span></span><br><span class="line">BOOTSTRAP_TOKEN=<span class="string">"9de762eff153167c5c0169a58ea65208"</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 服务网段 (Service CIDR），部署前路由不可达，部署后集群内使用 IP:Port 可达</span></span><br><span class="line">SERVICE_CIDR=<span class="string">"10.68.0.0/16"</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># POD 网段 (Cluster CIDR），部署前路由不可达，**部署后**路由可达</span></span><br><span class="line">CLUSTER_CIDR=<span class="string">"172.20.0.0/16"</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 服务端口范围 (NodePort Range)</span></span><br><span class="line">NODE_PORT_RANGE=<span class="string">"2000-8000"</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># kubernetes 服务 IP (预分配，一般是 SERVICE_CIDR 中第一个IP)</span></span><br><span class="line">CLUSTER_KUBERNETES_SVC_IP=<span class="string">"10.68.0.1"</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 集群 DNS 服务 IP (从 SERVICE_CIDR 中预分配)</span></span><br><span class="line">CLUSTER_DNS_SVC_IP=<span class="string">"10.68.0.2"</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 集群 DNS 域名</span></span><br><span class="line">CLUSTER_DNS_DOMAIN=<span class="string">"cluster.local."</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># etcd 集群间通信的IP和端口, **根据实际 etcd 集群成员设置**</span></span><br><span class="line">ETCD_NODES=<span class="string">"etcd1=https://10.102.54.42:2380,etcd2=https://10.102.54.43:2380,etcd3=https://10.102.54.44:2380"</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># etcd 集群服务地址列表, **根据实际 etcd 集群成员设置**</span></span><br><span class="line">ETCD_ENDPOINTS=<span class="string">"https://10.102.54.42:2379,https://10.102.54.43:2379,https://10.102.54.44:2379"</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 集群basic auth 使用的用户名和密码</span></span><br><span class="line">BASIC_AUTH_USER=<span class="string">"admin"</span></span><br><span class="line">BASIC_AUTH_PASS=<span class="string">"infrak8s"</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># ---------附加参数--------------------</span></span><br><span class="line"><span class="comment">#默认二进制文件目录</span></span><br><span class="line">bin_dir=<span class="string">"/root/local/bin"</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#证书目录</span></span><br><span class="line">ca_dir=<span class="string">"/etc/kubernetes/ssl"</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#部署目录，即 ansible 工作目录，建议不要修改</span></span><br><span class="line">base_dir=<span class="string">"/etc/ansible"</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#私有仓库 harbor服务器 (域名或者IP)</span></span><br><span class="line"><span class="comment">#需要把 harbor服务器证书复制到roles/harbor/files/harbor-ca.crt</span></span><br><span class="line">HARBOR_SERVER=<span class="string">"harbor.com"</span></span><br></pre></td></tr></table></figure>
-<ul>
-<li><p>注意事项</p>
-<ul>
-<li><p>高可用<code>master</code>的虚拟<code>VIP</code><br>正常情况下安装<code>HAPROXY</code>后即可自动通过<code>ARP</code>协议生成虚拟<code>IP</code>并告知同网络其他机器，但是阿里云的网络不允许<code>ARP</code>，这样的话有2种解决方案：</p>
-<ul>
-<li>用阿里云<code>SLB</code>，后端挂载三台<code>master</code>即可，很简单，但这样只实现了负载均衡，并不能实现高可用，因为无法通过<code>SLB</code>的健康检查来踢掉挂掉的节点</li>
-<li>使用阿里云高可用虚拟<code>IP</code>功能，但这个属于阿里云测试功能，需要找客服开通，且<strong>仅支持<code>VPC</code>网络</strong></li>
-</ul>
-</li>
-<li><p>网络模型<br>这个方案采用的<code>calico</code>网络模型作为<code>POD</code>网络，它默认使用<code>bgp</code>协议，但是阿里云同样不支持这个，所以出现的现象就是暴露出来的<code>nodeport</code>只能通过<code>pod</code>所在的<code>node</code>访问，这样的话<code>k8s</code>niubility的地方就不存在了。所幸它还支持另一种<code>IPIP</code>模式，通过<code>IP</code>包方式进行通信，所以需要修改 <code>roles/calico/templates/calico-node.service.j2</code> 找到 <code>-e CALICO_IPV4POOL_IPIP=off \</code>这行，把<code>off</code> 改成 <code>always</code>.<br>保存后继续安装即可</p>
-</li>
-</ul>
-</li>
-</ul>
-<h2 id="部署addons"><a href="#部署addons" class="headerlink" title="部署addons"></a>部署addons</h2><ul>
-<li><p>安装kube-dns</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl create -f /etc/ansible/manifests/kubedns/kubedns.yaml</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>安装kube-dashbord</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml</span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-<p>注意需要修改<code>svc kubernetest-dashbord</code>里的<code>type</code>为<code>nodeport</code>，这样可以从集群外进行访问<br><code>dashbord</code>的权限问题<br>采用了<code>token</code>认证的方式，首先建一个<code>admin role</code>，创建 <code>admin</code> 用户并赋予管理员权限<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl apply -f https://raw.githubusercontent.com/rootsongjc/kubernetes-handbook/master/manifests/dashboard-1.7.1/admin-role.yaml</span><br></pre></td></tr></table></figure></p>
-<p>创建完成后获取 <code>secret</code> 和 <code>token</code> 的值<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">token=`kubectl -n kube-system get secret|grep admin-token | awk <span class="string">'&#123;print $1&#125;'</span>`    </span><br><span class="line">kubectl -n kube-system describe secret <span class="variable">$token</span></span><br></pre></td></tr></table></figure></p>
-<p>获取到的<code>token</code>既可以用来登录<br>或者也可以用<code>kubeconfig</code>文件进行登录,位置是每台<code>node</code>机器上的<code>/root/.kube/config</code></p>
-<ul>
-<li><p>安装promethus和grafana</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">kubectl apply \</span><br><span class="line">--filename https://raw.githubusercontent.com/giantswarm/kubernetes-prometheus/master/manifests-all.yaml</span><br></pre></td></tr></table></figure>
-<p>各种<code>dashbord</code>后续再说</p>
-</li>
-<li><p>日志入graylog<br><code>ubuntu16.04</code>下修改<code>/etc/docker/daemon.json</code>,添加</p>
-</li>
-</ul>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">"log-driver"</span>: <span class="string">"gelf"</span>,</span><br><span class="line">  <span class="string">"log-opts"</span>:  &#123;</span><br><span class="line">    <span class="string">"gelf-address"</span>: <span class="string">"udp://10.102.54.11:12202"</span></span><br><span class="line">  &#125;,</span><br></pre></td></tr></table></figure>
-<ul>
-<li><p>支持私有docker-registery<br><code>ubuntu16.04</code>下修改<code>/etc/docker/daemon.json</code>,添加</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">  <span class="string">"insecure-registries"</span> : [<span class="string">"harbor.com"</span>],</span><br></pre></td></tr></table></figure>
-<p><code>centos7.x</code>下</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cp /lib/systemd/system/docker.service /etc/systemd/system/ &amp;&amp; sed -i <span class="string">'12s/$/ --insecure-registry=harbor.com/'</span> /etc/systemd/system/docker.service &amp;&amp; systemctl daemon-reload &amp;&amp; service docker restart</span><br></pre></td></tr></table></figure>
-</li>
-</ul>
+            <p>近期用<code>go</code>开发发布平台整合<code>k8s</code>，在<code>mac</code>上编译好的<code>linux binary</code>放在<code>测试机</code>上却报<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">k8s Error response from daemon: client is newer than server (client API version: 1.32, server API version: 1.21</span><br></pre></td></tr></table></figure></p>
+<p>看起来是版本太低，需要进行升级，之前是通过<code>docker-engine</code>安装的<br>大概步骤是：</p>
+<ol>
+<li>安装依赖：</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">apt-get install apt-transport-https ca-certificates</span><br></pre></td></tr></table></figure>
+<ol start="2">
+<li>加装<code>docker repo</code>   </li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">echo "deb https://apt.dockerproject.org/repo ubuntu-trusty main" | sudo tee /etc/apt/sources.list.d/docker.list</span><br></pre></td></tr></table></figure>
+<ol start="3">
+<li>加<code>key</code> </li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 36A1D7869245C8950F966E92D8576A8BA88D21E9</span><br></pre></td></tr></table></figure>
+<ol start="4">
+<li>更新</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">apt-get update</span><br></pre></td></tr></table></figure>
+<ol start="5">
+<li>安装<br>发现<code>ubuntu</code>下有几种安装方法</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">apt-get install -y docker-engine</span><br><span class="line">apt-get install -y lxc-docker</span><br><span class="line">apt-get install -y docker.io</span><br></pre></td></tr></table></figure>
+<p>但是坑爹的是一个比一个版本老<br>要想更新至最新版本需要</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wget -qO- https://get.docker.com/ | sh</span><br></pre></td></tr></table></figure>
+<p>这个安装的是最新的<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">Client:</span><br><span class="line"> Version:      17.09.0-ce</span><br><span class="line"> API version:  1.32</span><br><span class="line"> Go version:   go1.8.3</span><br><span class="line"> Git commit:   afdb6d4</span><br><span class="line"> Built:        Tue Sep 26 22:42:38 2017</span><br><span class="line"> OS/Arch:      linux/amd64</span><br><span class="line"></span><br><span class="line">Server:</span><br><span class="line"> Version:      17.09.0-ce</span><br><span class="line"> API version:  1.32 (minimum version 1.12)</span><br><span class="line"> Go version:   go1.8.3</span><br><span class="line"> Git commit:   afdb6d4</span><br><span class="line"> Built:        Tue Sep 26 22:41:20 2017</span><br><span class="line"> OS/Arch:      linux/amd64</span><br><span class="line"> Experimental: false</span><br></pre></td></tr></table></figure></p>
+<p>在这种情况下可以<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">export DOCKER_API_VERSION=1.23</span><br></pre></td></tr></table></figure></p>
+<p>指定使用的版本<br><code>ubuntu</code>的<code>repo</code>真的有人维护吗？</p>
 
           
         
@@ -1027,6 +833,157 @@
 
 
     
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/01/21/CAS-compile-plugin2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Just Think">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="小胖鱼@Think">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/01/21/CAS-compile-plugin2/" itemprop="url">CAS5.x编译、部署(2)-SAML2.0认证协议支持</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-01-21T16:37:46+08:00">
+                2019-01-21
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/IT-CAS/" itemprop="url" rel="index">
+                    <span itemprop="name">IT CAS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="升级5-1-0"><a href="#升级5-1-0" class="headerlink" title="升级5.1.0"></a>升级5.1.0</h2><p><code>CAS</code>与<code>SAP</code>进行<code>SAML2.0</code>协议认证时有<a href="https://github.com/apereo/cas/issues/2496" target="_blank" rel="noopener">#2496</a>问题，在<code>V5.1.0-RC3</code>修复，所以在<code>5.1.0</code>正式<code>release</code>后进行升级.<br>修改<code>gradle.properties</code><br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cas.version=5.1.0</span><br></pre></td></tr></table></figure></p>
+<p>同时修改<code>cas/build.gradle</code><br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">apply from: <span class="string">'https://raw.githubusercontent.com/apereo/cas/5.1.x/gradle/overrides.gradle'</span><span class="comment">#由5.0.x改为5.1.x</span></span><br></pre></td></tr></table></figure></p>
+<p>重新编译替换即可</p>
+<h2 id="SAML2-0认证支持"><a href="#SAML2-0认证支持" class="headerlink" title="SAML2.0认证支持"></a>SAML2.0认证支持</h2><p>保证编译war包时添加了<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">compile <span class="string">"org.apereo.cas:cas-server-support-saml-idp:<span class="variable">$&#123;project.'cas.version'&#125;</span>"</span></span><br></pre></td></tr></table></figure></p>
+<p>要把证书引入到java环境中：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">keytool -import -<span class="built_in">alias</span> cas-main  -keystore <span class="variable">$JAVA_HOME</span>/jre/lib/security/cacerts -file /tmp/host.cer</span><br></pre></td></tr></table></figure></p>
+<p>引入了证书到linux的认证目录下（不确定是否有用处）<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cp 证书 /usr/<span class="built_in">local</span>/share/ca-certificates/ &amp;&amp; update-ca-certificates</span><br></pre></td></tr></table></figure></p>
+<p>注意：<br>1.通配符域名如*.com，会报DNS 找不到host<br>2.不引入证书到cas-server的java环境的话，会报<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Caused by: javax.net.ssl.SSLHandshakeException: sun.security.validator.ValidatorException: PKIX path building failed: sun.security.provider.certpath.SunCertPathBuilderException: unable to find valid certification path to requested target</span><br></pre></td></tr></table></figure></p>
+<h3 id="配置SAML2-SPmetadata"><a href="#配置SAML2-SPmetadata" class="headerlink" title="配置SAML2 SPmetadata"></a>配置SAML2 SPmetadata</h3><p>配置中添加了<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cas.authn.samlIdp.metadata.location=/etc/cas/saml <span class="comment">#5.1.0后需要加file:,否则报错识别不了</span></span><br><span class="line">cas.authn.samlIdp.metadata.location=file:/etc/cas/saml</span><br></pre></td></tr></table></figure></p>
+<p>所以把<code>SPMetadata</code>放到<code>/etc/cas/saml</code>下<br>然后以<code>services</code>的形式配置SP信息，<code>path</code>为<code>tomcat/webapps/cas/WEB-INF/classes/services</code>,格式为<code>json</code>文件<br>配置文件内容为：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="string">"@class"</span> : <span class="string">"org.apereo.cas.support.saml.services.SamlRegisteredService"</span>,</span><br><span class="line">  <span class="string">"serviceId"</span> : <span class="string">"***********"</span>, <span class="comment">#为metadata里的entityId</span></span><br><span class="line">  <span class="string">"name"</span> : <span class="string">"SAMLService"</span>, <span class="comment">#唯一的名字</span></span><br><span class="line">  <span class="string">"id"</span> : 10000003, <span class="comment">#唯一且递增的id</span></span><br><span class="line">  <span class="string">"evaluationOrder"</span> : 10,</span><br><span class="line">  <span class="string">"metadataLocation"</span> : <span class="string">"/etc/cas/saml2/ServiceProviderSAML2Metadata_New.xml"</span> <span class="comment">#指定metadata的path</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>多个SP的话就配置多个services<br>update:<br>cas 5.1.0正式版release后，从json文件load service需要在配置中添加：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cas.serviceRegistry.initFromJson=<span class="literal">true</span></span><br></pre></td></tr></table></figure></p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
   </section>
 
   
@@ -1077,7 +1034,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">17</span>
+                  <span class="site-state-item-count">18</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
