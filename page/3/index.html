@@ -1,1328 +1,161 @@
 <!DOCTYPE html>
-
-
-
-  
-
-
-<html class="theme-next muse use-motion" lang="zh">
+<html lang="zh">
 <head><meta name="generator" content="Hexo 3.9.0">
-  <meta charset="UTF-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<meta name="theme-color" content="#222">
-
-
-
-
-
-
-
-
-
-<meta http-equiv="Cache-Control" content="no-transform">
-<meta http-equiv="Cache-Control" content="no-siteapp">
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-  
-  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
-
-
-
-
-
-
-
-<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
-
-<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
-
-
-  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
-
-
-  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
-
-
-  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
-
-
-  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
-
-
-
-
-
-  <meta name="keywords" content="Hexo, NexT">
-
-
-
-
-
-  <link rel="alternate" href="/atom.xml" title="小胖鱼@Think" type="application/atom+xml">
-
-
-
-
-
-
-<meta property="og:type" content="website">
-<meta property="og:title" content="小胖鱼@Think">
-<meta property="og:url" content="http://yoursite.com/page/3/index.html">
-<meta property="og:site_name" content="小胖鱼@Think">
-<meta property="og:locale" content="zh">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="小胖鱼@Think">
-
-
-
-<script type="text/javascript" id="hexo.configurations">
-  var NexT = window.NexT || {};
-  var CONFIG = {
-    root: '/',
-    scheme: 'Muse',
-    version: '5.1.4',
-    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
-    fancybox: true,
-    tabs: true,
-    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
-    duoshuo: {
-      userId: '0',
-      author: 'Author'
-    },
-    algolia: {
-      applicationID: '',
-      apiKey: '',
-      indexName: '',
-      hits: {"per_page":10},
-      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
-    }
-  };
-</script>
-
-
-
-  <link rel="canonical" href="http://yoursite.com/page/3/">
-
-
-
-
-
-  <title>小胖鱼@Think</title>
-  
-
-
-
-
-
-
-
-
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="renderer" content="webkit">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+     <link rel="shortcut icon" href="/img/favicon.ico">
+    <title>
+        小胖鱼@Think
+    </title>
+    <link rel="stylesheet" href="/libs/highlight/styles/monokai-sublime.css">
+    <link rel="stylesheet" href="/libs/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/css/style.css">
 </head>
+<body id="bodyx">
+    <div class="hd logodiv">
+    <img src="/img/male.png" class="logopng">
+    <p class="logot">
+         小胖鱼@Think 
+         <span class="logo_2"><i class="fa fa-battery-full" ></i></span>
+        <h3 class="words" style="font-weight: bold;font-family: Georgia;"> 
+            CloudNative/Kubernetes/Go 
+        </h3>
+    </p>
 
-<body itemscope itemtype="http://schema.org/WebPage" lang="zh">
-
-  
-  
-    
-  
-
-  <div class="container sidebar-position-left 
-  page-home">
-    <div class="headband"></div>
-
-    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
-      <div class="header-inner"><div class="site-brand-wrapper">
-  <div class="site-meta ">
-    
-
-    <div class="custom-logo-site-title">
-      <a href="/" class="brand" rel="start">
-        <span class="logo-line-before"><i></i></span>
-        <span class="site-title">小胖鱼@Think</span>
-        <span class="logo-line-after"><i></i></span>
-      </a>
-    </div>
-      
-        <p class="site-subtitle"></p>
-      
-  </div>
-
-  <div class="site-nav-toggle">
-    <button>
-      <span class="btn-bar"></span>
-      <span class="btn-bar"></span>
-      <span class="btn-bar"></span>
-    </button>
-  </div>
 </div>
-
-<nav class="site-nav">
-  
-
-  
-    <ul id="menu" class="menu">
-      
+<div class="hd">
+    <ol class="breadcrumb">
         
-        <li class="menu-item menu-item-home">
-          <a href="/" rel="section">
-            
-              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
-            
-            Home
-          </a>
-        </li>
-      
+            <li><a class="ba" href="/about">关于我👀</a></li>
         
-        <li class="menu-item menu-item-archives">
-          <a href="/archives/" rel="section">
-            
-              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
-            
-            Archives
-          </a>
-        </li>
-      
-
-      
-    </ul>
-  
-
-  
-</nav>
-
-
-
- </div>
-    </header>
-
-    <main id="main" class="main">
-      <div class="main-inner">
-        <div class="content-wrap">
-          <div id="content" class="content">
-            
-  <section id="posts" class="posts-expand">
+            <li><a class="ba" href="https://yuzhiquan.github.io/">访问主站🎉</a></li>
+        
+            <li><a class="ba" href="https://github.com/yuzhiquan">Github🐒</a></li>
+        
+    </ol>
+    <hr class="breadcrumbhr">
+</div>
+<div class="hd">
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/01/21/CAS-compile-plugin3/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Just Think">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="小胖鱼@Think">
-    </span>
-
     
-      <header class="post-header">
-
         
         
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2019/01/21/CAS-compile-plugin3/" itemprop="url">CAS5.x编译、部署(3)-登录页定制</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-01-21T16:37:46+08:00">
-                2019-01-21
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/IT-CAS/" itemprop="url" rel="index">
-                    <span itemprop="name">IT CAS</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="定制登录页"><a href="#定制登录页" class="headerlink" title="定制登录页"></a>定制登录页</h2><ul>
-<li>静态资源的位置：<br><code>webapps/cas/WEB-INF/classes/static</code>,包括<code>CSS</code>、<code>JS</code>等静态文件</li>
-<li>登录页模板位置：<code>webapps/cas/WEB-INF/classes/templates</code>,以组件的方式加载了很多其他子模板，简单的说就是控制页面的布局，写过<code>vue</code>、<code>react</code>之类的应该了解，比如我们也要修改的登录页文件就是<code>casLoginView.html</code>,把原来右边的各项组件都去掉，只保留登录框<br> 保留: <figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"col-sm-12 col-md-6 col-md-push-3 "</span>&gt;</span></span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-<p>  去掉:<br>  <figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"notices"</span> <span class="attr">class</span>=<span class="string">"col-sm-12 col-md-6 col-md-push-6"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">th:replace</span>=<span class="string">"fragments/insecure"</span>/&gt;</span></span><br><span class="line">     <span class="tag">&lt;<span class="name">div</span> <span class="attr">th:replace</span>=<span class="string">"fragments/defaultauthn"</span>/&gt;</span></span><br><span class="line">     <span class="tag">&lt;<span class="name">div</span> <span class="attr">th:replace</span>=<span class="string">"fragments/cookies"</span>/&gt;</span></span><br><span class="line">     <span class="tag">&lt;<span class="name">div</span> <span class="attr">th:replace</span>=<span class="string">"fragments/serviceui"</span>/&gt;</span></span><br><span class="line">     <span class="tag">&lt;<span class="name">div</span> <span class="attr">th:replace</span>=<span class="string">"fragments/cas-resources-list"</span> </span></span><br><span class="line">     &lt;div th:replace="fragments/loginProviders" /&gt;</span><br><span class="line"> <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"> <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"col-sm-12 col-md-6 col-md-pull-6"</span>&gt;</span></span><br></pre></td></tr></table></figure></p>
-<ul>
-<li>修改具体各个组件的显示，则是在<code>webapps/WEB-INF/classes/templates/fragments</code>下, 可以配合静态资源的修改来自定义登录页</li>
-<li>各项提示语文件则是根据语言不同，在<code>webapps/cas/WEB-INF/classes</code>下的<code>messages_*.properties</code>文件，大陆的话就是<code>messages_zh_CN.properties</code>文件</li>
-</ul>
-<p><strong>有些基本的页面功底就可以进行登录页自定义了</strong></p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/01/21/docker-update/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Just Think">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="小胖鱼@Think">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2019/01/21/docker-update/" itemprop="url">ubuntu14.04 docker安装与升级</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-01-21T16:37:46+08:00">
-                2019-01-21
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/docker-go/" itemprop="url" rel="index">
-                    <span itemprop="name">docker go</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>近期用<code>go</code>开发发布平台整合<code>k8s</code>，在<code>mac</code>上编译好的<code>linux binary</code>放在<code>测试机</code>上却报<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">k8s Error response from daemon: client is newer than server (client API version: 1.32, server API version: 1.21</span><br></pre></td></tr></table></figure></p>
-<p>看起来是版本太低，需要进行升级，之前是通过<code>docker-engine</code>安装的<br>大概步骤是：</p>
-<ol>
-<li>安装依赖：</li>
-</ol>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">apt-get install apt-transport-https ca-certificates</span><br></pre></td></tr></table></figure>
-<ol start="2">
-<li>加装<code>docker repo</code>   </li>
-</ol>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">echo "deb https://apt.dockerproject.org/repo ubuntu-trusty main" | sudo tee /etc/apt/sources.list.d/docker.list</span><br></pre></td></tr></table></figure>
-<ol start="3">
-<li>加<code>key</code> </li>
-</ol>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 36A1D7869245C8950F966E92D8576A8BA88D21E9</span><br></pre></td></tr></table></figure>
-<ol start="4">
-<li>更新</li>
-</ol>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">apt-get update</span><br></pre></td></tr></table></figure>
-<ol start="5">
-<li>安装<br>发现<code>ubuntu</code>下有几种安装方法</li>
-</ol>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">apt-get install -y docker-engine</span><br><span class="line">apt-get install -y lxc-docker</span><br><span class="line">apt-get install -y docker.io</span><br></pre></td></tr></table></figure>
-<p>但是坑爹的是一个比一个版本老<br>要想更新至最新版本需要</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wget -qO- https://get.docker.com/ | sh</span><br></pre></td></tr></table></figure>
-<p>这个安装的是最新的<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">Client:</span><br><span class="line"> Version:      17.09.0-ce</span><br><span class="line"> API version:  1.32</span><br><span class="line"> Go version:   go1.8.3</span><br><span class="line"> Git commit:   afdb6d4</span><br><span class="line"> Built:        Tue Sep 26 22:42:38 2017</span><br><span class="line"> OS/Arch:      linux/amd64</span><br><span class="line"></span><br><span class="line">Server:</span><br><span class="line"> Version:      17.09.0-ce</span><br><span class="line"> API version:  1.32 (minimum version 1.12)</span><br><span class="line"> Go version:   go1.8.3</span><br><span class="line"> Git commit:   afdb6d4</span><br><span class="line"> Built:        Tue Sep 26 22:41:20 2017</span><br><span class="line"> OS/Arch:      linux/amd64</span><br><span class="line"> Experimental: false</span><br></pre></td></tr></table></figure></p>
-<p>在这种情况下可以<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">export DOCKER_API_VERSION=1.23</span><br></pre></td></tr></table></figure></p>
-<p>指定使用的版本<br><code>ubuntu</code>的<code>repo</code>真的有人维护吗？</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/01/21/k8s_install_in_aliyun_vpc/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Just Think">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="小胖鱼@Think">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2019/01/21/k8s_install_in_aliyun_vpc/" itemprop="url">阿里云部署高可用K8S集群</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-01-21T16:37:46+08:00">
-                2019-01-21
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/docker-go-k8s/" itemprop="url" rel="index">
-                    <span itemprop="name">docker go k8s</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="阿里云部署高可用K8S集群"><a href="#阿里云部署高可用K8S集群" class="headerlink" title="阿里云部署高可用K8S集群"></a>阿里云部署高可用K8S集群</h1><h2 id="环境："><a href="#环境：" class="headerlink" title="环境："></a>环境：</h2><ul>
-<li>阿里云<code>ECS</code>，<code>Ubuntu 16.04.3 LTS</code>,共6台，其中三台<code>master</code>,三台<code>node</code></li>
-<li>阿里云<code>VPC</code>网络环境</li>
-<li><p><code>k8s</code>版本</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">kubectl  version</span><br><span class="line">Client Version: version.Info&#123;Major:<span class="string">"1"</span>, Minor:<span class="string">"8"</span>, GitVersion:<span class="string">"v1.8.4"</span>, GitCommit:<span class="string">"9befc2b8928a9426501d3bf62f72849d5cbcd5a3"</span>, GitTreeState:<span class="string">"clean"</span>, BuildDate:<span class="string">"2017-11-20T05:28:34Z"</span>, GoVersion:<span class="string">"go1.8.3"</span>, Compiler:<span class="string">"gc"</span>, Platform:<span class="string">"linux/amd64"</span>&#125;</span><br><span class="line">Server Version: version.Info&#123;Major:<span class="string">"1"</span>, Minor:<span class="string">"8"</span>, GitVersion:<span class="string">"v1.8.4"</span>, GitCommit:<span class="string">"9befc2b8928a9426501d3bf62f72849d5cbcd5a3"</span>, GitTreeState:<span class="string">"clean"</span>, BuildDate:<span class="string">"2017-11-20T05:17:43Z"</span>, GoVersion:<span class="string">"go1.8.3"</span>, Compiler:<span class="string">"gc"</span>, Platform:<span class="string">"linux/amd64"</span>&#125;</span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-<h2 id="部署主集群"><a href="#部署主集群" class="headerlink" title="部署主集群"></a>部署主集群</h2><ul>
-<li>部署参考<a href="https://github.com/gjmzj/kubeasz" target="_blank" rel="noopener">https://github.com/gjmzj/kubeasz</a></li>
-<li>部署所使用配置</li>
-</ul>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 部署节点：运行这份 ansible 脚本的节点</span></span><br><span class="line">[deploy]</span><br><span class="line">10.102.54.42</span><br><span class="line"></span><br><span class="line"><span class="comment"># etcd集群请提供如下NODE_NAME、NODE_IP变量</span></span><br><span class="line"><span class="comment"># 请注意etcd集群必须是1,3,5,7...奇数个节点</span></span><br><span class="line">[etcd]</span><br><span class="line">10.102.54.42 NODE_NAME=etcd1 NODE_IP=<span class="string">"10.102.54.42"</span></span><br><span class="line">10.102.54.43 NODE_NAME=etcd2 NODE_IP=<span class="string">"10.102.54.43"</span></span><br><span class="line">10.102.54.44 NODE_NAME=etcd3 NODE_IP=<span class="string">"10.102.54.44"</span></span><br><span class="line"></span><br><span class="line">[kube-master]</span><br><span class="line">10.102.54.42 NODE_IP=<span class="string">"10.102.54.42"</span></span><br><span class="line">10.102.54.43 NODE_IP=<span class="string">"10.102.54.43"</span></span><br><span class="line">10.102.54.44 NODE_IP=<span class="string">"10.102.54.44"</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 负载均衡至少两个节点，安装 haproxy+keepalived</span></span><br><span class="line"><span class="comment"># 根据master节点数量同步修改roles/lb/templates/haproxy.cfg.j2</span></span><br><span class="line">[lb]</span><br><span class="line">10.102.54.43 LB_IF=<span class="string">"eth0"</span> LB_ROLE=backup</span><br><span class="line">10.102.54.42 LB_IF=<span class="string">"eth0"</span> LB_ROLE=master</span><br><span class="line">[lb:vars]</span><br><span class="line">LB_EP1=<span class="string">"10.102.54.42:6443"</span>	<span class="comment"># api-server 实际成员地址端口</span></span><br><span class="line">LB_EP2=<span class="string">"10.102.54.43:6443"</span>	<span class="comment"># api-server 实际成员地址端口</span></span><br><span class="line">LB_EP3=<span class="string">"10.102.54.44:6443"</span>	<span class="comment"># api-server 实际成员地址端口</span></span><br><span class="line">MASTER_IP=<span class="string">"10.102.54.222"</span>  	<span class="comment"># api-server 虚地址</span></span><br><span class="line">MASTER_PORT=<span class="string">"8443"</span>		<span class="comment"># api-server 服务端口</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#确保node节点有变量NODE_ID=node1</span></span><br><span class="line">[kube-node]</span><br><span class="line">10.102.54.45 NODE_ID=node1 NODE_IP=<span class="string">"10.102.54.45"</span></span><br><span class="line">10.102.54.46 NODE_ID=node2 NODE_IP=<span class="string">"10.102.54.46"</span></span><br><span class="line">10.102.54.47 NODE_ID=node3 NODE_IP=<span class="string">"10.102.54.47"</span></span><br><span class="line"></span><br><span class="line">[kube-cluster:children]</span><br><span class="line">kube-node</span><br><span class="line">kube-master</span><br><span class="line"></span><br><span class="line"><span class="comment"># 预留组，后续添加node节点使用</span></span><br><span class="line">[new-node]</span><br><span class="line"><span class="comment">#10.102.54.xx NODE_ID=node6 NODE_IP="10.102.54.xx"</span></span><br><span class="line"><span class="comment">#10.102.54.xx NODE_ID=node7 NODE_IP="10.102.54.xx"</span></span><br><span class="line"></span><br><span class="line">[all:vars]</span><br><span class="line"><span class="comment"># ---------集群主要参数---------------</span></span><br><span class="line"><span class="comment">#集群 MASTER IP, 需要负载均衡，一般为VIP地址</span></span><br><span class="line">MASTER_IP=<span class="string">"10.102.54.222"</span></span><br><span class="line">KUBE_APISERVER=<span class="string">"https://10.102.54.222:8443"</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#TLS Bootstrapping 使用的 Token，使用 head -c 16 /dev/urandom | od -An -t x | tr -d ' ' 生成</span></span><br><span class="line">BOOTSTRAP_TOKEN=<span class="string">"9de762eff153167c5c0169a58ea65208"</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 服务网段 (Service CIDR），部署前路由不可达，部署后集群内使用 IP:Port 可达</span></span><br><span class="line">SERVICE_CIDR=<span class="string">"10.68.0.0/16"</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># POD 网段 (Cluster CIDR），部署前路由不可达，**部署后**路由可达</span></span><br><span class="line">CLUSTER_CIDR=<span class="string">"172.20.0.0/16"</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 服务端口范围 (NodePort Range)</span></span><br><span class="line">NODE_PORT_RANGE=<span class="string">"2000-8000"</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># kubernetes 服务 IP (预分配，一般是 SERVICE_CIDR 中第一个IP)</span></span><br><span class="line">CLUSTER_KUBERNETES_SVC_IP=<span class="string">"10.68.0.1"</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 集群 DNS 服务 IP (从 SERVICE_CIDR 中预分配)</span></span><br><span class="line">CLUSTER_DNS_SVC_IP=<span class="string">"10.68.0.2"</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 集群 DNS 域名</span></span><br><span class="line">CLUSTER_DNS_DOMAIN=<span class="string">"cluster.local."</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># etcd 集群间通信的IP和端口, **根据实际 etcd 集群成员设置**</span></span><br><span class="line">ETCD_NODES=<span class="string">"etcd1=https://10.102.54.42:2380,etcd2=https://10.102.54.43:2380,etcd3=https://10.102.54.44:2380"</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># etcd 集群服务地址列表, **根据实际 etcd 集群成员设置**</span></span><br><span class="line">ETCD_ENDPOINTS=<span class="string">"https://10.102.54.42:2379,https://10.102.54.43:2379,https://10.102.54.44:2379"</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 集群basic auth 使用的用户名和密码</span></span><br><span class="line">BASIC_AUTH_USER=<span class="string">"admin"</span></span><br><span class="line">BASIC_AUTH_PASS=<span class="string">"infrak8s"</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># ---------附加参数--------------------</span></span><br><span class="line"><span class="comment">#默认二进制文件目录</span></span><br><span class="line">bin_dir=<span class="string">"/root/local/bin"</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#证书目录</span></span><br><span class="line">ca_dir=<span class="string">"/etc/kubernetes/ssl"</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#部署目录，即 ansible 工作目录，建议不要修改</span></span><br><span class="line">base_dir=<span class="string">"/etc/ansible"</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#私有仓库 harbor服务器 (域名或者IP)</span></span><br><span class="line"><span class="comment">#需要把 harbor服务器证书复制到roles/harbor/files/harbor-ca.crt</span></span><br><span class="line">HARBOR_SERVER=<span class="string">"harbor.com"</span></span><br></pre></td></tr></table></figure>
-<ul>
-<li><p>注意事项</p>
-<ul>
-<li><p>高可用<code>master</code>的虚拟<code>VIP</code><br>正常情况下安装<code>HAPROXY</code>后即可自动通过<code>ARP</code>协议生成虚拟<code>IP</code>并告知同网络其他机器，但是阿里云的网络不允许<code>ARP</code>，这样的话有2种解决方案：</p>
-<ul>
-<li>用阿里云<code>SLB</code>，后端挂载三台<code>master</code>即可，很简单，但这样只实现了负载均衡，并不能实现高可用，因为无法通过<code>SLB</code>的健康检查来踢掉挂掉的节点</li>
-<li>使用阿里云高可用虚拟<code>IP</code>功能，但这个属于阿里云测试功能，需要找客服开通，且<strong>仅支持<code>VPC</code>网络</strong></li>
-</ul>
-</li>
-<li><p>网络模型<br>这个方案采用的<code>calico</code>网络模型作为<code>POD</code>网络，它默认使用<code>bgp</code>协议，但是阿里云同样不支持这个，所以出现的现象就是暴露出来的<code>nodeport</code>只能通过<code>pod</code>所在的<code>node</code>访问，这样的话<code>k8s</code>niubility的地方就不存在了。所幸它还支持另一种<code>IPIP</code>模式，通过<code>IP</code>包方式进行通信，所以需要修改 <code>roles/calico/templates/calico-node.service.j2</code> 找到 <code>-e CALICO_IPV4POOL_IPIP=off \</code>这行，把<code>off</code> 改成 <code>always</code>.<br>保存后继续安装即可</p>
-</li>
-</ul>
-</li>
-</ul>
-<h2 id="部署addons"><a href="#部署addons" class="headerlink" title="部署addons"></a>部署addons</h2><ul>
-<li><p>安装kube-dns</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl create -f /etc/ansible/manifests/kubedns/kubedns.yaml</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>安装kube-dashbord</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml</span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-<p>注意需要修改<code>svc kubernetest-dashbord</code>里的<code>type</code>为<code>nodeport</code>，这样可以从集群外进行访问<br><code>dashbord</code>的权限问题<br>采用了<code>token</code>认证的方式，首先建一个<code>admin role</code>，创建 <code>admin</code> 用户并赋予管理员权限<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl apply -f https://raw.githubusercontent.com/rootsongjc/kubernetes-handbook/master/manifests/dashboard-1.7.1/admin-role.yaml</span><br></pre></td></tr></table></figure></p>
-<p>创建完成后获取 <code>secret</code> 和 <code>token</code> 的值<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">token=`kubectl -n kube-system get secret|grep admin-token | awk <span class="string">'&#123;print $1&#125;'</span>`    </span><br><span class="line">kubectl -n kube-system describe secret <span class="variable">$token</span></span><br></pre></td></tr></table></figure></p>
-<p>获取到的<code>token</code>既可以用来登录<br>或者也可以用<code>kubeconfig</code>文件进行登录,位置是每台<code>node</code>机器上的<code>/root/.kube/config</code></p>
-<ul>
-<li><p>安装promethus和grafana</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">kubectl apply \</span><br><span class="line">--filename https://raw.githubusercontent.com/giantswarm/kubernetes-prometheus/master/manifests-all.yaml</span><br></pre></td></tr></table></figure>
-<p>各种<code>dashbord</code>后续再说</p>
-</li>
-<li><p>日志入graylog<br><code>ubuntu16.04</code>下修改<code>/etc/docker/daemon.json</code>,添加</p>
-</li>
-</ul>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">"log-driver"</span>: <span class="string">"gelf"</span>,</span><br><span class="line">  <span class="string">"log-opts"</span>:  &#123;</span><br><span class="line">    <span class="string">"gelf-address"</span>: <span class="string">"udp://10.102.54.11:12202"</span></span><br><span class="line">  &#125;,</span><br></pre></td></tr></table></figure>
-<ul>
-<li><p>支持私有docker-registery<br><code>ubuntu16.04</code>下修改<code>/etc/docker/daemon.json</code>,添加</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">  <span class="string">"insecure-registries"</span> : [<span class="string">"harbor.com"</span>],</span><br></pre></td></tr></table></figure>
-<p><code>centos7.x</code>下</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cp /lib/systemd/system/docker.service /etc/systemd/system/ &amp;&amp; sed -i <span class="string">'12s/$/ --insecure-registry=harbor.com/'</span> /etc/systemd/system/docker.service &amp;&amp; systemctl daemon-reload &amp;&amp; service docker restart</span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/01/21/python_setattr/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Just Think">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="小胖鱼@Think">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2019/01/21/python_setattr/" itemprop="url">python的属性设置</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-01-21T16:37:46+08:00">
-                2019-01-21
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/python/" itemprop="url" rel="index">
-                    <span itemprop="name">python</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <blockquote>
-<p>python中的属性管理由<code>__dict__</code>存储</p>
-</blockquote>
-<h3 id="getattr-与-getattribute"><a href="#getattr-与-getattribute" class="headerlink" title="__getattr__与__getattribute__"></a><code>__getattr__</code>与<code>__getattribute__</code></h3><h4 id="区别"><a href="#区别" class="headerlink" title="区别"></a>区别</h4><ul>
-<li><code>__getattr__</code>在访问不存在的成员时才会触发，可以用来做部分异常处理</li>
-<li><code>__getattribute__</code>则拦截所有对属性的访问（包括对<code>__dict__</code>的访问），如果<code>class</code>同时定义了<code>__getattr__</code>和<code>__getattribute__</code>，<code>__getattr__</code>不会生效<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">In [<span class="number">29</span>]: <span class="class"><span class="keyword">class</span> <span class="title">Test</span><span class="params">(object)</span>:</span></span><br><span class="line">    ...:     <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self,name)</span>:</span></span><br><span class="line">    ...:         self.name=name</span><br><span class="line">    ...:     <span class="function"><span class="keyword">def</span> <span class="title">__getattr__</span><span class="params">(self,*args,**kwargs)</span>:</span></span><br><span class="line">    ...:         <span class="keyword">if</span> <span class="string">'age'</span> <span class="keyword">in</span> args:</span><br><span class="line">    ...:             <span class="keyword">return</span> <span class="number">20</span></span><br><span class="line">    ...:     <span class="function"><span class="keyword">def</span> <span class="title">__setattr__</span><span class="params">(self,*args,**kwargs)</span>:</span></span><br><span class="line">    ...:         <span class="keyword">return</span> object.__setattr__(self,*args,**kwargs)</span><br><span class="line">    ...:</span><br><span class="line">    ...:</span><br><span class="line"></span><br><span class="line">In [<span class="number">30</span>]: t=Test(<span class="string">'haha'</span>)</span><br><span class="line"></span><br><span class="line">In [<span class="number">31</span>]: t.__dict__</span><br><span class="line">Out[<span class="number">31</span>]: &#123;<span class="string">'name'</span>: <span class="string">'haha'</span>&#125;</span><br><span class="line"></span><br><span class="line">In [<span class="number">32</span>]: t.age</span><br><span class="line">Out[<span class="number">32</span>]: <span class="number">20</span></span><br><span class="line"></span><br><span class="line">In [<span class="number">33</span>]: t.age=<span class="number">100</span></span><br><span class="line"></span><br><span class="line">In [<span class="number">34</span>]: t.age</span><br><span class="line">O ut[<span class="number">34</span>]: <span class="number">100</span></span><br><span class="line"></span><br><span class="line">In [<span class="number">35</span>]: t.__dict__</span><br><span class="line">Out[<span class="number">35</span>]: &#123;<span class="string">'age'</span>: <span class="number">100</span>, <span class="string">'name'</span>: <span class="string">'haha'</span>&#125;</span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-<p><code>__getattribute__</code>只有新式类才生效，继承自<code>object</code>的类</p>
-<h2 id="setattr"><a href="#setattr" class="headerlink" title="__setattr__"></a><code>__setattr__</code></h2><p>每当属性被赋值的时候， <code>__setattr__()</code> 会被调用，所以有可能造成递归调用，比如：<br><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#wrong</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">__setattr__</span><span class="params">(self, name, value)</span>:</span></span><br><span class="line">    self.name = value</span><br><span class="line"><span class="comment">#right</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">__setattr__</span><span class="params">(self, name, value)</span>:</span></span><br><span class="line">    self.__dict__[name] = value</span><br></pre></td></tr></table></figure></p>
-<p>一般来说都是在获取某个属性的时候做特殊处理或限制，设置属性时很少会涉及。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/01/21/aliyun-api-Signature-base-on-python/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Just Think">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="小胖鱼@Think">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2019/01/21/aliyun-api-Signature-base-on-python/" itemprop="url">AliYun阿里云API签名机制（Python）</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-01-21T16:37:46+08:00">
-                2019-01-21
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/python/" itemprop="url" rel="index">
-                    <span itemprop="name">python</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>最近在写阿里云相关<code>API</code>,看<a href="https://help.aliyun.com/document_detail/27572.html?spm=5176.doc27577.6.112.jzBpJ7" target="_blank" rel="noopener">官方文档</a>，其中比较重要的就是签名机制，为了在<code>SLB</code>和<code>ECS</code>中使用,封装了相关类备用</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#!/usr/bin/env python</span></span><br><span class="line"><span class="comment">#coding: utf-8</span></span><br><span class="line"><span class="comment">#python v2.7.6</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> sys, os</span><br><span class="line"><span class="keyword">import</span> urllib, urllib2</span><br><span class="line"><span class="keyword">import</span> base64</span><br><span class="line"><span class="keyword">import</span> hmac</span><br><span class="line"><span class="keyword">import</span> hashlib</span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line"><span class="keyword">import</span> uuid</span><br><span class="line"><span class="keyword">import</span> json</span><br><span class="line"><span class="keyword">import</span> ConfigParser</span><br><span class="line"></span><br><span class="line">cf = ConfigParser.ConfigParser()</span><br><span class="line">cf.read(<span class="string">'conf.ini'</span>)</span><br><span class="line"></span><br><span class="line">access_key_id = cf.get(<span class="string">"aliyun"</span>, <span class="string">"access_key_id"</span>)</span><br><span class="line">access_key_secret = cf.get(<span class="string">"aliyun"</span>, <span class="string">"access_key_secret"</span>)</span><br><span class="line"></span><br><span class="line">slb_address = cf.get(<span class="string">"aliyun"</span>, <span class="string">"slb_address"</span>)</span><br><span class="line">ecs_address = cf.get(<span class="string">"aliyun"</span>, <span class="string">"ecs_address"</span>)</span><br><span class="line"></span><br><span class="line">slb_api_version = cf.get(<span class="string">"aliyun"</span>, <span class="string">"slb_api_version"</span>)</span><br><span class="line">ecs_api_version = cf.get(<span class="string">"aliyun"</span>, <span class="string">"ecs_api_version"</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ALIYUN</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self, user_params, Host, Version=slb_api_version)</span>:</span></span><br><span class="line">        self.user_params = user_params</span><br><span class="line">        <span class="comment">#self.user_params= &#123;'Action': self.Action, 'LoadBalancerId': self.LoadBalancerId,'BackendServers':self.BackendServers&#125;</span></span><br><span class="line">        self.server_address = Host</span><br><span class="line">        self.version = Version</span><br><span class="line"></span><br><span class="line"><span class="meta">    @staticmethod</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">percent_encode</span><span class="params">(str)</span>:</span></span><br><span class="line">        res = urllib.quote(str.decode(sys.stdin.encoding).encode(<span class="string">'utf8'</span>), <span class="string">''</span>)</span><br><span class="line">        res = res.replace(<span class="string">'+'</span>, <span class="string">'%20'</span>)</span><br><span class="line">        res = res.replace(<span class="string">'\''</span>, <span class="string">'%27'</span>)</span><br><span class="line">        res = res.replace(<span class="string">'\"'</span>, <span class="string">'%22'</span>)</span><br><span class="line">        res = res.replace(<span class="string">'*'</span>, <span class="string">'%2A'</span>)</span><br><span class="line">        res = res.replace(<span class="string">'%7E'</span>, <span class="string">'~'</span>)</span><br><span class="line">        <span class="keyword">return</span> res</span><br><span class="line"></span><br><span class="line"><span class="meta">    @staticmethod</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">compute_signature</span><span class="params">(parameters, access_key_secret)</span>:</span></span><br><span class="line">        sortedParameters = sorted(parameters.items(),</span><br><span class="line">                                  key=<span class="keyword">lambda</span> parameters: parameters[<span class="number">0</span>])</span><br><span class="line">        canonicalizedQueryString = <span class="string">''</span></span><br><span class="line">        <span class="keyword">for</span> (k, v) <span class="keyword">in</span> sortedParameters:</span><br><span class="line">            canonicalizedQueryString += <span class="string">'&amp;'</span> + ALIYUN.percent_encode(</span><br><span class="line">                k) + <span class="string">'='</span> + ALIYUN.percent_encode(str(v))</span><br><span class="line">        stringToSign = <span class="string">'GET&amp;%2F&amp;'</span> + ALIYUN.percent_encode(</span><br><span class="line">            canonicalizedQueryString[<span class="number">1</span>:])</span><br><span class="line">        h = hmac.new(access_key_secret + <span class="string">"&amp;"</span>, stringToSign, sha1)</span><br><span class="line">        signature = base64.encodestring(h.digest()).strip()</span><br><span class="line">        <span class="keyword">return</span> signature</span><br><span class="line"></span><br><span class="line"><span class="meta">    @staticmethod</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">compose_url</span><span class="params">(server_address, user_params, version)</span>:</span></span><br><span class="line">        timestamp = time.strftime(<span class="string">"%Y-%m-%dT%H:%M:%SZ"</span>, time.gmtime())</span><br><span class="line">        parameters = &#123; \</span><br><span class="line">                <span class="string">'Format'</span>        : <span class="string">'JSON'</span>, \</span><br><span class="line">                <span class="string">'Version'</span>       : version, \</span><br><span class="line">                <span class="string">'AccessKeyId'</span>   : access_key_id, \</span><br><span class="line">                <span class="string">'SignatureVersion'</span>  : <span class="string">'1.0'</span>, \</span><br><span class="line">                <span class="string">'SignatureMethod'</span>   : <span class="string">'HMAC-SHA1'</span>, \</span><br><span class="line">                <span class="string">'SignatureNonce'</span>    : str(uuid.uuid1()), \</span><br><span class="line">                <span class="string">'TimeStamp'</span>         : timestamp, \</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">for</span> key <span class="keyword">in</span> user_params.keys():</span><br><span class="line">            parameters[key] = user_params[key]</span><br><span class="line">        signature = ALIYUN.compute_signature(parameters, access_key_secret)</span><br><span class="line">        parameters[<span class="string">'Signature'</span>] = signature</span><br><span class="line">        url = server_address + <span class="string">"/?"</span> + urllib.urlencode(parameters)</span><br><span class="line">        <span class="keyword">print</span> url</span><br><span class="line">        <span class="keyword">return</span> url</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">make_request</span><span class="params">(self, quiet=False)</span>:</span></span><br><span class="line">        url = ALIYUN.compose_url(self.server_address, self.user_params,</span><br><span class="line">                                 self.version)</span><br><span class="line">        request = urllib2.Request(url)</span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            conn = urllib2.urlopen(request)</span><br><span class="line">            response = conn.read()</span><br><span class="line">        <span class="keyword">except</span> urllib2.HTTPError, e:</span><br><span class="line">            print(e.read().strip())</span><br><span class="line">            <span class="keyword">raise</span> SystemExit(e)</span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            obj = json.loads(response)</span><br><span class="line">            <span class="keyword">if</span> quiet:</span><br><span class="line">                <span class="keyword">return</span> obj</span><br><span class="line">        <span class="keyword">except</span> ValueError, e:</span><br><span class="line">            <span class="keyword">raise</span> SystemExit(e)</span><br><span class="line">        json.dump(obj, sys.stdout, sort_keys=<span class="literal">True</span>, indent=<span class="number">2</span>)</span><br><span class="line">        sys.stdout.write(<span class="string">'\n'</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">"__main__"</span>:</span><br><span class="line">    testAdd=ALIYUN( \</span><br><span class="line">            &#123;<span class="string">'Action'</span>:<span class="string">'AddBackendServers'</span>,\</span><br><span class="line">            <span class="string">'LoadBalancerId'</span>:<span class="string">'139a00604ad-cn-east-hangzhou-01'</span>,\</span><br><span class="line">            <span class="string">'BackendServers'</span>:[&#123;<span class="string">"ServerId"</span>:<span class="string">"vm-233"</span>,<span class="string">"Weight"</span>:<span class="string">"0"</span>&#125;,&#123;<span class="string">"ServerId"</span>:<span class="string">"vm-234"</span>,<span class="string">"Weight"</span>:<span class="string">"0"</span>&#125;]\</span><br><span class="line">            &#125;,slb_address</span><br><span class="line">            )</span><br><span class="line">    testRemove=ALIYUN( \</span><br><span class="line">            &#123;</span><br><span class="line">            <span class="string">'Action'</span>:<span class="string">'RemoveBackendServers'</span>,\</span><br><span class="line">            <span class="string">'LoadBalancerId'</span>:<span class="string">'139a00604ad-cn-east-hangzhou-01'</span>,\</span><br><span class="line">            <span class="string">'BackendServers'</span>:[<span class="string">" vm-233"</span>,<span class="string">" vm-234"</span>]\</span><br><span class="line">            &#125;,slb_address</span><br><span class="line">            )</span><br><span class="line">    testSet=ALIYUN( \</span><br><span class="line">            &#123;</span><br><span class="line">            <span class="string">'Action'</span>:<span class="string">'SetBackendServers'</span>,\</span><br><span class="line">            <span class="string">'LoadBalancerId'</span>:<span class="string">'139a00604ad-cn-east-hangzhou-01'</span>,\</span><br><span class="line">            <span class="string">'BackendServers'</span>:[&#123;<span class="string">"ServerId"</span>:<span class="string">"vm-233"</span>,<span class="string">"Weight"</span>:<span class="string">"0"</span>&#125;,&#123;<span class="string">"ServerId"</span>:<span class="string">"vm-234"</span>,<span class="string">"Weight"</span>:<span class="string">"0"</span>&#125;]\</span><br><span class="line">            &#125;,slb_address</span><br><span class="line">            )</span><br><span class="line">    testEcs=ALIYUN( \</span><br><span class="line">            &#123;</span><br><span class="line">            <span class="string">'Action'</span>:<span class="string">'DescribeInstances'</span>,\</span><br><span class="line">            <span class="string">'RegionId'</span>:<span class="string">'cn-hangzhou'</span>,\</span><br><span class="line">            &#125;,ecs_address,</span><br><span class="line">            Version=ecs_api_version</span><br><span class="line">            )</span><br><span class="line">    testSLBd = ALIYUN(&#123;<span class="string">'Action'</span>: <span class="string">'DescribeRegions'</span>&#125;, slb_address)</span><br><span class="line">    testSLBd1 = ALIYUN(</span><br><span class="line">        &#123;<span class="string">'Action'</span>: <span class="string">'DescribeLoadBalancers'</span>,</span><br><span class="line">         <span class="string">'RegionId'</span>: <span class="string">'cn-hangzhou'</span>&#125;, slb_address)</span><br><span class="line">    testSLBd2 = ALIYUN(</span><br><span class="line">        &#123;<span class="string">'Action'</span>: <span class="string">'DescribeLoadBalancers'</span>,</span><br><span class="line">         <span class="string">'RegionId'</span>: <span class="string">'cn-beijing'</span>&#125;, slb_address)</span><br><span class="line">    testSLBd.make_request()</span><br><span class="line">    testSLBd1.make_request()</span><br><span class="line">    <span class="keyword">print</span> testSLBd2.make_request(quiet=<span class="literal">True</span>)</span><br></pre></td></tr></table></figure>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-  </section>
-
-  
-  <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/2/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span><a class="page-number" href="/page/4/">4</a><a class="extend next" rel="next" href="/page/4/"><i class="fa fa-angle-right"></i></a>
-  </nav>
-
-
-
-          </div>
-          
-
-
-          
-
-        </div>
-        
-          
-  
-  <div class="sidebar-toggle">
-    <div class="sidebar-toggle-line-wrap">
-      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
-      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
-      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
-    </div>
-  </div>
-
-  <aside id="sidebar" class="sidebar">
-    
-    <div class="sidebar-inner">
-
-      
-
-      
-
-      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
-        <div class="site-overview">
-          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
-            
-              <p class="site-author-name" itemprop="name">Just Think</p>
-              <p class="site-description motion-element" itemprop="description"></p>
-          </div>
-
-          <nav class="site-state motion-element">
-
-            
-              <div class="site-state-item site-state-posts">
-              
-                <a href="/archives/">
-              
-                  <span class="site-state-item-count">18</span>
-                  <span class="site-state-item-name">posts</span>
-                </a>
-              </div>
-            
-
-            
-              
-              
-              <div class="site-state-item site-state-categories">
-                
-                  <span class="site-state-item-count">6</span>
-                  <span class="site-state-item-name">categories</span>
-                
-              </div>
-            
-
-            
-              
-              
-              <div class="site-state-item site-state-tags">
-                <a href="/tags/index.html">
-                  <span class="site-state-item-count">10</span>
-                  <span class="site-state-item-name">tags</span>
-                </a>
-              </div>
-            
-
-          </nav>
-
-          
-            <div class="feed-link motion-element">
-              <a href="/atom.xml" rel="alternate">
-                <i class="fa fa-rss"></i>
-                RSS
-              </a>
+            <div class="titlex">
+                <p><span class="jing">& </span><span style="color: #6d9ee7;">公元</span> 
+                 2019年🕛
+                </p>
             </div>
-          
-
-          
-
-          
-          
-
-          
-          
-
-          
-
-        </div>
-      </section>
-
-      
-
-      
-
-    </div>
-  </aside>
-
-
+            
         
-      </div>
-    </main>
-
-    <footer id="footer" class="footer">
-      <div class="footer-inner">
-        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
-  <span class="with-love">
-    <i class="fa fa-user"></i>
-  </span>
-  <span class="author" itemprop="copyrightHolder">Just Think</span>
-
-  
+        <a class="flink" href="/2019/01/21/CAS-compile-plugin3/">
+            <div class="list">
+                <div class="postname">
+                    CAS5.x编译、部署(3)-登录页定制
+                </div>
+                <div class="posttime">
+                    January 21st
+                </div>
+            </div>
+        </a>
+    
+        
+        
+        <a class="flink" href="/2019/01/21/aliyun-api-Signature-base-on-python/">
+            <div class="list">
+                <div class="postname">
+                    AliYun阿里云API签名机制（Python）
+                </div>
+                <div class="posttime">
+                    January 21st
+                </div>
+            </div>
+        </a>
+    
+        
+        
+        <a class="flink" href="/2019/01/21/k8s_install_in_aliyun_vpc/">
+            <div class="list">
+                <div class="postname">
+                    阿里云部署高可用K8S集群
+                </div>
+                <div class="posttime">
+                    January 21st
+                </div>
+            </div>
+        </a>
+    
+        
+        
+        <a class="flink" href="/2019/01/21/python_setattr/">
+            <div class="list">
+                <div class="postname">
+                    python的属性设置
+                </div>
+                <div class="posttime">
+                    January 21st
+                </div>
+            </div>
+        </a>
+    
+        
+        
+        <a class="flink" href="/2019/01/21/docker-update/">
+            <div class="list">
+                <div class="postname">
+                    ubuntu14.04 docker安装与升级
+                </div>
+                <div class="posttime">
+                    January 21st
+                </div>
+            </div>
+        </a>
+    
 </div>
-
-
-  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
-
-
-
-  <span class="post-meta-divider">|</span>
-
-
-
-  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
-
-
-
-
-        
-
-
-
-
-
-
-
-        
-      </div>
-    </footer>
-
-    
-      <div class="back-to-top">
-        <i class="fa fa-arrow-up"></i>
-        
-      </div>
-    
-
-    
-
-  </div>
-
-  
-
-<script type="text/javascript">
-  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
-    window.Promise = null;
-  }
-</script>
-
-
-
-
-
-
-
-
-
-  
-
-
-
-
-
-
-
-
-
-
-
-
-  
-  
-    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
-  
-
-  
-  
-    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
-  
-
-  
-  
-    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
-  
-
-  
-  
-    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
-  
-
-  
-  
-    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
-  
-
-  
-  
-    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
-  
-
-
-  
-
-
-  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
-
-  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
-
-
-
-  
-  
-
-  
-
-  
-
-
-  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
-
-
-
-  
-
-
-  
-
-
-
-
-	
-
-
-
-
-
-  
-
-
-
-
-
-  
-
-
-
-
-
-
-
-
-
-
-
-
-  
-
-
-
-
-
-  
-
-  
-
-  
-
-  
-  
-
-  
-
-  
-
-  
-
+    <div class="footer" id="footer">
+    <p><h4>Copyright © 2020 | Author: Yuzhiquan | <a href="https://github.com/Xunzhuo/hexo-theme-coder">Theme: Hexo-Coder</a></h4>
+        <label class="el-switch el-switch-blue el-switch-sm" style="vertical-align: sub;">
+            <input type="checkbox" name="switch" id="update_style">
+            <span class="el-switch-style"></span>
+        </label>
+<!--         <script type="text/javascript">
+        var cnzz_protocol = (("https:" == document.location.protocol) ? "https://" : "http://");
+        document.write(unescape("%3Cspan id='cnzz_stat_icon_1278548644'%3E%3C/span%3E%3Cscript src='" + cnzz_protocol + "v1.cnzz.com/stat.php%3Fid%3D1278548644%26show%3Dpic1' type='text/javascript'%3E%3C/script%3E"));
+        </script> -->
+    </p>
+</div>
+<input type="hidden" id="web_style" value="black">
+<input type="hidden" id="valine_appid" value="NOsswOncKgc8HOxqo9oxIWlX-gzGzoHsz">
+<input type="hidden" id="valine_appKey" value="z1FihjWEbS8uIfUQdmCtK7zz">
+<script src="/libs/jquery.min.js"></script>
+<script src="/libs/highlight/highlight.pack.js"></script>
+<script src='//cdn.jsdelivr.net/npm/valine@1.3.10/dist/Valine.min.js'></script>
+<script src="/js/js.js"></script>
+<style type="text/css">
+.v * {
+    color: #698fca;
+}
+
+.v .vlist .vcard .vhead .vsys {
+    color: #3a3e4a;
+}
+
+.v .vlist .vcard .vh .vmeta .vat {
+    color: #638fd5;
+}
+
+.v .vlist .vcard .vhead .vnick {
+    color: #6ba1ff;
+}
+
+.v a {
+    color: #8696b1;
+}
+
+.v .vlist .vcard .vhead .vnick:hover {
+    color: #669bfc;
+}
+</style>
 </body>
 </html>
