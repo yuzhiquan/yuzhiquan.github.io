@@ -2,9 +2,9 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>http://yoursite.com/2020/06/19/k8s-nit-record/</loc>
+    <loc>http://yoursite.com/2020/06/22/k8s-nit-record/</loc>
     
-    <lastmod>2020-06-19T12:14:14.905Z</lastmod>
+    <lastmod>2020-06-22T09:58:34.460Z</lastmod>
     
   </url>
   
@@ -79,13 +79,6 @@
   </url>
   
   <url>
-    <loc>http://yoursite.com/2019/01/21/CAS-compile-plugin2/</loc>
-    
-    <lastmod>2019-01-21T08:37:46.576Z</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>http://yoursite.com/2019/01/21/aliyun-api-Signature-base-on-python/</loc>
     
     <lastmod>2019-01-21T08:37:46.576Z</lastmod>
@@ -93,21 +86,14 @@
   </url>
   
   <url>
+    <loc>http://yoursite.com/2019/01/21/CAS-compile-plugin2/</loc>
+    
+    <lastmod>2019-01-21T08:37:46.576Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://yoursite.com/2019/01/21/k8s_install_in_aliyun_vpc/</loc>
-    
-    <lastmod>2019-01-21T08:37:46.576Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://yoursite.com/2019/01/21/CAS-compile-plugin3/</loc>
-    
-    <lastmod>2019-01-21T08:37:46.576Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://yoursite.com/2019/01/21/python_setattr/</loc>
     
     <lastmod>2019-01-21T08:37:46.576Z</lastmod>
     
@@ -122,6 +108,20 @@
   
   <url>
     <loc>http://yoursite.com/2019/01/21/Flask%E8%AE%B0%E5%BD%95log/</loc>
+    
+    <lastmod>2019-01-21T08:37:46.576Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://yoursite.com/2019/01/21/CAS-compile-plugin3/</loc>
+    
+    <lastmod>2019-01-21T08:37:46.576Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://yoursite.com/2019/01/21/python_setattr/</loc>
     
     <lastmod>2019-01-21T08:37:46.576Z</lastmod>
     
