@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+
+
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="null">
+  <meta name="author" content="Just Think">
+  <meta name="keywords" content="undefined">
+  <title>AliYun阿里云API签名机制（Python） - 小胖鱼@Think</title>
+
+  <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
+
+
+  <link rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css">
+  <link rel="stylesheet" href="/lib/hint/hint.min.css">
+
+  
+    <link rel="stylesheet" href="https://cdn.staticfile.org/highlight.js/10.0.0/styles/github-gist.min.css">
+  
+
+  
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_yg9cfy8wd6.css">
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_pjno9b9zyxs.css">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script src="/js/utils.js"></script>
+</head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Fluid</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                ホーム
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                アーカイブ
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                カテゴリー
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                タグ
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                本ブログ情報　
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/img/default.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+  <div class="mt-3 post-meta">
+    <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+    <time datetime="2019-01-21 16:37">
+      January 21, 2019 pm
+    </time>
+  </div>
+
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      486 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      9
+       分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <article class="markdown-body">
+              <p>最近在写阿里云相关<code>API</code>,看<a href="https://help.aliyun.com/document_detail/27572.html?spm=5176.doc27577.6.112.jzBpJ7" target="_blank" rel="noopener">官方文档</a>，其中比较重要的就是签名机制，为了在<code>SLB</code>和<code>ECS</code>中使用,封装了相关类备用</p>
+<pre><code class="hljs python"><span class="hljs-comment">#!/usr/bin/env python</span>
+<span class="hljs-comment">#coding: utf-8</span>
+<span class="hljs-comment">#python v2.7.6</span>
+
+<span class="hljs-keyword">import</span> sys, os
+<span class="hljs-keyword">import</span> urllib, urllib2
+<span class="hljs-keyword">import</span> base64
+<span class="hljs-keyword">import</span> hmac
+<span class="hljs-keyword">import</span> hashlib
+<span class="hljs-keyword">import</span> time
+<span class="hljs-keyword">import</span> uuid
+<span class="hljs-keyword">import</span> json
+<span class="hljs-keyword">import</span> ConfigParser
+
+cf = ConfigParser.ConfigParser()
+cf.read(<span class="hljs-string">'conf.ini'</span>)
+
+access_key_id = cf.get(<span class="hljs-string">"aliyun"</span>, <span class="hljs-string">"access_key_id"</span>)
+access_key_secret = cf.get(<span class="hljs-string">"aliyun"</span>, <span class="hljs-string">"access_key_secret"</span>)
+
+slb_address = cf.get(<span class="hljs-string">"aliyun"</span>, <span class="hljs-string">"slb_address"</span>)
+ecs_address = cf.get(<span class="hljs-string">"aliyun"</span>, <span class="hljs-string">"ecs_address"</span>)
+
+slb_api_version = cf.get(<span class="hljs-string">"aliyun"</span>, <span class="hljs-string">"slb_api_version"</span>)
+ecs_api_version = cf.get(<span class="hljs-string">"aliyun"</span>, <span class="hljs-string">"ecs_api_version"</span>)
+
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">ALIYUN</span>:</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self, user_params, Host, Version=slb_api_version)</span>:</span>
+        self.user_params = user_params
+        <span class="hljs-comment">#self.user_params= &#123;'Action': self.Action, 'LoadBalancerId': self.LoadBalancerId,'BackendServers':self.BackendServers&#125;</span>
+        self.server_address = Host
+        self.version = Version
+
+<span class="hljs-meta">    @staticmethod</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">percent_encode</span><span class="hljs-params">(str)</span>:</span>
+        res = urllib.quote(str.decode(sys.stdin.encoding).encode(<span class="hljs-string">'utf8'</span>), <span class="hljs-string">''</span>)
+        res = res.replace(<span class="hljs-string">'+'</span>, <span class="hljs-string">'%20'</span>)
+        res = res.replace(<span class="hljs-string">'\''</span>, <span class="hljs-string">'%27'</span>)
+        res = res.replace(<span class="hljs-string">'\"'</span>, <span class="hljs-string">'%22'</span>)
+        res = res.replace(<span class="hljs-string">'*'</span>, <span class="hljs-string">'%2A'</span>)
+        res = res.replace(<span class="hljs-string">'%7E'</span>, <span class="hljs-string">'~'</span>)
+        <span class="hljs-keyword">return</span> res
+
+<span class="hljs-meta">    @staticmethod</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">compute_signature</span><span class="hljs-params">(parameters, access_key_secret)</span>:</span>
+        sortedParameters = sorted(parameters.items(),
+                                  key=<span class="hljs-keyword">lambda</span> parameters: parameters[<span class="hljs-number">0</span>])
+        canonicalizedQueryString = <span class="hljs-string">''</span>
+        <span class="hljs-keyword">for</span> (k, v) <span class="hljs-keyword">in</span> sortedParameters:
+            canonicalizedQueryString += <span class="hljs-string">'&amp;'</span> + ALIYUN.percent_encode(
+                k) + <span class="hljs-string">'='</span> + ALIYUN.percent_encode(str(v))
+        stringToSign = <span class="hljs-string">'GET&amp;%2F&amp;'</span> + ALIYUN.percent_encode(
+            canonicalizedQueryString[<span class="hljs-number">1</span>:])
+        h = hmac.new(access_key_secret + <span class="hljs-string">"&amp;"</span>, stringToSign, sha1)
+        signature = base64.encodestring(h.digest()).strip()
+        <span class="hljs-keyword">return</span> signature
+
+<span class="hljs-meta">    @staticmethod</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">compose_url</span><span class="hljs-params">(server_address, user_params, version)</span>:</span>
+        timestamp = time.strftime(<span class="hljs-string">"%Y-%m-%dT%H:%M:%SZ"</span>, time.gmtime())
+        parameters = &#123; \
+                <span class="hljs-string">'Format'</span>        : <span class="hljs-string">'JSON'</span>, \
+                <span class="hljs-string">'Version'</span>       : version, \
+                <span class="hljs-string">'AccessKeyId'</span>   : access_key_id, \
+                <span class="hljs-string">'SignatureVersion'</span>  : <span class="hljs-string">'1.0'</span>, \
+                <span class="hljs-string">'SignatureMethod'</span>   : <span class="hljs-string">'HMAC-SHA1'</span>, \
+                <span class="hljs-string">'SignatureNonce'</span>    : str(uuid.uuid1()), \
+                <span class="hljs-string">'TimeStamp'</span>         : timestamp, \
+        &#125;
+        <span class="hljs-keyword">for</span> key <span class="hljs-keyword">in</span> user_params.keys():
+            parameters[key] = user_params[key]
+        signature = ALIYUN.compute_signature(parameters, access_key_secret)
+        parameters[<span class="hljs-string">'Signature'</span>] = signature
+        url = server_address + <span class="hljs-string">"/?"</span> + urllib.urlencode(parameters)
+        <span class="hljs-keyword">print</span> url
+        <span class="hljs-keyword">return</span> url
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">make_request</span><span class="hljs-params">(self, quiet=False)</span>:</span>
+        url = ALIYUN.compose_url(self.server_address, self.user_params,
+                                 self.version)
+        request = urllib2.Request(url)
+        <span class="hljs-keyword">try</span>:
+            conn = urllib2.urlopen(request)
+            response = conn.read()
+        <span class="hljs-keyword">except</span> urllib2.HTTPError, e:
+            print(e.read().strip())
+            <span class="hljs-keyword">raise</span> SystemExit(e)
+        <span class="hljs-keyword">try</span>:
+            obj = json.loads(response)
+            <span class="hljs-keyword">if</span> quiet:
+                <span class="hljs-keyword">return</span> obj
+        <span class="hljs-keyword">except</span> ValueError, e:
+            <span class="hljs-keyword">raise</span> SystemExit(e)
+        json.dump(obj, sys.stdout, sort_keys=<span class="hljs-literal">True</span>, indent=<span class="hljs-number">2</span>)
+        sys.stdout.write(<span class="hljs-string">'\n'</span>)
+
+<span class="hljs-keyword">if</span> __name__ == <span class="hljs-string">"__main__"</span>:
+    testAdd=ALIYUN( \
+            &#123;<span class="hljs-string">'Action'</span>:<span class="hljs-string">'AddBackendServers'</span>,\
+            <span class="hljs-string">'LoadBalancerId'</span>:<span class="hljs-string">'139a00604ad-cn-east-hangzhou-01'</span>,\
+            <span class="hljs-string">'BackendServers'</span>:[&#123;<span class="hljs-string">"ServerId"</span>:<span class="hljs-string">"vm-233"</span>,<span class="hljs-string">"Weight"</span>:<span class="hljs-string">"0"</span>&#125;,&#123;<span class="hljs-string">"ServerId"</span>:<span class="hljs-string">"vm-234"</span>,<span class="hljs-string">"Weight"</span>:<span class="hljs-string">"0"</span>&#125;]\
+            &#125;,slb_address
+            )
+    testRemove=ALIYUN( \
+            &#123;
+            <span class="hljs-string">'Action'</span>:<span class="hljs-string">'RemoveBackendServers'</span>,\
+            <span class="hljs-string">'LoadBalancerId'</span>:<span class="hljs-string">'139a00604ad-cn-east-hangzhou-01'</span>,\
+            <span class="hljs-string">'BackendServers'</span>:[<span class="hljs-string">" vm-233"</span>,<span class="hljs-string">" vm-234"</span>]\
+            &#125;,slb_address
+            )
+    testSet=ALIYUN( \
+            &#123;
+            <span class="hljs-string">'Action'</span>:<span class="hljs-string">'SetBackendServers'</span>,\
+            <span class="hljs-string">'LoadBalancerId'</span>:<span class="hljs-string">'139a00604ad-cn-east-hangzhou-01'</span>,\
+            <span class="hljs-string">'BackendServers'</span>:[&#123;<span class="hljs-string">"ServerId"</span>:<span class="hljs-string">"vm-233"</span>,<span class="hljs-string">"Weight"</span>:<span class="hljs-string">"0"</span>&#125;,&#123;<span class="hljs-string">"ServerId"</span>:<span class="hljs-string">"vm-234"</span>,<span class="hljs-string">"Weight"</span>:<span class="hljs-string">"0"</span>&#125;]\
+            &#125;,slb_address
+            )
+    testEcs=ALIYUN( \
+            &#123;
+            <span class="hljs-string">'Action'</span>:<span class="hljs-string">'DescribeInstances'</span>,\
+            <span class="hljs-string">'RegionId'</span>:<span class="hljs-string">'cn-hangzhou'</span>,\
+            &#125;,ecs_address,
+            Version=ecs_api_version
+            )
+    testSLBd = ALIYUN(&#123;<span class="hljs-string">'Action'</span>: <span class="hljs-string">'DescribeRegions'</span>&#125;, slb_address)
+    testSLBd1 = ALIYUN(
+        &#123;<span class="hljs-string">'Action'</span>: <span class="hljs-string">'DescribeLoadBalancers'</span>,
+         <span class="hljs-string">'RegionId'</span>: <span class="hljs-string">'cn-hangzhou'</span>&#125;, slb_address)
+    testSLBd2 = ALIYUN(
+        &#123;<span class="hljs-string">'Action'</span>: <span class="hljs-string">'DescribeLoadBalancers'</span>,
+         <span class="hljs-string">'RegionId'</span>: <span class="hljs-string">'cn-beijing'</span>&#125;, slb_address)
+    testSLBd.make_request()
+    testSLBd1.make_request()
+    <span class="hljs-keyword">print</span> testSLBd2.make_request(quiet=<span class="hljs-literal">True</span>)</code></pre>
+
+            </article>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/python/">python</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/python/">python</a>
+                    
+                      <a class="hover-with-bg" href="/tags/aliyun/">aliyun</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-6">
+                    
+                    
+                      <a href="/2019/01/21/CAS-compile-plugin2/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">CAS5.x编译、部署(2)-SAML2.0认证协议支持</span>
+                        <span class="visible-mobile">前の記事</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-6">
+                    
+                    
+                      <a href="/2019/01/21/Flask记录log/">
+                        <span class="hidden-mobile">Flask日志记录</span>
+                        <span class="visible-mobile">次の記事</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+            
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;ディレクトリ</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a id="scroll-top-button" href="#" role="button">
+      <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">検索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">キーワード</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener">
+        <span>Fluid</span></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="/js/debouncer.js" ></script>
+<script  src="/js/main.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/lazyload.js" ></script>
+  
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+  <script  src="/js/clipboard-use.js" ></script>
+
+
+
+
+
+
+
+  <script  src="https://cdn.staticfile.org/tocbot/4.11.1/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: 'article.markdown-body',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        collapseDepth: 0,
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc').css('visibility', 'visible');
+      }
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "AliYun阿里云API签名机制（Python）&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      searchFunc(path, 'local-search-input', 'local-search-result');
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+  <script>
+    $('#post img:not(.no-zoom img, img[no-zoom]), img[zoom]').each(
+      function () {
+        var element = document.createElement('a');
+        $(element).attr('data-fancybox', 'images');
+        $(element).attr('href', $(this).attr('src'));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

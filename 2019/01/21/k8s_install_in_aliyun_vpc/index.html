@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+
+
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="null">
+  <meta name="author" content="Just Think">
+  <meta name="keywords" content="undefined">
+  <title>阿里云部署高可用K8S集群 - 小胖鱼@Think</title>
+
+  <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
+
+
+  <link rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css">
+  <link rel="stylesheet" href="/lib/hint/hint.min.css">
+
+  
+    <link rel="stylesheet" href="https://cdn.staticfile.org/highlight.js/10.0.0/styles/github-gist.min.css">
+  
+
+  
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_yg9cfy8wd6.css">
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_pjno9b9zyxs.css">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script src="/js/utils.js"></script>
+</head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Fluid</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                ホーム
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                アーカイブ
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                カテゴリー
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                タグ
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                本ブログ情報　
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/img/default.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+  <div class="mt-3 post-meta">
+    <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+    <time datetime="2019-01-21 16:37">
+      January 21, 2019 pm
+    </time>
+  </div>
+
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      1.4k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      20
+       分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <article class="markdown-body">
+              <h1 id="阿里云部署高可用K8S集群"><a href="#阿里云部署高可用K8S集群" class="headerlink" title="阿里云部署高可用K8S集群"></a>阿里云部署高可用K8S集群</h1><h2 id="环境："><a href="#环境：" class="headerlink" title="环境："></a>环境：</h2><ul>
+<li>阿里云<code>ECS</code>，<code>Ubuntu 16.04.3 LTS</code>,共6台，其中三台<code>master</code>,三台<code>node</code></li>
+<li>阿里云<code>VPC</code>网络环境</li>
+<li><p><code>k8s</code>版本</p>
+<pre><code class="hljs bash">kubectl  version
+Client Version: version.Info&#123;Major:<span class="hljs-string">"1"</span>, Minor:<span class="hljs-string">"8"</span>, GitVersion:<span class="hljs-string">"v1.8.4"</span>, GitCommit:<span class="hljs-string">"9befc2b8928a9426501d3bf62f72849d5cbcd5a3"</span>, GitTreeState:<span class="hljs-string">"clean"</span>, BuildDate:<span class="hljs-string">"2017-11-20T05:28:34Z"</span>, GoVersion:<span class="hljs-string">"go1.8.3"</span>, Compiler:<span class="hljs-string">"gc"</span>, Platform:<span class="hljs-string">"linux/amd64"</span>&#125;
+Server Version: version.Info&#123;Major:<span class="hljs-string">"1"</span>, Minor:<span class="hljs-string">"8"</span>, GitVersion:<span class="hljs-string">"v1.8.4"</span>, GitCommit:<span class="hljs-string">"9befc2b8928a9426501d3bf62f72849d5cbcd5a3"</span>, GitTreeState:<span class="hljs-string">"clean"</span>, BuildDate:<span class="hljs-string">"2017-11-20T05:17:43Z"</span>, GoVersion:<span class="hljs-string">"go1.8.3"</span>, Compiler:<span class="hljs-string">"gc"</span>, Platform:<span class="hljs-string">"linux/amd64"</span>&#125;</code></pre>
+</li>
+</ul>
+<h2 id="部署主集群"><a href="#部署主集群" class="headerlink" title="部署主集群"></a>部署主集群</h2><ul>
+<li>部署参考<a href="https://github.com/gjmzj/kubeasz" target="_blank" rel="noopener">https://github.com/gjmzj/kubeasz</a></li>
+<li>部署所使用配置</li>
+</ul>
+<pre><code class="hljs bash"><span class="hljs-comment"># 部署节点：运行这份 ansible 脚本的节点</span>
+[deploy]
+10.102.54.42
+
+<span class="hljs-comment"># etcd集群请提供如下NODE_NAME、NODE_IP变量</span>
+<span class="hljs-comment"># 请注意etcd集群必须是1,3,5,7...奇数个节点</span>
+[etcd]
+10.102.54.42 NODE_NAME=etcd1 NODE_IP=<span class="hljs-string">"10.102.54.42"</span>
+10.102.54.43 NODE_NAME=etcd2 NODE_IP=<span class="hljs-string">"10.102.54.43"</span>
+10.102.54.44 NODE_NAME=etcd3 NODE_IP=<span class="hljs-string">"10.102.54.44"</span>
+
+[kube-master]
+10.102.54.42 NODE_IP=<span class="hljs-string">"10.102.54.42"</span>
+10.102.54.43 NODE_IP=<span class="hljs-string">"10.102.54.43"</span>
+10.102.54.44 NODE_IP=<span class="hljs-string">"10.102.54.44"</span>
+
+<span class="hljs-comment"># 负载均衡至少两个节点，安装 haproxy+keepalived</span>
+<span class="hljs-comment"># 根据master节点数量同步修改roles/lb/templates/haproxy.cfg.j2</span>
+[lb]
+10.102.54.43 LB_IF=<span class="hljs-string">"eth0"</span> LB_ROLE=backup
+10.102.54.42 LB_IF=<span class="hljs-string">"eth0"</span> LB_ROLE=master
+[lb:vars]
+LB_EP1=<span class="hljs-string">"10.102.54.42:6443"</span>	<span class="hljs-comment"># api-server 实际成员地址端口</span>
+LB_EP2=<span class="hljs-string">"10.102.54.43:6443"</span>	<span class="hljs-comment"># api-server 实际成员地址端口</span>
+LB_EP3=<span class="hljs-string">"10.102.54.44:6443"</span>	<span class="hljs-comment"># api-server 实际成员地址端口</span>
+MASTER_IP=<span class="hljs-string">"10.102.54.222"</span>  	<span class="hljs-comment"># api-server 虚地址</span>
+MASTER_PORT=<span class="hljs-string">"8443"</span>		<span class="hljs-comment"># api-server 服务端口</span>
+
+<span class="hljs-comment">#确保node节点有变量NODE_ID=node1</span>
+[kube-node]
+10.102.54.45 NODE_ID=node1 NODE_IP=<span class="hljs-string">"10.102.54.45"</span>
+10.102.54.46 NODE_ID=node2 NODE_IP=<span class="hljs-string">"10.102.54.46"</span>
+10.102.54.47 NODE_ID=node3 NODE_IP=<span class="hljs-string">"10.102.54.47"</span>
+
+[kube-cluster:children]
+kube-node
+kube-master
+
+<span class="hljs-comment"># 预留组，后续添加node节点使用</span>
+[new-node]
+<span class="hljs-comment">#10.102.54.xx NODE_ID=node6 NODE_IP="10.102.54.xx"</span>
+<span class="hljs-comment">#10.102.54.xx NODE_ID=node7 NODE_IP="10.102.54.xx"</span>
+
+[all:vars]
+<span class="hljs-comment"># ---------集群主要参数---------------</span>
+<span class="hljs-comment">#集群 MASTER IP, 需要负载均衡，一般为VIP地址</span>
+MASTER_IP=<span class="hljs-string">"10.102.54.222"</span>
+KUBE_APISERVER=<span class="hljs-string">"https://10.102.54.222:8443"</span>
+
+<span class="hljs-comment">#TLS Bootstrapping 使用的 Token，使用 head -c 16 /dev/urandom | od -An -t x | tr -d ' ' 生成</span>
+BOOTSTRAP_TOKEN=<span class="hljs-string">"9de762eff153167c5c0169a58ea65208"</span>
+
+<span class="hljs-comment"># 服务网段 (Service CIDR），部署前路由不可达，部署后集群内使用 IP:Port 可达</span>
+SERVICE_CIDR=<span class="hljs-string">"10.68.0.0/16"</span>
+
+<span class="hljs-comment"># POD 网段 (Cluster CIDR），部署前路由不可达，**部署后**路由可达</span>
+CLUSTER_CIDR=<span class="hljs-string">"172.20.0.0/16"</span>
+
+<span class="hljs-comment"># 服务端口范围 (NodePort Range)</span>
+NODE_PORT_RANGE=<span class="hljs-string">"2000-8000"</span>
+
+<span class="hljs-comment"># kubernetes 服务 IP (预分配，一般是 SERVICE_CIDR 中第一个IP)</span>
+CLUSTER_KUBERNETES_SVC_IP=<span class="hljs-string">"10.68.0.1"</span>
+
+<span class="hljs-comment"># 集群 DNS 服务 IP (从 SERVICE_CIDR 中预分配)</span>
+CLUSTER_DNS_SVC_IP=<span class="hljs-string">"10.68.0.2"</span>
+
+<span class="hljs-comment"># 集群 DNS 域名</span>
+CLUSTER_DNS_DOMAIN=<span class="hljs-string">"cluster.local."</span>
+
+<span class="hljs-comment"># etcd 集群间通信的IP和端口, **根据实际 etcd 集群成员设置**</span>
+ETCD_NODES=<span class="hljs-string">"etcd1=https://10.102.54.42:2380,etcd2=https://10.102.54.43:2380,etcd3=https://10.102.54.44:2380"</span>
+
+<span class="hljs-comment"># etcd 集群服务地址列表, **根据实际 etcd 集群成员设置**</span>
+ETCD_ENDPOINTS=<span class="hljs-string">"https://10.102.54.42:2379,https://10.102.54.43:2379,https://10.102.54.44:2379"</span>
+
+<span class="hljs-comment"># 集群basic auth 使用的用户名和密码</span>
+BASIC_AUTH_USER=<span class="hljs-string">"admin"</span>
+BASIC_AUTH_PASS=<span class="hljs-string">"infrak8s"</span>
+
+<span class="hljs-comment"># ---------附加参数--------------------</span>
+<span class="hljs-comment">#默认二进制文件目录</span>
+bin_dir=<span class="hljs-string">"/root/local/bin"</span>
+
+<span class="hljs-comment">#证书目录</span>
+ca_dir=<span class="hljs-string">"/etc/kubernetes/ssl"</span>
+
+<span class="hljs-comment">#部署目录，即 ansible 工作目录，建议不要修改</span>
+base_dir=<span class="hljs-string">"/etc/ansible"</span>
+
+<span class="hljs-comment">#私有仓库 harbor服务器 (域名或者IP)</span>
+<span class="hljs-comment">#需要把 harbor服务器证书复制到roles/harbor/files/harbor-ca.crt</span>
+HARBOR_SERVER=<span class="hljs-string">"harbor.com"</span></code></pre>
+<ul>
+<li><p>注意事项</p>
+<ul>
+<li><p>高可用<code>master</code>的虚拟<code>VIP</code><br>正常情况下安装<code>HAPROXY</code>后即可自动通过<code>ARP</code>协议生成虚拟<code>IP</code>并告知同网络其他机器，但是阿里云的网络不允许<code>ARP</code>，这样的话有2种解决方案：</p>
+<ul>
+<li>用阿里云<code>SLB</code>，后端挂载三台<code>master</code>即可，很简单，但这样只实现了负载均衡，并不能实现高可用，因为无法通过<code>SLB</code>的健康检查来踢掉挂掉的节点</li>
+<li>使用阿里云高可用虚拟<code>IP</code>功能，但这个属于阿里云测试功能，需要找客服开通，且<strong>仅支持<code>VPC</code>网络</strong></li>
+</ul>
+</li>
+<li><p>网络模型<br>这个方案采用的<code>calico</code>网络模型作为<code>POD</code>网络，它默认使用<code>bgp</code>协议，但是阿里云同样不支持这个，所以出现的现象就是暴露出来的<code>nodeport</code>只能通过<code>pod</code>所在的<code>node</code>访问，这样的话<code>k8s</code>niubility的地方就不存在了。所幸它还支持另一种<code>IPIP</code>模式，通过<code>IP</code>包方式进行通信，所以需要修改 <code>roles/calico/templates/calico-node.service.j2</code> 找到 <code>-e CALICO_IPV4POOL_IPIP=off \</code>这行，把<code>off</code> 改成 <code>always</code>.<br>保存后继续安装即可</p>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="部署addons"><a href="#部署addons" class="headerlink" title="部署addons"></a>部署addons</h2><ul>
+<li><p>安装kube-dns</p>
+<pre><code class="hljs bash">kubectl create -f /etc/ansible/manifests/kubedns/kubedns.yaml</code></pre>
+</li>
+<li><p>安装kube-dashbord</p>
+<pre><code class="hljs bash">kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml</code></pre>
+</li>
+</ul>
+<p>注意需要修改<code>svc kubernetest-dashbord</code>里的<code>type</code>为<code>nodeport</code>，这样可以从集群外进行访问<br><code>dashbord</code>的权限问题<br>采用了<code>token</code>认证的方式，首先建一个<code>admin role</code>，创建 <code>admin</code> 用户并赋予管理员权限<br><pre><code class="hljs bash">kubectl apply -f https://raw.githubusercontent.com/rootsongjc/kubernetes-handbook/master/manifests/dashboard-1.7.1/admin-role.yaml</code></pre></p>
+<p>创建完成后获取 <code>secret</code> 和 <code>token</code> 的值<br><pre><code class="hljs bash">token=`kubectl -n kube-system get secret|grep admin-token | awk <span class="hljs-string">'&#123;print $1&#125;'</span>`    
+kubectl -n kube-system describe secret <span class="hljs-variable">$token</span></code></pre></p>
+<p>获取到的<code>token</code>既可以用来登录<br>或者也可以用<code>kubeconfig</code>文件进行登录,位置是每台<code>node</code>机器上的<code>/root/.kube/config</code></p>
+<ul>
+<li><p>安装promethus和grafana</p>
+<pre><code class="hljs bash">kubectl apply \
+--filename https://raw.githubusercontent.com/giantswarm/kubernetes-prometheus/master/manifests-all.yaml</code></pre>
+<p>各种<code>dashbord</code>后续再说</p>
+</li>
+<li><p>日志入graylog<br><code>ubuntu16.04</code>下修改<code>/etc/docker/daemon.json</code>,添加</p>
+</li>
+</ul>
+<pre><code class="hljs bash"><span class="hljs-string">"log-driver"</span>: <span class="hljs-string">"gelf"</span>,
+  <span class="hljs-string">"log-opts"</span>:  &#123;
+    <span class="hljs-string">"gelf-address"</span>: <span class="hljs-string">"udp://10.102.54.11:12202"</span>
+  &#125;,</code></pre>
+<ul>
+<li><p>支持私有docker-registery<br><code>ubuntu16.04</code>下修改<code>/etc/docker/daemon.json</code>,添加</p>
+<pre><code class="hljs bash">  <span class="hljs-string">"insecure-registries"</span> : [<span class="hljs-string">"harbor.com"</span>],</code></pre>
+<p><code>centos7.x</code>下</p>
+<pre><code class="hljs bash">cp /lib/systemd/system/docker.service /etc/systemd/system/ &amp;&amp; sed -i <span class="hljs-string">'12s/$/ --insecure-registry=harbor.com/'</span> /etc/systemd/system/docker.service &amp;&amp; systemctl daemon-reload &amp;&amp; service docker restart</code></pre>
+</li>
+</ul>
+
+            </article>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/docker-go-k8s/">docker go k8s</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/k8s/">k8s</a>
+                    
+                      <a class="hover-with-bg" href="/tags/docker/">docker</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-6">
+                    
+                    
+                      <a href="/2019/01/21/python_setattr/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">python的属性设置</span>
+                        <span class="visible-mobile">前の記事</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-6">
+                    
+                    
+                      <a href="/2019/01/21/CAS-compile-plugin/">
+                        <span class="hidden-mobile">CAS5.x编译、部署(1)-LDAP支持</span>
+                        <span class="visible-mobile">次の記事</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+            
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;ディレクトリ</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a id="scroll-top-button" href="#" role="button">
+      <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">検索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">キーワード</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener">
+        <span>Fluid</span></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="/js/debouncer.js" ></script>
+<script  src="/js/main.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/lazyload.js" ></script>
+  
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+  <script  src="/js/clipboard-use.js" ></script>
+
+
+
+
+
+
+
+  <script  src="https://cdn.staticfile.org/tocbot/4.11.1/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: 'article.markdown-body',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        collapseDepth: 0,
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc').css('visibility', 'visible');
+      }
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "阿里云部署高可用K8S集群&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      searchFunc(path, 'local-search-input', 'local-search-result');
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+  <script>
+    $('#post img:not(.no-zoom img, img[no-zoom]), img[zoom]').each(
+      function () {
+        var element = document.createElement('a');
+        $(element).attr('data-fancybox', 'images');
+        $(element).attr('href', $(this).attr('src'));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

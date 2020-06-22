@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+
+
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="null">
+  <meta name="author" content="Just Think">
+  <meta name="keywords" content="undefined">
+  <title>CAS5.x编译、部署(1)-LDAP支持 - 小胖鱼@Think</title>
+
+  <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
+
+
+  <link rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css">
+  <link rel="stylesheet" href="/lib/hint/hint.min.css">
+
+  
+    <link rel="stylesheet" href="https://cdn.staticfile.org/highlight.js/10.0.0/styles/github-gist.min.css">
+  
+
+  
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_yg9cfy8wd6.css">
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_pjno9b9zyxs.css">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script src="/js/utils.js"></script>
+</head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Fluid</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                ホーム
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                アーカイブ
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                カテゴリー
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                タグ
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                本ブログ情報　
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/img/default.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+  <div class="mt-3 post-meta">
+    <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+    <time datetime="2019-01-21 16:37">
+      January 21, 2019 pm
+    </time>
+  </div>
+
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      953 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      16
+       分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <article class="markdown-body">
+              <h2 id="依赖"><a href="#依赖" class="headerlink" title="依赖"></a>依赖</h2><p>测试环境: <code>ubuntu14.04</code><br><code>JDK</code>: <code>jdk1.8.0_121</code><br><code>tomacat</code>: <code>apache-tomcat-8.5.13</code>(<strong>cas5.x需要tomcat8.0以上</strong>)<br>安装依赖：<br><code>jdk</code>安装</p>
+<pre><code class="hljs bash">mv jdk1.8.0_121 /usr/<span class="hljs-built_in">local</span>
+cat&lt;&lt; EOF &gt;&gt;/etc/profile
+<span class="hljs-built_in">export</span> JAVA_HOME=/usr/<span class="hljs-built_in">local</span>/jdk1.8.0_121
+<span class="hljs-built_in">export</span> CLASSPATH=.:<span class="hljs-variable">$JAVA_HOME</span>/lib/dt.jar:<span class="hljs-variable">$JAVA_HOME</span>/lib/tools.jar
+<span class="hljs-built_in">export</span> PATH=<span class="hljs-variable">$JAVA_HOME</span>/bin:<span class="hljs-variable">$PATH</span>
+EOF
+<span class="hljs-built_in">source</span> /etc/profile</code></pre>
+<p><code>tomcat</code>安装<br><pre><code class="hljs bash">tar zxf apache-tomcat-8.5.13.tar.gz
+mv apache-tomcat-8.5.13 /usr/<span class="hljs-built_in">local</span>
+ln -s /usr/<span class="hljs-built_in">local</span>/apache-tomcat-8.5.13  /usr/<span class="hljs-built_in">local</span>/tomcat</code></pre></p>
+<h2 id="编译"><a href="#编译" class="headerlink" title="编译"></a>编译</h2><p>注意，编译某个分支不要直接拉代码编，出问题的可能性很大<br><strong><code>CAS5.x</code>之后，只支持<code>gradle</code>编译方式</strong><br>可以使用官方提供的模板来进行编译<br><pre><code class="hljs bash">wget https://github.com/apereo/cas-gradle-overlay-template/archive/master.zip
+unzip master.zip
+cp -r cas-gradle-overlay-template-master /etc/cas
+<span class="hljs-built_in">cd</span> /etc/cas &amp;&amp; ./gradlew clean build</code></pre></p>
+<p>如果要指定编译版本，修改<code>gradle.properties</code><br><pre><code class="hljs bash">cas.version=5.0.5</code></pre></p>
+<p>如需添加插件进行编译，如<code>ldap</code>、<code>SAML</code>、<code>MFA</code>等等插件，修改<code>cas/build.gradle</code><br><pre><code class="hljs bash">dependencies &#123;
+    compile <span class="hljs-string">"org.apereo.cas:cas-server-webapp:<span class="hljs-variable">$&#123;project.'cas.version'&#125;</span>@war"</span>
+    compile <span class="hljs-string">"org.apereo.cas:cas-server-support-ldap:<span class="hljs-variable">$&#123;project.'cas.version'&#125;</span>"</span>
+    compile <span class="hljs-string">"org.apereo.cas:cas-server-support-saml-idp:<span class="hljs-variable">$&#123;project.'cas.version'&#125;</span>"</span>
+    compile <span class="hljs-string">"org.apereo.cas:cas-server-support-gauth:<span class="hljs-variable">$&#123;project.'cas.version'&#125;</span>"</span>
+&#125;</code></pre></p>
+<p>编译好的<code>war</code>包，在<code>cas/build/libs</code>下</p>
+<h2 id="服务启动"><a href="#服务启动" class="headerlink" title="服务启动"></a>服务启动</h2><p>将编译好的<code>war</code>包放到<code>/usr/local/tomcat/webapps/</code>下<br>然后启动<code>tomcat</code>：<br><pre><code class="hljs bash">/usr/<span class="hljs-built_in">local</span>/tomcat/bin/catalina.sh  start</code></pre></p>
+<p>服务管理通过<code>/usr/local/tomcat/bin/catalina.sh</code>脚本<br><code>CAS</code>服务相关配置修改都在<code>/usr/local/tomcat/webapps/cas/WEB-INF/classes/application.properties</code><br><code>log</code>控制调整配置文件是<code>/usr/local/tomcat/webapps/cas/WEB-INF/classes/log4j2.xml</code></p>
+<h2 id="插件配置"><a href="#插件配置" class="headerlink" title="插件配置"></a>插件配置</h2><p>需要保证编译时已添加各种插件<br>配置文件（<code>/usr/local/tomcat/webapps/cas/WEB-INF/classes/application.properties</code>）</p>
+<h3 id="ldap配置"><a href="#ldap配置" class="headerlink" title="ldap配置"></a><code>ldap</code>配置</h3><pre><code class="hljs bash">cas.authn.accept.users= <span class="hljs-comment">#去掉默认的账号密码</span>
+<span class="hljs-comment">#配置LDAP认证方式</span>
+cas.authn.attributeRepository.ldap.ldapUrl= <span class="hljs-comment">#修改ldap地址</span>
+cas.authn.attributeRepository.ldap.useSsl=<span class="hljs-literal">false</span>
+cas.authn.attributeRepository.ldap.useStartTls=<span class="hljs-literal">false</span>
+cas.authn.attributeRepository.ldap.connectTimeout=5000
+cas.authn.attributeRepository.ldap.baseDn= <span class="hljs-comment">#修改用户bashDn</span>
+cas.authn.attributeRepository.ldap.userFilter=user=&#123;user&#125; <span class="hljs-comment">#修改用户查询方式</span>
+cas.authn.attributeRepository.ldap.subtreeSearch=<span class="hljs-literal">true</span>
+cas.authn.attributeRepository.ldap.bindDn= <span class="hljs-comment">#填写bindDn</span>
+cas.authn.attributeRepository.ldap.bindCredential=******* <span class="hljs-comment">#填写密码</span>
+cas.authn.attributeRepository.ldap.trustCertificates=
+cas.authn.attributeRepository.ldap.keystore=
+cas.authn.attributeRepository.ldap.keystorePassword=
+cas.authn.attributeRepository.ldap.keystoreType=JKS
+cas.authn.attributeRepository.ldap.minPoolSize=3
+cas.authn.attributeRepository.ldap.maxPoolSize=10
+cas.authn.attributeRepository.ldap.validateOnCheckout=<span class="hljs-literal">true</span>
+cas.authn.attributeRepository.ldap.validatePeriodically=<span class="hljs-literal">true</span>
+cas.authn.attributeRepository.ldap.validatePeriod=600
+cas.authn.attributeRepository.ldap.failFast=<span class="hljs-literal">true</span>
+cas.authn.attributeRepository.ldap.idleTime=500
+cas.authn.attributeRepository.ldap.prunePeriod=600
+cas.authn.attributeRepository.ldap.blockWaitTime=5000
+cas.authn.attributeRepository.attributes.samaccountname=samaccountname <span class="hljs-comment">#查询主键</span>
+cas.authn.attributeRepository.attributes.displayName=displayName
+cas.authn.attributeRepository.attributes.cn=cn
+  
+<span class="hljs-comment">#配置ldap认证服务器</span>
+<span class="hljs-comment">##</span>
+<span class="hljs-comment"># LDAP</span>
+<span class="hljs-comment">#</span>
+<span class="hljs-comment"># Interesting part for Active Directory:</span>
+cas.authn.ldap[0].<span class="hljs-built_in">type</span>=AD <span class="hljs-comment">#ldap服务类型</span>
+cas.authn.ldap[0].ldapUrl= <span class="hljs-comment">#修改ldap地址</span>
+cas.authn.ldap[0].useSsl=<span class="hljs-literal">false</span>
+cas.authn.ldap[0].useStartTls=<span class="hljs-literal">false</span>
+cas.authn.ldap[0].connectTimeout=5000
+cas.authn.ldap[0].baseDn= <span class="hljs-comment">#修改用户bashDn</span>
+cas.authn.ldap[0].userFilter=user=&#123;user&#125; <span class="hljs-comment">#修改用户查询方式</span>
+cas.authn.ldap[0].subtreeSearch=<span class="hljs-literal">true</span>
+cas.authn.ldap[0].bindDn= <span class="hljs-comment">#配置账户</span>
+cas.authn.ldap[0].bindCredential=*********<span class="hljs-comment">#配置密码</span>
+ 
+cas.authn.ldap[0].dnFormat=cn=%s,OU=Users,OU=,DC=,dc=com <span class="hljs-comment">#配置查询语句</span>
+cas.authn.ldap[0].principalAttributeId=samaccountname <span class="hljs-comment">#配置属性查询</span>
+cas.authn.ldap[0].principalAttributePassword=
+cas.authn.ldap[0].principalAttributeList=samaccountname,sn,cn,givenName,displayName  <span class="hljs-comment">#配置返回属性</span>
+cas.authn.ldap[0].failFast=<span class="hljs-literal">false</span>
+<span class="hljs-comment"># Default values:</span>
+cas.authn.ldap[0].minPoolSize=3
+cas.authn.ldap[0].maxPoolSize=10
+cas.authn.ldap[0].validateOnCheckout=<span class="hljs-literal">true</span>
+cas.authn.ldap[0].validatePeriodically=<span class="hljs-literal">true</span>
+cas.authn.ldap[0].validatePeriod=600
+cas.authn.ldap[0].idleTime=5000
+cas.authn.ldap[0].prunePeriod=5000
+cas.authn.ldap[0].blockWaitTime=5000</code></pre>
+<h3 id="SAML配置"><a href="#SAML配置" class="headerlink" title="SAML配置"></a><code>SAML</code>配置</h3><pre><code class="hljs bash"><span class="hljs-comment">#saml</span>
+cas.samlCore.ticketidSaml2=<span class="hljs-literal">false</span>
+cas.samlCore.skewAllowance=0
+cas.samlCore.attributeNamespace=http://www.ja-sig.org/products/cas/
+cas.samlCore.issuer=
+cas.authn.samlIdp.entityId= <span class="hljs-comment">#配置地址</span>
+cas.authn.samlIdp.hostName= <span class="hljs-comment">#配置域名</span>
+cas.authn.samlIdp.scope= <span class="hljs-comment">#配置域</span>
+cas.authn.samlIdp.metadata.cacheExpirationMinutes=30
+cas.authn.samlIdp.metadata.failFast=<span class="hljs-literal">true</span>
+cas.authn.samlIdp.metadata.location=/etc/cas/saml <span class="hljs-comment">#配置 file:/etc/cas/saml</span>
+cas.authn.samlIdp.metadata.privateKeyAlgName=RSA
+cas.authn.samlIdp.metadata.requireValidMetadata=<span class="hljs-literal">true</span>
+ 
+cas.authn.samlIdp.metadata.basicAuthnUsername=
+cas.authn.samlIdp.metadata.basicAuthnPassword=
+cas.authn.samlIdp.metadata.supportedContentTypes=
+cas.authn.samlIdp.logout.forceSignedLogoutRequests=<span class="hljs-literal">true</span>
+cas.authn.samlIdp.logout.singleLogoutCallbacksDisabled=<span class="hljs-literal">false</span>
+cas.authn.samlIdp.response.skewAllowance=0
+cas.authn.samlIdp.response.signError=<span class="hljs-literal">false</span>
+cas.authn.samlIdp.response.overrideSignatureCanonicalizationAlgorithm=
+cas.authn.samlIdp.response.useAttributeFriendlyName=<span class="hljs-literal">true</span></code></pre>
+
+            </article>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/IT-CAS/">IT CAS</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/IT/">IT</a>
+                    
+                      <a class="hover-with-bg" href="/tags/CAS/">CAS</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-6">
+                    
+                    
+                      <a href="/2019/01/21/k8s_install_in_aliyun_vpc/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">阿里云部署高可用K8S集群</span>
+                        <span class="visible-mobile">前の記事</span>
+                      </a>
+                    
+                  </div>
+                  <div class="post-next col-6">
+                    
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+            
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;ディレクトリ</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a id="scroll-top-button" href="#" role="button">
+      <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">検索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">キーワード</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener">
+        <span>Fluid</span></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="/js/debouncer.js" ></script>
+<script  src="/js/main.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/lazyload.js" ></script>
+  
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+  <script  src="/js/clipboard-use.js" ></script>
+
+
+
+
+
+
+
+  <script  src="https://cdn.staticfile.org/tocbot/4.11.1/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: 'article.markdown-body',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        collapseDepth: 0,
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc').css('visibility', 'visible');
+      }
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "CAS5.x编译、部署(1)-LDAP支持&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      searchFunc(path, 'local-search-input', 'local-search-result');
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+  <script>
+    $('#post img:not(.no-zoom img, img[no-zoom]), img[zoom]').each(
+      function () {
+        var element = document.createElement('a');
+        $(element).attr('data-fancybox', 'images');
+        $(element).attr('href', $(this).attr('src'));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>
