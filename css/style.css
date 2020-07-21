@@ -1,8 +1,7 @@
 body {
-  background-color: #000;
-  background-image: url("http://picreso.oss-cn-beijing.aliyuncs.com/black.jpg");
+  background-color: #363636;
   color: #d2d2d2;
-  font-weight: 400;
+  font-weight: 4000;
   font-size: 14px;
   font-family: "Menlo", "Meslo LG", monospace;
   line-height: 1.725;
@@ -14,7 +13,6 @@ a {
 }
 a:focus,
 a:hover {
-  color: Chocolate;
   text-decoration: underline;
 }
 .footer {
@@ -29,7 +27,7 @@ a:hover {
   width: 100%;
 }
 .hd {
-  width: 650px;
+  width: 55%;
   height: 100%;
   margin: auto;
 }
@@ -37,11 +35,12 @@ a:hover {
   text-align: center;
 }
 .titlex {
-  font-size: 20px;
+  font-size: 30px;
   font-weight: bold;
   margin-top: 30px;
 }
 .list {
+  font-size: 17px;
   padding-left: 25px;
   padding-right: 25px;
   height: 30px;
@@ -54,7 +53,7 @@ a:hover {
   float: right;
 }
 .logopng {
-  width: 200px;
+  width: 150px;
 }
 .breadcrumb {
   padding: 8px 15px;
@@ -64,13 +63,27 @@ a:hover {
   text-align: center;
 }
 .jing {
-  color: Chocolate;
+  color: #1e90ff;
 }
 .logot {
   font-weight: bold;
-  font-size: 24px;
-  margin-top: -10px;
+  font-size: 45px;
+  margin-top: 10px;
   margin-bottom: -20px;
+}
+.site-search-form {
+  padding-top: 30px;
+}
+.site-search-form #local-search-input {
+  border-radius: 10px;
+  height: 100%;
+  width: 100px;
+}
+#search-logo {
+  padding-right: 10px;
+}
+#local-search-close {
+  align: center;
 }
 .logot .logo_1 {
   color: #888;
@@ -83,6 +96,7 @@ a:hover {
 }
 .words {
   padding-top: 16px;
+  font-size: 20px;
 }
 .navd {
   padding-top: 14px;
@@ -99,32 +113,48 @@ hr {
   border-color: #58606b;
 }
 .posts .replay-btn {
-  background-color: #6495ed;
+  background-color: #696969;
   width: 40px;
   color: #fff;
   height: 40px;
   line-height: 40px;
   text-align: center;
-  border-radius: 100%;
+  border-radius: 80%;
   position: absolute;
 }
-.posts .post-title {
+.post-content {
+  width: 100%;
+  height: 100%;
+  margin: auto;
+}
+p {
+  font-size: 18px;
+  font-weight: 8000;
+}
+li {
+  font-size: 17px;
+  font-weight: 1000;
+}
+a {
+  font-size: 20px;
+}
+.post-title {
   text-align: center;
   font-size: 24px;
   line-height: 40px;
   margin-bottom: 10px;
 }
-.posts .post-content a {
+.post-content a {
   color: #699be9;
 }
-.posts .fhr {
+.fhr {
   margin-top: 20px;
 }
-.posts .highlight .gutter .hljs {
+.highlight .gutter .hljs {
   border-top-left-radius: 5px;
   border-bottom-left-radius: 5px;
 }
-.posts .highlight .code .hljs {
+.highlight .code .hljs {
   border-top-right-radius: 5px;
   border-bottom-right-radius: 5px;
 }
@@ -891,7 +921,6 @@ hr {
 }
 .bg_while {
   background-color: #fff;
-  background-image: url("http://picreso.oss-cn-beijing.aliyuncs.com/white.jpg");
   color: #696969;
 }
 .el-radio,
@@ -1206,10 +1235,14 @@ label.el-checkbox {
 .breadcrumb>li {
   display: inline-block;
 }
+.breadcrumb a {
+  font-weight: bold;
+  font-size: 90%;
+}
 .breadcrumb>li+li:before {
   padding: 0 5px;
   color: #ccc;
-  content: "&\00a0";
+  content: "|";
 }
 .breadcrumb>.active {
   color: #777;
