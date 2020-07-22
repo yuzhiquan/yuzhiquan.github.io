@@ -4,7 +4,7 @@
   <url>
     <loc>http://yoursite.com/2020/07/22/k8s-network/</loc>
     
-    <lastmod>2020-07-22T12:21:58.020Z</lastmod>
+    <lastmod>2020-07-22T12:41:18.803Z</lastmod>
     
   </url>
   
@@ -93,7 +93,14 @@
   </url>
   
   <url>
-    <loc>http://yoursite.com/2019/01/21/CAS-compile-plugin3/</loc>
+    <loc>http://yoursite.com/2019/01/21/docker-update/</loc>
+    
+    <lastmod>2019-01-21T08:37:46.576Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://yoursite.com/2019/01/21/aliyun-api-Signature-base-on-python/</loc>
     
     <lastmod>2019-01-21T08:37:46.576Z</lastmod>
     
@@ -107,7 +114,7 @@
   </url>
   
   <url>
-    <loc>http://yoursite.com/2019/01/21/aliyun-api-Signature-base-on-python/</loc>
+    <loc>http://yoursite.com/2019/01/21/CAS-compile-plugin3/</loc>
     
     <lastmod>2019-01-21T08:37:46.576Z</lastmod>
     
@@ -122,13 +129,6 @@
   
   <url>
     <loc>http://yoursite.com/2019/01/21/python_setattr/</loc>
-    
-    <lastmod>2019-01-21T08:37:46.576Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://yoursite.com/2019/01/21/docker-update/</loc>
     
     <lastmod>2019-01-21T08:37:46.576Z</lastmod>
     
