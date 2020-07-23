@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head><meta name="generator" content="Hexo 3.9.0">
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="renderer" content="webkit">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="google-site-verification" content="TZE0rZyIqLl10trYu3BWBWa1Vmz6HFwhb2OcNEK4u-s">
+     <link rel="shortcut icon" href="/img/favicon.ico">
+    <title>
+        小胖鱼@Think
+    </title>
+    <meta name="description" content="CloudNative/Kubernetes/Go">
+    <meta name="keywords" content="Kubernetes,Docker,Go">
+    <link rel="stylesheet" href="/libs/highlight/styles/monokai-sublime.css">
+    <link rel="stylesheet" href="/libs/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body id="bodyx">
+    <div class="hd posts">
+    <a href="/index.html"><i class="fa fa-home
+ replay-btn" aria-hidden="true"></i></a>
+    <div class="post-title">
+        <p>
+            Kubernetes 网络
+        </p>
+        <hr>
+    </div>
+    <div class="post-content">
+        <h3 id="基础"><a href="#基础" class="headerlink" title="基础"></a>基础</h3><p>容器网络基于<code>namespace</code>中的<code>networknamespace</code>(此外还有<code>pid</code>、<code>mount</code>、<code>user</code>、<code>ipc</code>、<code>UTS</code>(<code>hostname</code>)、<code>cgroup</code>)</p>
+<ul>
+<li>单独<code>networkns</code>中包括独立的网络设备、路由表、<code>iptables</code>规则</li>
+<li>网络设备无论是虚拟的还是实体，可以从一个<code>ns</code>移动到另外一个<code>ns</code></li>
+</ul>
+<h3 id="docker网络"><a href="#docker网络" class="headerlink" title="docker网络"></a>docker网络</h3><p>docker分为四种网络</p>
+<ul>
+<li><code>bridge</code>（<code>default</code>）,建立<code>docker0</code>网桥设备，所有<code>docker container</code>连接在网桥上</li>
+<li><code>container</code>，加入一个已经存在的<code>container</code>的<code>ns</code></li>
+<li><code>NONE</code>，不设置网络</li>
+<li><code>host</code>，使用所在宿主机网络</li>
+</ul>
+<h3 id="网络设备"><a href="#网络设备" class="headerlink" title="网络设备"></a>网络设备</h3><ul>
+<li><code>bridge</code>，虚拟交互机，可以发送<code>arp</code>，获取相应<code>ip</code>的<code>mac</code>地址</li>
+<li><code>veth-pair</code>，连接不同<code>ns</code>，一般一端在容器内，一端在宿主机上（网桥上）</li>
+<li><code>tun</code>设备，连接内核态和用户态</li>
+</ul>
+<h3 id="通用"><a href="#通用" class="headerlink" title="通用"></a>通用</h3><h4 id="容器与node通信"><a href="#容器与node通信" class="headerlink" title="容器与node通信"></a>容器与<code>node</code>通信</h4><p><code>veth-pair</code>使得容器内流量到达宿主机，通过路由表查询，到达其他<code>node</code></p>
+<h4 id="容器与同node内容器通信"><a href="#容器与同node内容器通信" class="headerlink" title="容器与同node内容器通信"></a>容器与同<code>node</code>内容器通信</h4><p><code>veth-pair</code>使得容器内流量到达宿主机，通过路由表查询，同<code>node</code>内容器可直达，由于所有容器链接在网桥上，网桥可以作为虚拟交换机进行<code>arp</code>，获取<code>mac</code></p>
+<h4 id="容器与不同node间容器通信"><a href="#容器与不同node间容器通信" class="headerlink" title="容器与不同node间容器通信"></a>容器与不同<code>node</code>间容器通信</h4><p>需要一个<code>网线</code>,而开源的网络方案用了不同的方式来实现这根网线</p>
+<h3 id="K8S网络方案"><a href="#K8S网络方案" class="headerlink" title="K8S网络方案"></a>K8S网络方案</h3><p>大体分为<code>overlay</code>、路由、<code>underlay</code>、</p>
+<h4 id="Flannel"><a href="#Flannel" class="headerlink" title="Flannel"></a>Flannel</h4><h5 id="udp"><a href="#udp" class="headerlink" title="udp"></a>udp</h5><ul>
+<li>流量从用户态进程-&gt;内核态</li>
+<li>通过子网记录获取某个网段的<code>ip</code>在某个<code>node</code>上</li>
+<li>流量通过路由表，指定某个网段的流量通过某个设备发出，这里是<code>flannel0</code>,这是一个<code>tun</code>设备，用于链接内核态和用户态，使得流量从内核态-&gt;<code>flannel</code>用户态</li>
+<li>每台<code>node</code>上的<code>flannel</code>都监听指定端口<code>8285</code>，通过<code>flannel</code>进程封装<code>udp</code>包，以用户态包发往指定<code>node</code>的<code>flannel</code></li>
+<li>对端<code>flannel</code>接受到包后，直接给<code>flannel0 tun</code>设备处理，完成从用户态-&gt;内核态,然后内核态包查询路由表交给相应的网桥设备处理</li>
+<li>三次用户态和内核态装换，效率较低<h5 id="vxlan"><a href="#vxlan" class="headerlink" title="vxlan"></a>vxlan</h5></li>
+<li>不再通过<code>flannel</code>进程传递</li>
+<li>流量不再发往<code>flannel0</code>,而是<code>flannel.1</code>,这是一个vtep隧道设备</li>
+<li>查询路由表知道，某个段的<code>ip</code>的网关是对应<code>node</code>上的<code>vtep</code>设备<code>ip</code></li>
+<li>如何知道对端<code>vtep</code>设备，由<code>flannel</code>维护，会写入一个<code>arp</code>记录，记录某个<code>ip</code>的<code>vtep</code>设备的<code>mac</code>地址是啥</li>
+<li>同时会写<code>fdb</code>，记录的是发往某个<code>mac</code>地址需要从<code>flannel.1</code>设备发给某个宿主机<code>ip</code><h5 id="host-gw"><a href="#host-gw" class="headerlink" title="host-gw"></a>host-gw</h5></li>
+<li>写路由表</li>
+<li>某个<code>ip</code>段的包的网关，就是那个<code>ip</code>段容器所在宿主机某个设备的<code>ip</code></li>
+<li>要求通过<code>ip</code>可以直接查到相应<code>mac</code></li>
+</ul>
+<h4 id="calico"><a href="#calico" class="headerlink" title="calico"></a>calico</h4><p>支持<code>network-policy</code><br>与<code>host-gw</code>模式类似，会写入多条路由规则</p>
+<ul>
+<li>某个<code>ip</code>段的路由网关是某个宿主机的<code>ip</code></li>
+<li>本机容器的路由规则是：容器<code>ip</code>对应的设备是某个<code>veth-pair</code>的一端<h5 id="ipip"><a href="#ipip" class="headerlink" title="ipip"></a>ipip</h5></li>
+<li>如果宿主机不再同一网段下，需要通过<code>ipip</code>模块建立隧道来通信</li>
+<li>这样<code>bgp</code>用来路由发现，但是宿主机间通信通过隧道<h5 id="bgp"><a href="#bgp" class="headerlink" title="bgp"></a>bgp</h5></li>
+<li>可以建立少数几个<code>routerreflector</code>，也可以和交换机建立</li>
+</ul>
+<h4 id="underlay"><a href="#underlay" class="headerlink" title="underlay"></a>underlay</h4><p>依赖底层网络<br>容器虚拟化部分，可以用<code>ipvlan</code>、<code>macvlan</code>、<code>sr-iov</code><br><code>ipam</code>部分可以自研</p>
+<p>优点：</p>
+<ul>
+<li>性能好，充分利用现有网络</li>
+<li>可定制化高</li>
+</ul>
+<p>劣势：</p>
+<ul>
+<li>需要时间长，每次都需要进行容器虚拟化</li>
+<li><code>underlay</code>属于外部网络，所以<code>svc</code>的<code>cluster-ip</code>不会通，需要做些工作</li>
+<li>依赖底层网络实现</li>
+</ul>
+
+    </div>
+
+    
+        <hr class="fhr">
+        <div id="vcomments"></div>
+    
+</div>
+    <div class="footer" id="footer">
+    <p><h4>Copyright © 2020 | Author: yuzhiquan | Theme By <a class="theme-author" href="https://github.com/Xunzhuo/hexo-theme-coder" style="font-size:14px; color: #969696">Coder</a></h4>
+    
+        <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+        <span id="busuanzi_container_site_pv">Page Views: <span id="busuanzi_value_site_pv"></span></span>
+        <span class="post-meta-divider">|</span>
+        <span id="busuanzi_container_site_uv">Unique Visitors: <span id="busuanzi_value_site_uv"></span></span>
+    
+    <label class="el-switch el-switch-blue el-switch-sm" style="vertical-align: sub;">
+        <input type="checkbox" name="switch" id="update_style">
+        <span class="el-switch-style"></span>
+    </label>
+
+    <!--         <script type="text/javascript">
+    var cnzz_protocol = (("https:" == document.location.protocol) ? "https://" : "http://");
+    document.write(unescape("%3Cspan id='cnzz_stat_icon_1278548644'%3E%3C/span%3E%3Cscript src='" + cnzz_protocol + "v1.cnzz.com/stat.php%3Fid%3D1278548644%26show%3Dpic1' type='text/javascript'%3E%3C/script%3E"));
+    </script> -->
+</p>
+</div>
+
+<input type="hidden" id="web_style" value="black">
+<input type="hidden" id="valine_appid" value="NOsswOncKgc8HOxqo9oxIWlX-gzGzoHsz">
+<input type="hidden" id="valine_appKey" value="z1FihjWEbS8uIfUQdmCtK7zz">
+<script src="/libs/jquery.min.js"></script>
+<script src="/libs/highlight/highlight.pack.js"></script>
+<script src='//cdn.jsdelivr.net/npm/valine@1.3.10/dist/Valine.min.js'></script>
+<script src="/js/js.js"></script>
+<style type="text/css">
+.v * {
+color: #698fca;
+}
+.v .vlist .vcard .vhead .vsys {
+color: #3a3e4a;
+}
+.v .vlist .vcard .vh .vmeta .vat {
+color: #638fd5;
+}
+.v .vlist .vcard .vhead .vnick {
+color: #6ba1ff;
+}
+.v a {
+color: #8696b1;
+}
+.v .vlist .vcard .vhead .vnick:hover {
+color: #669bfc;
+}
+</style>
+    <script type="text/javascript" color="173,174,173" opacity='1' zIndex="-2" count="99" src="//cdn.bootcss.com/canvas-nest.js/1.0.0/canvas-nest.min.js"></script>
+</body>
+</html>
