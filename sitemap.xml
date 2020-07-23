@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://yoursite.com/2020/07/23/Docker%20%E5%9F%BA%E7%A1%80/</loc>
+    
+    <lastmod>2020-07-23T09:00:31.405Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://yoursite.com/2020/07/23/k8s-service/</loc>
     
     <lastmod>2020-07-23T08:55:41.253Z</lastmod>
@@ -128,14 +135,14 @@
   </url>
   
   <url>
-    <loc>http://yoursite.com/2019/01/21/python_setattr/</loc>
+    <loc>http://yoursite.com/2019/01/21/CAS-compile-plugin3/</loc>
     
     <lastmod>2019-01-21T08:37:46.576Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yoursite.com/2019/01/21/CAS-compile-plugin3/</loc>
+    <loc>http://yoursite.com/2019/01/21/python_setattr/</loc>
     
     <lastmod>2019-01-21T08:37:46.576Z</lastmod>
     
