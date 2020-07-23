@@ -22,12 +22,17 @@
  replay-btn" aria-hidden="true"></i></a>
     <div class="post-title">
         <p>
-            about
+            Kubernetes service实现
         </p>
         <hr>
     </div>
     <div class="post-content">
-        <p>Cloud Native, Kubernetes develop memeber.</p>
+        <h3 id="service类型"><a href="#service类型" class="headerlink" title="service类型"></a>service类型</h3><ul>
+<li>clusterip，默认通过iptables形成一个vip</li>
+<li>headless，为每个pod分配一个独有域名，访问svc时返回的是iplist</li>
+<li>loadbalancer，一般用于云厂商，需要cloud-provider支持</li>
+<li>external，用于引入外部域名解析，类似域名cname，需要dns支持</li>
+</ul>
 
     </div>
 
