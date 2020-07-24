@@ -58,7 +58,8 @@
 <li>不再通过<code>flannel</code>进程传递</li>
 <li>流量不再发往<code>flannel0</code>,而是<code>flannel.1</code>,这是一个vtep隧道设备</li>
 <li>查询路由表知道，某个段的<code>ip</code>的网关是对应<code>node</code>上的<code>vtep</code>设备<code>ip</code></li>
-<li>如何知道对端<code>vtep</code>设备，由<code>flannel</code>维护，会写入一个<code>arp</code>记录，记录某个<code>ip</code>的<code>vtep</code>设备的<code>mac</code>地址是啥</li>
+<li>如何知道对端<code>vtep</code>设备的<code>mac</code>，由<code>flannel</code>维护，会写入一个<code>arp</code>记录，记录某个<code>ip</code>的<code>vtep</code>设备的<code>mac</code>地址是啥</li>
+<li>这里获取都是内部网络的<code>ip</code>和<code>mac</code>，如何获取宿主机<code>ip</code></li>
 <li>同时会写<code>fdb</code>，记录的是发往某个<code>mac</code>地址需要从<code>flannel.1</code>设备发给某个宿主机<code>ip</code><h5 id="host-gw"><a href="#host-gw" class="headerlink" title="host-gw"></a>host-gw</h5></li>
 <li>写路由表</li>
 <li>某个<code>ip</code>段的包的网关，就是那个<code>ip</code>段容器所在宿主机某个设备的<code>ip</code></li>

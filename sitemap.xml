@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://yoursite.com/2020/07/24/k8s-network/</loc>
+    
+    <lastmod>2020-07-24T00:48:01.533Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://yoursite.com/2020/07/23/Docker%20%E5%9F%BA%E7%A1%80/</loc>
     
     <lastmod>2020-07-23T09:00:31.405Z</lastmod>
@@ -12,13 +19,6 @@
     <loc>http://yoursite.com/2020/07/23/k8s-service/</loc>
     
     <lastmod>2020-07-23T08:55:41.253Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://yoursite.com/2020/07/23/k8s-network/</loc>
-    
-    <lastmod>2020-07-23T02:59:08.432Z</lastmod>
     
   </url>
   
