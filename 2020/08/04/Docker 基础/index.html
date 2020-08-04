@@ -27,7 +27,14 @@
         <hr>
     </div>
     <div class="post-content">
-        <h2 id="Image"><a href="#Image" class="headerlink" title="Image"></a>Image</h2><h2 id="Container"><a href="#Container" class="headerlink" title="Container"></a>Container</h2><h2 id="Namespace"><a href="#Namespace" class="headerlink" title="Namespace"></a>Namespace</h2><h2 id="Cgroup"><a href="#Cgroup" class="headerlink" title="Cgroup"></a>Cgroup</h2>
+        <h2 id="Image"><a href="#Image" class="headerlink" title="Image"></a>Image</h2><p>静态概念<br>由多个只读层+最上面读写层组成</p>
+<ul>
+<li>分层</li>
+<li>修改会在最上面一层进行，copy on write</li>
+<li>删除一般也不是真删除，而是白屏障或者设置属性来完成</li>
+<li>init层包含一些host文件等等<h2 id="Container"><a href="#Container" class="headerlink" title="Container"></a>Container</h2>动态概念，可读写文件系统+隔离的pid空间<h2 id="Namespace"><a href="#Namespace" class="headerlink" title="Namespace"></a>Namespace</h2>用于隔离<br>包括<code>mount</code>、<code>pid</code>、<code>UTS(hostname)</code>、<code>IPC</code>、<code>network</code>、<code>USER</code>、<code>cgroup</code><h2 id="Cgroup"><a href="#Cgroup" class="headerlink" title="Cgroup"></a>Cgroup</h2>由层级子资源树和资源限制文件组成</li>
+</ul>
+
     </div>
 
     
