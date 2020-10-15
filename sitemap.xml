@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://yoursite.com/2020/10/15/k8s-cni/</loc>
+    
+    <lastmod>2020-10-15T03:31:59.320Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://yoursite.com/2020/08/04/Docker%20%E5%9F%BA%E7%A1%80/</loc>
     
     <lastmod>2020-08-04T07:53:31.562Z</lastmod>
@@ -100,28 +107,21 @@
   </url>
   
   <url>
-    <loc>http://yoursite.com/2019/01/21/k8s-cni/</loc>
+    <loc>http://yoursite.com/2019/01/21/k8s_install_in_aliyun_vpc/</loc>
     
-    <lastmod>2019-01-21T09:09:39.626Z</lastmod>
+    <lastmod>2019-01-21T08:37:46.576Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://yoursite.com/2019/01/21/aliyun-api-Signature-base-on-python/</loc>
+    
+    <lastmod>2019-01-21T08:37:46.576Z</lastmod>
     
   </url>
   
   <url>
     <loc>http://yoursite.com/2019/01/21/docker-update/</loc>
-    
-    <lastmod>2019-01-21T08:37:46.576Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://yoursite.com/2019/01/21/CAS-compile-plugin3/</loc>
-    
-    <lastmod>2019-01-21T08:37:46.576Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://yoursite.com/2019/01/21/k8s_install_in_aliyun_vpc/</loc>
     
     <lastmod>2019-01-21T08:37:46.576Z</lastmod>
     
@@ -135,13 +135,6 @@
   </url>
   
   <url>
-    <loc>http://yoursite.com/2019/01/21/CAS-compile-plugin2/</loc>
-    
-    <lastmod>2019-01-21T08:37:46.576Z</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>http://yoursite.com/tags/index.html</loc>
     
     <lastmod>2019-01-21T08:37:46.576Z</lastmod>
@@ -149,14 +142,21 @@
   </url>
   
   <url>
-    <loc>http://yoursite.com/2019/01/21/Flask%E8%AE%B0%E5%BD%95log/</loc>
+    <loc>http://yoursite.com/2019/01/21/CAS-compile-plugin3/</loc>
     
     <lastmod>2019-01-21T08:37:46.576Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yoursite.com/2019/01/21/aliyun-api-Signature-base-on-python/</loc>
+    <loc>http://yoursite.com/2019/01/21/CAS-compile-plugin2/</loc>
+    
+    <lastmod>2019-01-21T08:37:46.576Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://yoursite.com/2019/01/21/Flask%E8%AE%B0%E5%BD%95log/</loc>
     
     <lastmod>2019-01-21T08:37:46.576Z</lastmod>
     
