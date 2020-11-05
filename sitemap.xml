@@ -2,9 +2,9 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>http://yoursite.com/2020/11/03/flannel-hostgw-backend-dev/</loc>
+    <loc>http://yoursite.com/2020/11/05/flannel-hostgw-backend-dev/</loc>
     
-    <lastmod>2020-11-03T10:09:14.448Z</lastmod>
+    <lastmod>2020-11-05T08:09:50.969Z</lastmod>
     
   </url>
   
@@ -114,21 +114,7 @@
   </url>
   
   <url>
-    <loc>http://yoursite.com/2020/10/29/CAS-compile-plugin2/</loc>
-    
-    <lastmod>2019-01-21T08:37:46.000Z</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>http://yoursite.com/2020/10/29/Flask%E8%AE%B0%E5%BD%95log/</loc>
-    
-    <lastmod>2019-01-21T08:37:46.000Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://yoursite.com/2020/10/29/k8s_install_in_aliyun_vpc/</loc>
     
     <lastmod>2019-01-21T08:37:46.000Z</lastmod>
     
@@ -142,7 +128,14 @@
   </url>
   
   <url>
-    <loc>http://yoursite.com/2020/10/29/python_setattr/</loc>
+    <loc>http://yoursite.com/2020/10/29/docker-update/</loc>
+    
+    <lastmod>2019-01-21T08:37:46.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://yoursite.com/2020/10/29/k8s_install_in_aliyun_vpc/</loc>
     
     <lastmod>2019-01-21T08:37:46.000Z</lastmod>
     
@@ -156,7 +149,7 @@
   </url>
   
   <url>
-    <loc>http://yoursite.com/2020/10/29/docker-update/</loc>
+    <loc>http://yoursite.com/2020/10/29/python_setattr/</loc>
     
     <lastmod>2019-01-21T08:37:46.000Z</lastmod>
     
@@ -164,6 +157,13 @@
   
   <url>
     <loc>http://yoursite.com/2020/10/29/CAS-compile-plugin3/</loc>
+    
+    <lastmod>2019-01-21T08:37:46.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://yoursite.com/2020/10/29/CAS-compile-plugin2/</loc>
     
     <lastmod>2019-01-21T08:37:46.000Z</lastmod>
     
