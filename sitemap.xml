@@ -2,49 +2,56 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>http://yoursite.com/2020/11/05/flannel-hostgw-backend-dev/</loc>
+    <loc>http://yoursite.com/2021/03/03/flannel-to-cni/</loc>
+    
+    <lastmod>2021-03-03T09:49:49.458Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://yoursite.com/2020/12/14/flannel-hostgw-backend-dev/</loc>
     
     <lastmod>2020-11-05T08:09:50.969Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yoursite.com/2020/10/29/k8s-cni/</loc>
+    <loc>http://yoursite.com/2020/12/14/k8s-cni/</loc>
     
     <lastmod>2020-10-15T03:31:59.000Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yoursite.com/2020/10/29/Docker%20%E5%9F%BA%E7%A1%80/</loc>
+    <loc>http://yoursite.com/2020/12/14/Docker%20%E5%9F%BA%E7%A1%80/</loc>
     
     <lastmod>2020-08-04T07:53:31.000Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yoursite.com/2020/10/29/2020/</loc>
+    <loc>http://yoursite.com/2020/12/14/2020/</loc>
     
     <lastmod>2020-07-24T07:48:28.000Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yoursite.com/2020/10/29/k8s-nit-record/</loc>
+    <loc>http://yoursite.com/2020/12/14/k8s-nit-record/</loc>
     
     <lastmod>2020-07-24T07:48:26.000Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yoursite.com/2020/10/29/k8s-network/</loc>
+    <loc>http://yoursite.com/2020/12/14/k8s-network/</loc>
     
     <lastmod>2020-07-24T00:48:01.000Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yoursite.com/2020/10/29/k8s-service/</loc>
+    <loc>http://yoursite.com/2020/12/14/k8s-service/</loc>
     
     <lastmod>2020-07-23T08:55:41.000Z</lastmod>
     
@@ -58,112 +65,112 @@
   </url>
   
   <url>
-    <loc>http://yoursite.com/2020/10/29/k8s-informer/</loc>
+    <loc>http://yoursite.com/2020/12/14/k8s-informer/</loc>
     
     <lastmod>2020-05-06T08:03:31.000Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yoursite.com/2020/10/29/k8s-scheduler/</loc>
+    <loc>http://yoursite.com/2020/12/14/k8s-scheduler/</loc>
     
     <lastmod>2020-01-03T11:46:44.000Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yoursite.com/2020/10/29/k8s-kubelet/</loc>
+    <loc>http://yoursite.com/2020/12/14/k8s-kubelet/</loc>
     
     <lastmod>2020-01-02T10:27:10.000Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yoursite.com/2020/10/29/k8s-api-servere/</loc>
+    <loc>http://yoursite.com/2020/12/14/k8s-api-servere/</loc>
     
     <lastmod>2019-12-30T09:09:31.000Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yoursite.com/2020/10/29/go-mem/</loc>
+    <loc>http://yoursite.com/2020/12/14/go-mem/</loc>
     
     <lastmod>2019-12-20T11:21:57.000Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yoursite.com/2020/10/29/cri-oci-runtime/</loc>
+    <loc>http://yoursite.com/2020/12/14/cri-oci-runtime/</loc>
     
     <lastmod>2019-12-10T11:14:31.000Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yoursite.com/2020/10/29/kubernetes-summary/</loc>
+    <loc>http://yoursite.com/2020/12/14/kubernetes-summary/</loc>
     
     <lastmod>2019-01-21T09:11:00.000Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yoursite.com/2020/10/29/go-gpm/</loc>
+    <loc>http://yoursite.com/2020/12/14/go-gpm/</loc>
     
     <lastmod>2019-01-21T09:09:56.000Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yoursite.com/2020/10/29/Flask%E8%AE%B0%E5%BD%95log/</loc>
+    <loc>http://yoursite.com/2020/12/14/aliyun-api-Signature-base-on-python/</loc>
     
     <lastmod>2019-01-21T08:37:46.000Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yoursite.com/2020/10/29/CAS-compile-plugin/</loc>
+    <loc>http://yoursite.com/2020/12/14/CAS-compile-plugin3/</loc>
     
     <lastmod>2019-01-21T08:37:46.000Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yoursite.com/2020/10/29/docker-update/</loc>
+    <loc>http://yoursite.com/2020/12/14/docker-update/</loc>
     
     <lastmod>2019-01-21T08:37:46.000Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yoursite.com/2020/10/29/k8s_install_in_aliyun_vpc/</loc>
+    <loc>http://yoursite.com/2020/12/14/CAS-compile-plugin/</loc>
     
     <lastmod>2019-01-21T08:37:46.000Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yoursite.com/2020/10/29/aliyun-api-Signature-base-on-python/</loc>
+    <loc>http://yoursite.com/2020/12/14/k8s_install_in_aliyun_vpc/</loc>
     
     <lastmod>2019-01-21T08:37:46.000Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yoursite.com/2020/10/29/python_setattr/</loc>
+    <loc>http://yoursite.com/2020/12/14/python_setattr/</loc>
     
     <lastmod>2019-01-21T08:37:46.000Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yoursite.com/2020/10/29/CAS-compile-plugin3/</loc>
+    <loc>http://yoursite.com/2020/12/14/Flask%E8%AE%B0%E5%BD%95log/</loc>
     
     <lastmod>2019-01-21T08:37:46.000Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yoursite.com/2020/10/29/CAS-compile-plugin2/</loc>
+    <loc>http://yoursite.com/2020/12/14/CAS-compile-plugin2/</loc>
     
     <lastmod>2019-01-21T08:37:46.000Z</lastmod>
     

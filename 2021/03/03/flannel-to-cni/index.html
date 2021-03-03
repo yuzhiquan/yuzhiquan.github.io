@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head><meta name="generator" content="Hexo 3.9.0">
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="renderer" content="webkit">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="google-site-verification" content="TZE0rZyIqLl10trYu3BWBWa1Vmz6HFwhb2OcNEK4u-s">
+     <link rel="shortcut icon" href="/img/favicon.ico">
+    <title>
+        小胖鱼@Think
+    </title>
+    <meta name="description" content="CloudNative/Kubernetes/Go">
+    <meta name="keywords" content="Kubernetes,Docker,Go">
+    <link rel="stylesheet" href="/libs/highlight/styles/monokai-sublime.css">
+    <link rel="stylesheet" href="/libs/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body id="bodyx">
+    <div class="hd posts">
+    <a href="/index.html"><i class="fa fa-home
+ replay-btn" aria-hidden="true"></i></a>
+    <div class="post-title">
+        <p>
+            Flannel改CNI方式
+        </p>
+        <hr>
+    </div>
+    <div class="post-content">
+        <p>背景：</p>
+<p>目前的部署方式，ip分配由docker默认的bridge driver来进行ipam分配，目前还不支持配置为serial模式，某些情况下快速复用容器ip会造成一些时序问题</p>
+<p>调研线性分配容器ip方案</p>
+<p>方案设计：</p>
+<p>docker bridge driver 线性ip分配，libnetwork支持这一配置，但是在docker daemon创建default driver时却无法进行ipam-option配置，已经进行修复提交给社区<br>flannel改为cni模式，这样ip分配就有ipam binary来进行，而默认的host-local分配方式就是线性分配的<br>方案实施：</p>
+<p>原有的flannel进程暂时不进行修改</p>
+<p>1.获取cni插件，在node上执行<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mkdir -p /opt/cni/bin/ &amp;&amp; mkdir -p /etc/cni/net.d/</span><br><span class="line">wget https://github.com/containernetworking/plugins/releases/download/v0.9.0/cni-plugins-linux-amd64-v0.9.0.tgz</span><br><span class="line">tar -xvf cni-plugins-linux-amd64-v0.9.0.tgz /opt/cni/bin</span><br></pre></td></tr></table></figure></p>
+<p>2.配置cni conf<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">cd /etc/cni/net.d/ &amp;&amp; touch 10-flannel.conf</span><br><span class="line">echo '</span><br><span class="line">&#123;</span><br><span class="line">        "cniVersion": "0.3.1",</span><br><span class="line">        "name": "mynet",</span><br><span class="line">        "type": "flannel"</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>‘ &gt; 10-flannel.conf // 这个配置缺路由设置<br>注意k8s 1.16之后必须填写cniVersion</p>
+<p>3.配置kubelet，为kubelet添加启动参数并重启</p>
+<p>–network-plugin=cni<br>这样配置后就开始使用cni模式网络</p>
+<p>可以删除一些pod进行测试，可以发现它是线性分配ip的</p>
+<p>2020-12-17更新</p>
+<p>今天调试了下tj1 pod ip不通的问题</p>
+<p>刚开始怀疑是路由和docker0 ip的问题</p>
+<p>查看路由表，果然有两条网桥路由，分别对应cni0和bridge0</p>
+<p>1 把bridge0路由删掉，并且down掉bridge0网卡</p>
+<p>但还是不通</p>
+<p>在master机器无法ping通机器，但是在pod所在node上可以ping通pod ip，在pod内也可以ping通网关(cni0)以及同node其他pod的ip</p>
+<p>证明网桥cni0是ok的</p>
+<p>在master和node上网卡抓icmp包发现，到达node和pod网卡后，无回应，怀疑pod内路由问题，果然，发现宿主机内只有所在网段路由，无默认路由</p>
+<p>改为cni方案后，pod内部路由，除了网段路由，其他路由均由cni内的ipam配置决定，所以</p>
+<p>2 改动10-flannel.conf为<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"> cat /etc/cni/net.d/10-flannel.conf </span><br><span class="line">&#123;</span><br><span class="line">        "cniVersion": "0.3.1",</span><br><span class="line">        "name": "mynet",</span><br><span class="line">        "type": "flannel",</span><br><span class="line">        "ipam": &#123;</span><br><span class="line">                "type": "host-local",</span><br><span class="line">                "routes": [</span><br><span class="line">                        &#123; "dst": "0.0.0.0/0", "gw": "10.46.30.1" &#125;</span><br><span class="line">                ]</span><br><span class="line">        &#125;</span><br><span class="line">        // 缺少bridge插件配置</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>pod ip通了</p>
+<p>2021-01-07 更新</p>
+<p>反馈从pod访问集群外服务，remote-addr记录的是容器所在node ip也就是说添加了SNAT</p>
+<p>查看node上iptabels规则<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"> iptables-save | grep 10.46.30.42</span><br><span class="line">-A POSTROUTING -s 10.46.30.42/32 -m comment --comment "name: \"mynet\" id: \"f68de15a59a613a05b124d56f9c334ce3e843a77bb79e097a330894021c01b5f\"" -j CNI-85c82e151d5cdf92a0ac776d</span><br><span class="line"> iptables-save | grep CNI-85c82e151d5cdf92a0ac776d</span><br><span class="line">:CNI-85c82e151d5cdf92a0ac776d - [0:0]</span><br><span class="line">-A POSTROUTING -s 10.46.30.42/32 -m comment --comment "name: \"mynet\" id: \"f68de15a59a613a05b124d56f9c334ce3e843a77bb79e097a330894021c01b5f\"" -j CNI-85c82e151d5cdf92a0ac776d</span><br><span class="line">-A CNI-85c82e151d5cdf92a0ac776d -d 10.46.30.0/26 -m comment --comment "name: \"mynet\" id: \"f68de15a59a613a05b124d56f9c334ce3e843a77bb79e097a330894021c01b5f\"" -j ACCEPT</span><br><span class="line">-A CNI-85c82e151d5cdf92a0ac776d ! -d 224.0.0.0/4 -m comment --comment "name: \"mynet\" id: \"f68de15a59a613a05b124d56f9c334ce3e843a77bb79e097a330894021c01b5f\"" -j MASQUERADE</span><br></pre></td></tr></table></figure></p>
+<p>可以看到添加了一条CNI-85c82e151d5cdf92a0ac776d，里面包含MASQUERADE</p>
+<p>通过查看flannel的cni代码，发现是flannel cni调用的bridge plugin添加的<a href="https://github.com/containernetworking/plugins/blob/219eb9e0464761c47383d239aba206da695e1a43/plugins/main/bridge/bridge.go#L549" target="_blank" rel="noopener">bridge.go#L549</a>，相应可以通过bridge插件配置添加 “ipMasq”: false来控制</p>
+<p>3 再次改动10-flannel.conf为</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"> cat /etc/cni/net.d/10-flannel.conf </span><br><span class="line">&#123;</span><br><span class="line">        "cniVersion": "0.3.1",</span><br><span class="line">        "name": "mynet",</span><br><span class="line">        "type": "flannel",</span><br><span class="line">        "ipam": &#123;</span><br><span class="line">                "type": "host-local",</span><br><span class="line">                "routes": [</span><br><span class="line">                        &#123; "dst": "0.0.0.0/0", "gw": "10.46.30.1" &#125;</span><br><span class="line">                ]</span><br><span class="line">        &#125;,</span><br><span class="line">        "delegate": &#123;</span><br><span class="line">                "ipMasq": false</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>QA：</p>
+<p>1.如何平滑升级？</p>
+<p>核心问题在于</p>
+<p>创建时如何把通过docker0已经分配的ip信息同步到cni里<br>这里使用的host-local ipam，可以看到它以本地磁盘目录默认/var/lib/cni/networks为backend，所以它检查ip占用以及分配ip、lock等都是以本地磁盘文件为准，如下<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"> cd /var/lib/cni/networks</span><br><span class="line"> cd mynet/</span><br><span class="line"> ls -altrh</span><br><span class="line">总用量 40K</span><br><span class="line">-rwxr-x--- 1 root root    0 12月 16 17:47 lock</span><br><span class="line">drwxr-xr-x 3 root root 4.0K 12月 16 17:47 ..</span><br><span class="line">-rw-r--r-- 1 root root   70 12月 16 17:53 10.46.30.5</span><br><span class="line">-rw-r--r-- 1 root root   70 12月 17 12:12 10.46.30.9</span><br><span class="line">-rw-r--r-- 1 root root   70 12月 21 18:32 10.46.30.13</span><br><span class="line">-rw-r--r-- 1 root root   70 12月 22 23:07 10.46.30.16</span><br><span class="line">-rw-r--r-- 1 root root   70 12月 23 10:23 10.46.30.18</span><br><span class="line">-rw-r--r-- 1 root root   70 12月 23 10:54 10.46.30.19</span><br><span class="line">-rw-r--r-- 1 root root   11 12月 23 10:57 last_reserved_ip.0</span><br><span class="line">-rw-r--r-- 1 root root   70 12月 23 10:57 10.46.30.20</span><br><span class="line">drwxr-xr-x 2 root root 4.0K 12月 23 10:57 .</span><br><span class="line"> cat 10.46.30.20 </span><br><span class="line">c6208cd874dedf5b32371e7aaecc12feb070be25d9bc5e3931cfa441d8958d7e</span><br><span class="line">eth0</span><br><span class="line"> cat last_reserved_ip.0 </span><br><span class="line">10.46.30.20</span><br></pre></td></tr></table></figure></p>
+<p>其中lock为ipam锁，防止重复分配；last_reserved_ip.0为当前cidr内最新已分配ip地址，下次分配就从这里开始分配；各个ip文件里记录的是sandboxid</p>
+<p>所以我们需要查看各个node上已存在的pod，并将其ip生成文件放到相应目录下，同时可以考虑把last_reserved_ip.0内的ip写的适当高一些(不会影响ip分配，一旦分完，会从头再分)</p>
+<ol>
+<li>升级过程中是否需要重启docker</li>
+</ol>
+<p>目前看不需要，docker内部路由无需修改，默认路由</p>
+<p>找台node做个实验<br>经过实验，由于容器内的eth0是veth pair，它对应的另一端在node上，但是连接docker0上，如果我们down掉docker0或者去掉相应路由，都会造成流量无法找到相应的网卡，所以需要将相应的veth网卡与docker0解除连接</p>
+<p>然后创建连接连到cni0上，但是这样在连接过程中可能会有流量丢失</p>
+<p>所以这里没办法平滑升级</p>
+<p>3.pod删除后，通过docker0分配的ip是否可以正确释放</p>
+<p>可以，hostlocal的release阶段就是直接删除目录下的ip文件（不会校验文件内容）</p>
+<p>风险：</p>
+<p>1.ip泄露的问题</p>
+<p>使用cni的插件目前都会存在这个问题，由于cri意外退出造成无法走cmddel正常删除ip，这样的ip就成了黑洞，需要有流程定时清理（比如terway的定时gc）</p>
+<p>2.原有网桥docker0</p>
+<p>最好删除或者修改地址，免得node重启造成docker0重新up后出现其他问题</p>
+
+    </div>
+
+    
+        <hr class="fhr">
+        <div id="vcomments"></div>
+    
+</div>
+    <div class="footer" id="footer">
+    <p><h4>Copyright © 2020 | Author: yuzhiquan | Theme By <a class="theme-author" href="https://github.com/Xunzhuo/hexo-theme-coder" style="font-size:14px; color: #969696">Coder</a></h4>
+    
+        <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+        <span id="busuanzi_container_site_pv">Page Views: <span id="busuanzi_value_site_pv"></span></span>
+        <span class="post-meta-divider">|</span>
+        <span id="busuanzi_container_site_uv">Unique Visitors: <span id="busuanzi_value_site_uv"></span></span>
+    
+    <label class="el-switch el-switch-blue el-switch-sm" style="vertical-align: sub;">
+        <input type="checkbox" name="switch" id="update_style">
+        <span class="el-switch-style"></span>
+    </label>
+
+    <!--         <script type="text/javascript">
+    var cnzz_protocol = (("https:" == document.location.protocol) ? "https://" : "http://");
+    document.write(unescape("%3Cspan id='cnzz_stat_icon_1278548644'%3E%3C/span%3E%3Cscript src='" + cnzz_protocol + "v1.cnzz.com/stat.php%3Fid%3D1278548644%26show%3Dpic1' type='text/javascript'%3E%3C/script%3E"));
+    </script> -->
+</p>
+</div>
+
+<input type="hidden" id="web_style" value="black">
+<input type="hidden" id="valine_appid" value="xvQv3v6vkbQqL7IBhjet04Ux-gzGzoHsz">
+<input type="hidden" id="valine_appKey" value="9AbHntN8K0I3hTo5R3kXGN0D">
+<script src="/libs/jquery.min.js"></script>
+<script src="/libs/highlight/highlight.pack.js"></script>
+<script src='//cdn.jsdelivr.net/npm/valine@1.3.10/dist/Valine.min.js'></script>
+<script src="/js/js.js"></script>
+<style type="text/css">
+.v * {
+color: #698fca;
+}
+.v .vlist .vcard .vhead .vsys {
+color: #3a3e4a;
+}
+.v .vlist .vcard .vh .vmeta .vat {
+color: #638fd5;
+}
+.v .vlist .vcard .vhead .vnick {
+color: #6ba1ff;
+}
+.v a {
+color: #8696b1;
+}
+.v .vlist .vcard .vhead .vnick:hover {
+color: #669bfc;
+}
+</style>
+    <script type="text/javascript" color="173,174,173" opacity='1' zIndex="-2" count="99" src="//cdn.bootcss.com/canvas-nest.js/1.0.0/canvas-nest.min.js"></script>
+</body>
+</html>

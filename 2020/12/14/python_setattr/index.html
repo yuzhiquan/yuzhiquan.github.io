@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head><meta name="generator" content="Hexo 3.9.0">
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="renderer" content="webkit">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="google-site-verification" content="TZE0rZyIqLl10trYu3BWBWa1Vmz6HFwhb2OcNEK4u-s">
+     <link rel="shortcut icon" href="/img/favicon.ico">
+    <title>
+        小胖鱼@Think
+    </title>
+    <meta name="description" content="CloudNative/Kubernetes/Go">
+    <meta name="keywords" content="Kubernetes,Docker,Go">
+    <link rel="stylesheet" href="/libs/highlight/styles/monokai-sublime.css">
+    <link rel="stylesheet" href="/libs/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body id="bodyx">
+    <div class="hd posts">
+    <a href="/index.html"><i class="fa fa-home
+ replay-btn" aria-hidden="true"></i></a>
+    <div class="post-title">
+        <p>
+            python的属性设置
+        </p>
+        <hr>
+    </div>
+    <div class="post-content">
+        <blockquote>
+<p>python中的属性管理由<code>__dict__</code>存储</p>
+</blockquote>
+<h3 id="getattr-与-getattribute"><a href="#getattr-与-getattribute" class="headerlink" title="__getattr__与__getattribute__"></a><code>__getattr__</code>与<code>__getattribute__</code></h3><h4 id="区别"><a href="#区别" class="headerlink" title="区别"></a>区别</h4><ul>
+<li><code>__getattr__</code>在访问不存在的成员时才会触发，可以用来做部分异常处理</li>
+<li><code>__getattribute__</code>则拦截所有对属性的访问（包括对<code>__dict__</code>的访问），如果<code>class</code>同时定义了<code>__getattr__</code>和<code>__getattribute__</code>，<code>__getattr__</code>不会生效<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">In [<span class="number">29</span>]: <span class="class"><span class="keyword">class</span> <span class="title">Test</span><span class="params">(object)</span>:</span></span><br><span class="line">    ...:     <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self,name)</span>:</span></span><br><span class="line">    ...:         self.name=name</span><br><span class="line">    ...:     <span class="function"><span class="keyword">def</span> <span class="title">__getattr__</span><span class="params">(self,*args,**kwargs)</span>:</span></span><br><span class="line">    ...:         <span class="keyword">if</span> <span class="string">'age'</span> <span class="keyword">in</span> args:</span><br><span class="line">    ...:             <span class="keyword">return</span> <span class="number">20</span></span><br><span class="line">    ...:     <span class="function"><span class="keyword">def</span> <span class="title">__setattr__</span><span class="params">(self,*args,**kwargs)</span>:</span></span><br><span class="line">    ...:         <span class="keyword">return</span> object.__setattr__(self,*args,**kwargs)</span><br><span class="line">    ...:</span><br><span class="line">    ...:</span><br><span class="line"></span><br><span class="line">In [<span class="number">30</span>]: t=Test(<span class="string">'haha'</span>)</span><br><span class="line"></span><br><span class="line">In [<span class="number">31</span>]: t.__dict__</span><br><span class="line">Out[<span class="number">31</span>]: &#123;<span class="string">'name'</span>: <span class="string">'haha'</span>&#125;</span><br><span class="line"></span><br><span class="line">In [<span class="number">32</span>]: t.age</span><br><span class="line">Out[<span class="number">32</span>]: <span class="number">20</span></span><br><span class="line"></span><br><span class="line">In [<span class="number">33</span>]: t.age=<span class="number">100</span></span><br><span class="line"></span><br><span class="line">In [<span class="number">34</span>]: t.age</span><br><span class="line">O ut[<span class="number">34</span>]: <span class="number">100</span></span><br><span class="line"></span><br><span class="line">In [<span class="number">35</span>]: t.__dict__</span><br><span class="line">Out[<span class="number">35</span>]: &#123;<span class="string">'age'</span>: <span class="number">100</span>, <span class="string">'name'</span>: <span class="string">'haha'</span>&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p><code>__getattribute__</code>只有新式类才生效，继承自<code>object</code>的类</p>
+<h2 id="setattr"><a href="#setattr" class="headerlink" title="__setattr__"></a><code>__setattr__</code></h2><p>每当属性被赋值的时候， <code>__setattr__()</code> 会被调用，所以有可能造成递归调用，比如：<br><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#wrong</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">__setattr__</span><span class="params">(self, name, value)</span>:</span></span><br><span class="line">    self.name = value</span><br><span class="line"><span class="comment">#right</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">__setattr__</span><span class="params">(self, name, value)</span>:</span></span><br><span class="line">    self.__dict__[name] = value</span><br></pre></td></tr></table></figure></p>
+<p>一般来说都是在获取某个属性的时候做特殊处理或限制，设置属性时很少会涉及。</p>
+
+    </div>
+
+    
+        <hr class="fhr">
+        <div id="vcomments"></div>
+    
+</div>
+    <div class="footer" id="footer">
+    <p><h4>Copyright © 2020 | Author: yuzhiquan | Theme By <a class="theme-author" href="https://github.com/Xunzhuo/hexo-theme-coder" style="font-size:14px; color: #969696">Coder</a></h4>
+    
+        <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+        <span id="busuanzi_container_site_pv">Page Views: <span id="busuanzi_value_site_pv"></span></span>
+        <span class="post-meta-divider">|</span>
+        <span id="busuanzi_container_site_uv">Unique Visitors: <span id="busuanzi_value_site_uv"></span></span>
+    
+    <label class="el-switch el-switch-blue el-switch-sm" style="vertical-align: sub;">
+        <input type="checkbox" name="switch" id="update_style">
+        <span class="el-switch-style"></span>
+    </label>
+
+    <!--         <script type="text/javascript">
+    var cnzz_protocol = (("https:" == document.location.protocol) ? "https://" : "http://");
+    document.write(unescape("%3Cspan id='cnzz_stat_icon_1278548644'%3E%3C/span%3E%3Cscript src='" + cnzz_protocol + "v1.cnzz.com/stat.php%3Fid%3D1278548644%26show%3Dpic1' type='text/javascript'%3E%3C/script%3E"));
+    </script> -->
+</p>
+</div>
+
+<input type="hidden" id="web_style" value="black">
+<input type="hidden" id="valine_appid" value="xvQv3v6vkbQqL7IBhjet04Ux-gzGzoHsz">
+<input type="hidden" id="valine_appKey" value="9AbHntN8K0I3hTo5R3kXGN0D">
+<script src="/libs/jquery.min.js"></script>
+<script src="/libs/highlight/highlight.pack.js"></script>
+<script src='//cdn.jsdelivr.net/npm/valine@1.3.10/dist/Valine.min.js'></script>
+<script src="/js/js.js"></script>
+<style type="text/css">
+.v * {
+color: #698fca;
+}
+.v .vlist .vcard .vhead .vsys {
+color: #3a3e4a;
+}
+.v .vlist .vcard .vh .vmeta .vat {
+color: #638fd5;
+}
+.v .vlist .vcard .vhead .vnick {
+color: #6ba1ff;
+}
+.v a {
+color: #8696b1;
+}
+.v .vlist .vcard .vhead .vnick:hover {
+color: #669bfc;
+}
+</style>
+    <script type="text/javascript" color="173,174,173" opacity='1' zIndex="-2" count="99" src="//cdn.bootcss.com/canvas-nest.js/1.0.0/canvas-nest.min.js"></script>
+</body>
+</html>

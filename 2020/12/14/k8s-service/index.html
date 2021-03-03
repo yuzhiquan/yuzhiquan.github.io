@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head><meta name="generator" content="Hexo 3.9.0">
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="renderer" content="webkit">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="google-site-verification" content="TZE0rZyIqLl10trYu3BWBWa1Vmz6HFwhb2OcNEK4u-s">
+     <link rel="shortcut icon" href="/img/favicon.ico">
+    <title>
+        小胖鱼@Think
+    </title>
+    <meta name="description" content="CloudNative/Kubernetes/Go">
+    <meta name="keywords" content="Kubernetes,Docker,Go">
+    <link rel="stylesheet" href="/libs/highlight/styles/monokai-sublime.css">
+    <link rel="stylesheet" href="/libs/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body id="bodyx">
+    <div class="hd posts">
+    <a href="/index.html"><i class="fa fa-home
+ replay-btn" aria-hidden="true"></i></a>
+    <div class="post-title">
+        <p>
+            Kubernetes service实现
+        </p>
+        <hr>
+    </div>
+    <div class="post-content">
+        <h3 id="service类型"><a href="#service类型" class="headerlink" title="service类型"></a>service类型</h3><ul>
+<li><code>clusterip</code>，默认通过<code>iptables</code>形成一个<code>vip</code></li>
+<li><code>headless</code>，为每个<code>pod</code>分配一个独有域名，访问<code>svc</code>时返回的是<code>iplist</code></li>
+<li><code>loadbalancer</code>，一般用于云厂商，需要<code>cloud-provider</code>支持</li>
+<li><code>external</code>，用于引入外部域名解析，类似域名<code>cname</code>，需要<code>dns</code>支持</li>
+<li><code>nodeport</code>,可以通过<code>nodeport</code>进行访问</li>
+</ul>
+<h3 id="clusterip实现"><a href="#clusterip实现" class="headerlink" title="clusterip实现"></a>clusterip实现</h3><h4 id="iptables"><a href="#iptables" class="headerlink" title="iptables"></a>iptables</h4><p>新增servcie，ip为：<code>10.0.1.175</code>（无法被<code>ping</code>）,后端<code>pod</code>为3个<br><code>kube-proxy</code>会在所有<code>node上</code>写入<code>iptables</code>规则<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">-A KUBE-SERVICES -d 10.0.1.175/32 -p tcp -m comment --comment "default/hostnames: cluster IP" -m tcp --dport 80 -j KUBE-SVC-NWV5X2332I4OT4T3</span><br></pre></td></tr></table></figure></p>
+<p>意思是目标为<code>10.0.1.175</code>端口为<code>80</code>的走<code>KUBE-SVC-NWV5X2332I4OT4T3</code>，查看一下<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">-A KUBE-SVC-NWV5X2332I4OT4T3 -m comment --comment "default/hostnames:" -m statistic --mode random --probability 0.33332999982 -j KUBE-SEP-WNBA2IHDGP2BOBGZ</span><br><span class="line">-A KUBE-SVC-NWV5X2332I4OT4T3 -m comment --comment "default/hostnames:" -m statistic --mode random --probability 0.50000000000 -j KUBE-SEP-X3P2623AGDH6CDF3</span><br><span class="line">-A KUBE-SVC-NWV5X2332I4OT4T3 -m comment --comment "default/hostnames:" -j KUBE-SEP-57KPRZ3JQVENLNBR</span><br></pre></td></tr></table></figure></p>
+<p>有三条对应的规则<br>第一条规则可能性是<code>30%</code>,第二条时只剩两条规则了，所以为<code>50%</code>,第三条之后就没了，所以不是<code>random</code>了，打开某一条对应规则<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">-A KUBE-SEP-57KPRZ3JQVENLNBR -s 10.244.3.6/32 -m comment --comment "default/hostnames:" -j MARK --set-xmark 0x00004000/0x00004000</span><br><span class="line">-A KUBE-SEP-57KPRZ3JQVENLNBR -p tcp -m comment --comment "default/hostnames:" -m tcp -j DNAT --to-destination 10.244.3.6:9376</span><br><span class="line"></span><br><span class="line">-A KUBE-SEP-WNBA2IHDGP2BOBGZ -s 10.244.1.7/32 -m comment --comment "default/hostnames:" -j MARK --set-xmark 0x00004000/0x00004000</span><br><span class="line">-A KUBE-SEP-WNBA2IHDGP2BOBGZ -p tcp -m comment --comment "default/hostnames:" -m tcp -j DNAT --to-destination 10.244.1.7:9376</span><br><span class="line"></span><br><span class="line">-A KUBE-SEP-X3P2623AGDH6CDF3 -s 10.244.2.3/32 -m comment --comment "default/hostnames:" -j MARK --set-xmark 0x00004000/0x00004000</span><br><span class="line">-A KUBE-SEP-X3P2623AGDH6CDF3 -p tcp -m comment --comment "default/hostnames:" -m tcp -j DNAT --to-destination 10.244.2.3:9376</span><br></pre></td></tr></table></figure></p>
+<p>就是对应到相应的<code>pod ip</code>，后面就可以走路由规则进行同<code>node</code>或者跨<code>node</code>访问了</p>
+<h4 id="ipvs"><a href="#ipvs" class="headerlink" title="ipvs"></a>ipvs</h4><p><code>iptables</code>规则为每个<code>pod</code>生成规则，且<code>iptables</code>无法增量更新，每更新一个<code>pod</code>就要把全集群规则刷新一遍，集群规模较大的时候效率较低<br>引入<code>ipvs</code></p>
+<h5 id="工作流程"><a href="#工作流程" class="headerlink" title="工作流程"></a>工作流程</h5><ul>
+<li><p>每台<code>node</code>上生成<code>ipvs</code>虚拟网卡，且为它分配 <code>Service VIP</code> 作为 <code>IP</code> 地址（意味着<code>vip</code>可以<code>ping</code>）</p>
+  <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">6: kube-ipvs0: &lt;BROADCAST,NOARP&gt; mtu 1500 qdisc noop state DOWN group default </span><br><span class="line">  link/ether 6e:e0:8a:3a:1b:f3 brd ff:ff:ff:ff:ff:ff</span><br><span class="line">  inet 10.96.0.1/32 brd 10.96.0.1 scope global kube-ipvs0</span><br><span class="line">     valid_lft forever preferred_lft forever</span><br><span class="line">  inet 10.97.43.84/32 brd 10.97.43.84 scope global kube-ipvs0</span><br><span class="line">     valid_lft forever preferred_lft forever</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>每个<code>node</code>创建一个<code>ipvs</code>虚拟主机，轮询算法，所以就可以把请求进行转发</p>
+</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">  [@node-2 ~]# ipvsadm -ln</span><br><span class="line">IP Virtual Server version 1.2.1 (size=4096)</span><br><span class="line">Prot LocalAddress:Port Scheduler Flags</span><br><span class="line">  -&gt; RemoteAddress:Port           Forward Weight ActiveConn InActConn</span><br><span class="line">TCP  10.96.0.1:443 rr</span><br><span class="line">  -&gt; 10.176.32.20:6443            Masq    1      1          0         </span><br><span class="line">TCP  10.97.43.84:80 rr</span><br><span class="line">  -&gt; 10.244.84.143:80             Masq    1      0          0         </span><br><span class="line">  -&gt; 10.244.84.144:80             Masq    1      0          0         </span><br><span class="line">  -&gt; 10.244.139.79:80             Masq    1      0          0         </span><br><span class="line">  -&gt; 10.244.139.80:80             Masq    1      0          0         </span><br><span class="line">  -&gt; 10.244.139.81:80             Masq    1      0          0         </span><br><span class="line">  -&gt; 10.244.247.14:80             Masq    1      0          0         </span><br><span class="line">  -&gt; 10.244.247.15:80             Masq    1      0          0         </span><br><span class="line">  -&gt; 10.244.247.16:80             Masq    1      0          0         </span><br><span class="line">  -&gt; 10.244.247.17:80             Masq    1      0          0</span><br></pre></td></tr></table></figure>
+<ul>
+<li>不过<code>SNAT</code>依旧需要<code>iptables</code>来做，单这样规则少很多</li>
+</ul>
+
+    </div>
+
+    
+        <hr class="fhr">
+        <div id="vcomments"></div>
+    
+</div>
+    <div class="footer" id="footer">
+    <p><h4>Copyright © 2020 | Author: yuzhiquan | Theme By <a class="theme-author" href="https://github.com/Xunzhuo/hexo-theme-coder" style="font-size:14px; color: #969696">Coder</a></h4>
+    
+        <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+        <span id="busuanzi_container_site_pv">Page Views: <span id="busuanzi_value_site_pv"></span></span>
+        <span class="post-meta-divider">|</span>
+        <span id="busuanzi_container_site_uv">Unique Visitors: <span id="busuanzi_value_site_uv"></span></span>
+    
+    <label class="el-switch el-switch-blue el-switch-sm" style="vertical-align: sub;">
+        <input type="checkbox" name="switch" id="update_style">
+        <span class="el-switch-style"></span>
+    </label>
+
+    <!--         <script type="text/javascript">
+    var cnzz_protocol = (("https:" == document.location.protocol) ? "https://" : "http://");
+    document.write(unescape("%3Cspan id='cnzz_stat_icon_1278548644'%3E%3C/span%3E%3Cscript src='" + cnzz_protocol + "v1.cnzz.com/stat.php%3Fid%3D1278548644%26show%3Dpic1' type='text/javascript'%3E%3C/script%3E"));
+    </script> -->
+</p>
+</div>
+
+<input type="hidden" id="web_style" value="black">
+<input type="hidden" id="valine_appid" value="xvQv3v6vkbQqL7IBhjet04Ux-gzGzoHsz">
+<input type="hidden" id="valine_appKey" value="9AbHntN8K0I3hTo5R3kXGN0D">
+<script src="/libs/jquery.min.js"></script>
+<script src="/libs/highlight/highlight.pack.js"></script>
+<script src='//cdn.jsdelivr.net/npm/valine@1.3.10/dist/Valine.min.js'></script>
+<script src="/js/js.js"></script>
+<style type="text/css">
+.v * {
+color: #698fca;
+}
+.v .vlist .vcard .vhead .vsys {
+color: #3a3e4a;
+}
+.v .vlist .vcard .vh .vmeta .vat {
+color: #638fd5;
+}
+.v .vlist .vcard .vhead .vnick {
+color: #6ba1ff;
+}
+.v a {
+color: #8696b1;
+}
+.v .vlist .vcard .vhead .vnick:hover {
+color: #669bfc;
+}
+</style>
+    <script type="text/javascript" color="173,174,173" opacity='1' zIndex="-2" count="99" src="//cdn.bootcss.com/canvas-nest.js/1.0.0/canvas-nest.min.js"></script>
+</body>
+</html>
