@@ -3,6 +3,7 @@ layout: page
 title: AI 大模型 30 课
 icon: fas fa-book-open
 order: 1
+permalink: /ai-llm-series/
 ---
 
 <meta http-equiv="refresh" content="0; url=/ai-llm/">
