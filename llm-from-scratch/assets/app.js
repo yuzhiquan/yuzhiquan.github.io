@@ -53,11 +53,15 @@ CH.forEach((ch,idx)=>{
     `<div class="ch-titles"><h2>${ch.title}</h2><div class="ch-en">${ch.en||''}</div></div>`));
   sec.appendChild(el('div','ch-oneliner', ch.one));
 
-  // 跨系列连接：跳到本篇对应的精读笔记
+  // 跨系列连接：跳到本篇对应的精读笔记 / 原文
   const noteLink = el('a','xref-banner','📝 看本篇精读笔记（第 '+ch.n+' 篇）→');
   noteLink.href = 'javascript:void(0)';
   noteLink.addEventListener('click',()=>{ if(window.goToNote) window.goToNote(ch.n); });
   sec.appendChild(noteLink);
+  const artLink = el('a','xref-banner alt','📄 看本篇系列原文（第 '+ch.n+' 篇）→');
+  artLink.href = 'javascript:void(0)';
+  artLink.addEventListener('click',()=>{ if(window.goToArticle) window.goToArticle(ch.n); });
+  sec.appendChild(artLink);
 
   const body = el('div','ch-body');
   (ch.blocks||[]).forEach(b=>body.appendChild(blockToNode(b)));

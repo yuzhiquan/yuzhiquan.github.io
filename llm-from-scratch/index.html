@@ -12,6 +12,7 @@
 <nav id="topnav">
   <button class="nav-btn active" data-view="course">📚 教程</button>
   <button class="nav-btn" data-view="notes">📝 精读笔记</button>
+  <button class="nav-btn" data-view="articles">📄 原文</button>
   <button class="nav-btn" data-view="quiz">🎯 自测</button>
   <button class="nav-btn" data-view="cards">🃏 闪卡</button>
   <button class="nav-btn" data-view="dash">📊 仪表盘</button>
@@ -60,11 +61,14 @@
       <p class="notes-source">
         📖 内容来自
         <a href="https://github.com/GitHubxsy/nanoAgent/blob/book/llm/README.md" target="_blank" rel="noopener">GitHubxsy/nanoAgent · book/llm/README.md</a>
-        （《从零开始理解大模型》16 篇）；配套 16 篇精读笔记已作为独立系列收录，可在顶部「📝 精读笔记」切换。
+        （《从零开始理解大模型》16 篇）；配套
+        <a href="https://github.com/yuzhiquan/llm-starter" target="_blank" rel="noopener">yuzhiquan/llm-starter</a>
+        根目录的 16 篇原文、以及 16 篇精读笔记，已分别作为独立系列收录，可在顶部「📄 原文」「📝 精读笔记」切换。
       </p>
       <div class="hero-meta">
         <span>📚 16 章</span>
         <span>🧩 27 个交互演示</span>
+        <span>📄 16 篇原文</span>
         <span>📝 16 篇精读笔记</span>
         <span>🎯 128 道自测题</span>
         <span>💾 进度本地保存</span>
@@ -81,7 +85,10 @@
         <a href="https://github.com/GitHubxsy/nanoAgent/blob/book/llm/README.md" target="_blank" rel="noopener">GitHubxsy/nanoAgent · book/llm/README.md</a>
         （《从零开始理解大模型》正篇 10 篇 + 番外 6 篇）。</p>
       <p class="muted">配套精读笔记整理自
-        <a href="https://github.com/yuzhiquan/llm-starter/tree/main/%E7%B2%BE%E8%AF%BB%E7%AC%94%E8%AE%B0" target="_blank" rel="noopener">yuzhiquan/llm-starter · 精读笔记</a>。
+        <a href="https://github.com/yuzhiquan/llm-starter/tree/main/%E7%B2%BE%E8%AF%BB%E7%AC%94%E8%AE%B0" target="_blank" rel="noopener">yuzhiquan/llm-starter · 精读笔记</a>；
+        系列原文来自
+        <a href="https://github.com/yuzhiquan/llm-starter" target="_blank" rel="noopener">yuzhiquan/llm-starter</a>
+        （根目录 llm-01 … llm-16）。
         所有数字、公式、代码均来自原教程；交互演示为便于理解做了极小化建模。</p>
     </footer>
     </div><!-- /view-course -->
@@ -107,6 +114,26 @@
       </header>
       <nav id="notes-toc" class="notes-toc"><!-- 由 modules.js 渲染 --></nav>
       <div id="notes-app"><!-- 由 modules.js 渲染 --></div>
+    </div>
+
+    <div id="view-articles" class="view">
+      <header class="notes-hero">
+        <div class="hero-kicker">ORIGINAL SERIES · 16 ARTICLES</div>
+        <h1>系列原文 · 16 篇</h1>
+        <p class="hero-lead">
+          《从零开始理解大模型》系列原文：从"猜下一个词"一路讲到 Transformer、训练、推理、Agent、多模态、GPU、Scaling Law、MoE。每篇配可运行代码，代码随文内链接提供。
+        </p>
+        <p class="notes-source">
+          📖 原文来自
+          <a href="https://github.com/yuzhiquan/llm-starter" target="_blank" rel="noopener">yuzhiquan/llm-starter</a>
+          （根目录 llm-01 … llm-16 共 16 篇）；配套精读笔记见「📝 精读笔记」，交互讲解见「📚 教程」。
+        </p>
+        <div class="notes-actions">
+          <button class="btn ghost" id="articles-back">← 回到交互教程</button>
+        </div>
+      </header>
+      <nav id="articles-toc" class="notes-toc"><!-- 由 modules.js 渲染 --></nav>
+      <div id="articles-app"><!-- 由 modules.js 渲染 --></div>
     </div>
 
     <div id="view-quiz" class="view">
@@ -141,13 +168,14 @@
   <button id="step-play" title="播放 / 暂停 (空格)">▶ 播放</button>
 </div>
 
-<script src="assets/quiz.js?v=3"></script>
-<script src="assets/glossary.js?v=3"></script>
-<script src="assets/data.js?v=3"></script>
-<script src="assets/content.js?v=3"></script>
-<script src="assets/notes.js?v=3"></script>
-<script src="assets/demos.js?v=3"></script>
-<script src="assets/app.js?v=3"></script>
-<script src="assets/modules.js?v=3"></script>
+<script src="assets/quiz.js?v=4"></script>
+<script src="assets/glossary.js?v=4"></script>
+<script src="assets/data.js?v=4"></script>
+<script src="assets/content.js?v=4"></script>
+<script src="assets/notes.js?v=4"></script>
+<script src="assets/demos.js?v=4"></script>
+<script src="assets/app.js?v=4"></script>
+<script src="assets/articles.js?v=4"></script>
+<script src="assets/modules.js?v=4"></script>
 </body>
 </html>

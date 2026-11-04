@@ -9,6 +9,7 @@ const QUIZ = window.QUIZ || {};
 const GLOSS = window.GLOSSARY || [];
 const DATA = window.DATA || {};
 const NOTES = window.NOTES || [];
+const ARTICLES = window.ARTICLES || [];
 
 /* ---------- 工具 ---------- */
 function h(tag, opts, ...kids){
@@ -35,7 +36,7 @@ const CKNOWN='llm_cards_known_v1';
 /* ============================================================
    导航切换
    ============================================================ */
-const views={course:'#view-course',notes:'#view-notes',quiz:'#view-quiz',cards:'#view-cards',dash:'#view-dash',gloss:'#view-gloss'};
+const views={course:'#view-course',articles:'#view-articles',notes:'#view-notes',quiz:'#view-quiz',cards:'#view-cards',dash:'#view-dash',gloss:'#view-gloss'};
 function switchView(v){
   Object.keys(views).forEach(k=>{ const el=$(views[k]); if(el) el.classList.toggle('active',k===v); });
   $$('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.view===v));
@@ -46,19 +47,32 @@ function switchView(v){
 }
 $$('.nav-btn').forEach(b=> b.addEventListener('click',()=>switchView(b.dataset.view)) );
 
-/* 跨系列跳转：教程章节 / 笔记正文里的「第 N 篇」/ 笔记头部按钮都会调用 */
-function goToNote(n){
-  switchView('notes');
-  setTimeout(()=>{ const t=document.getElementById('note'+n); if(t) t.scrollIntoView({behavior:'smooth',block:'start'}); },60);
-}
-function goToChapter(n){
-  if(window.TUTORIAL_HREF){ window.location.href = window.TUTORIAL_HREF + '#ch' + String(n).padStart(2,'0'); return; }
-  switchView('course');
-  setTimeout(()=>{ const t=document.getElementById('ch'+String(n).padStart(2,'0')); if(t) t.scrollIntoView({behavior:'smooth',block:'start'}); },60);
-}
-window.goToNote=goToNote; window.goToChapter=goToChapter;
+/* 跨系列跳转：教程章节 / 笔记正文 / 原文 —— 三个全局函数，standalone 页通过 *_HREF 跨页跳转 */
+function scrollToId(id){ const t=document.getElementById(id); if(t) t.scrollIntoView({behavior:'smooth',block:'start'}); }
+window.goToNote=function(n){
+  if(window.NOTES_HREF){ window.location.href=window.NOTES_HREF+'#note'+n; return; }
+  switchView('notes'); setTimeout(()=>scrollToId('note'+n),60);
+};
+window.goToChapter=function(n){
+  if(window.TUTORIAL_HREF){ window.location.href=window.TUTORIAL_HREF+'#ch'+String(n).padStart(2,'0'); return; }
+  switchView('course'); setTimeout(()=>scrollToId('ch'+String(n).padStart(2,'0')),60);
+};
+window.goToArticle=function(n){
+  if(window.ARTICLES_HREF){ window.location.href=window.ARTICLES_HREF+'#article'+n; return; }
+  switchView('articles'); setTimeout(()=>scrollToId('article'+n),60);
+};
 const notesBack=document.getElementById('notes-back');
 if(notesBack) notesBack.addEventListener('click',()=>{ switchView('course'); setTimeout(()=>window.scrollTo({top:0,behavior:'smooth'}),60); });
+const articlesBack=document.getElementById('articles-back');
+if(articlesBack) articlesBack.addEventListener('click',()=>{ switchView('course'); setTimeout(()=>window.scrollTo({top:0,behavior:'smooth'}),60); });
+
+/* 支持通过 URL hash 直达：#articleN / #noteN / #chNN（standalone 页也可深链分享） */
+window.addEventListener('load',function(){
+  const hash=decodeURIComponent(location.hash||''); let m;
+  if((m=hash.match(/^#article(\d+)$/))) setTimeout(()=>scrollToId('article'+m[1]),150);
+  else if((m=hash.match(/^#note(\d+)$/))) setTimeout(()=>scrollToId('note'+m[1]),150);
+  else if((m=hash.match(/^#ch(\d+)$/))) setTimeout(()=>scrollToId('ch'+String(m[1]).padStart(2,'0')),150);
+});
 
 /* ============================================================
    判分自测 + 错题本
@@ -295,13 +309,15 @@ function renderNotes(){
     head.appendChild(titles);
     sec.appendChild(head);
 
-    // 跨系列连接：回交互演示
+    // 跨系列连接：回交互演示 / 看原文 / 回教程
     const links=h('div',{cls:'note-links'});
     const b1=h('button',{cls:'xref',text:'🧩 看第 '+note.n+' 章交互演示'});
     b1.addEventListener('click',()=>{ if(window.TUTORIAL_HREF){ window.location.href = window.TUTORIAL_HREF + '#ch' + String(note.n).padStart(2,'0'); } else { goToChapter(note.n); } });
+    const b3=h('button',{cls:'xref ghost',text:'📄 看第 '+note.n+' 篇原文'});
+    b3.addEventListener('click',()=>{ if(window.ARTICLES_HREF){ window.location.href = window.ARTICLES_HREF + '#article' + note.n; } else { goToArticle(note.n); } });
     const b2=h('button',{cls:'xref ghost',text:'📚 回到教程目录'});
     b2.addEventListener('click',()=>{ if(window.TUTORIAL_HREF){ window.location.href = window.TUTORIAL_HREF; } else { switchView('course'); setTimeout(()=>window.scrollTo({top:0,behavior:'smooth'}),60); } });
-    links.appendChild(b1); links.appendChild(b2);
+    links.appendChild(b1); links.appendChild(b3); links.appendChild(b2);
     sec.appendChild(links);
 
     // 笔记正文（已由 gen_notes.js 转成 HTML）
@@ -311,9 +327,50 @@ function renderNotes(){
 }
 
 /* ============================================================
+   原文系列（materials/llm-*.md -> articles.js）
+   复用 .note* 样式；id 用 articleN 以免与笔记 noteN 冲突
+   ============================================================ */
+function renderArticles(){
+  const app=$('#articles-app'); if(!app) return;
+  app.innerHTML='';
+  const toc=$('#articles-toc'); if(toc) toc.innerHTML='';
+
+  ARTICLES.forEach(a=>{
+    if(toc){
+      const item=h('a',{cls:'notes-toc-item',attrs:{href:'javascript:void(0)'}});
+      item.appendChild(h('span',{cls:'nt-num',text:String(a.n).padStart(2,'0')}));
+      item.appendChild(h('span',{cls:'nt-title',text:a.short}));
+      item.addEventListener('click',()=>{ const t=document.getElementById('article'+a.n); if(t) t.scrollIntoView({behavior:'smooth',block:'start'}); });
+      toc.appendChild(item);
+    }
+
+    const sec=h('section',{cls:'note',attrs:{id:'article'+a.n,'data-n':String(a.n)}});
+    const head=h('div',{cls:'note-head'});
+    head.appendChild(h('div',{cls:'note-badge',text:String(a.n).padStart(2,'0')}));
+    const titles=h('div',{cls:'note-titles'});
+    titles.appendChild(h('div',{cls:'note-kicker',text:'原文 · '+(a.kicker||('第'+a.n+'篇'))}));
+    titles.appendChild(h('h2',{text:a.short}));
+    head.appendChild(titles);
+    sec.appendChild(head);
+
+    const links=h('div',{cls:'note-links'});
+    const b1=h('button',{cls:'xref',text:'🧩 看第 '+a.n+' 章交互演示'});
+    b1.addEventListener('click',()=>goToChapter(a.n));
+    const b2=h('button',{cls:'xref ghost',text:'📝 看第 '+a.n+' 篇精读笔记'});
+    b2.addEventListener('click',()=>goToNote(a.n));
+    links.appendChild(b1); links.appendChild(b2);
+    sec.appendChild(links);
+
+    sec.appendChild(h('div',{cls:'note-body',html:a.html}));
+    app.appendChild(sec);
+  });
+}
+
+/* ============================================================
    初始化（仅当对应视图存在）
    ============================================================ */
 if($('#notes-app')) renderNotes();
+if($('#articles-app')) renderArticles();
 if($('#quiz-app')) renderQuiz();
 if($('#cards-app')) renderCards();
 if($('#dash-app')) renderDash();
