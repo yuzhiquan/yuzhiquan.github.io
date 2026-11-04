@@ -18,9 +18,11 @@ permissions:
   pages: write
   id-token: write
 
-# Allow one concurrent deployment
+# Allow one concurrent deployment per branch. Using a branch-specific group
+# prevents a `chirpy`-branch validation run from cancelling an in-progress
+# `master`/`main` deployment (which would otherwise skip publishing).
 concurrency:
-  group: "pages"
+  group: "pages-${{ github.ref }}"
   cancel-in-progress: true
 
 jobs:
