@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="《AI 大模型 30 课》交互式教程：28 个可动手演示、160 道自测题、80 张闪卡、95 条术语词典与学习进度仪表盘。">
+<title>交互式教程 · AI 大模型 30 课｜轩辕的编程宇宙</title>
+<link rel="stylesheet" href="assets/local.css">
+<link rel="stylesheet" href="assets/study.css">
+</head>
+<body>
+<div class="xy-topbar">
+  <a href="index.html">← 系列目录</a>
+  <span class="xy-brand">交互式教程 · AI 大模型 30 课</span>
+  <a href="notes.html">📝 精读笔记</a>
+  <span>·</span>
+  <a href="/">博客首页</a>
+</div>
+<div class="study-wrap">
+  <header class="study-hero">
+    <div class="xy-kicker">LEARN BY DOING</div>
+    <h1>边拖边懂：把公式变成能动手的东西</h1>
+    <p>按五卷组织的 <strong>28 个交互演示</strong>：调坐标看余弦相似度、改学习率看梯度发散、单步执行注意力打分与 softmax、拉长序列看 KV Cache 的 O(n²) 账单。再配 160 道自测题（自动错题本）、80 张闪卡、95 条术语词典和学习进度仪表盘，进度保存在本机浏览器。</p>
+    <div class="xy-links" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:18px">
+      <a href="notes.html" style="padding:8px 14px;background:#fffaf0;border:1px solid #ddd2ba;border-radius:999px;text-decoration:none;font-size:13px">📝 32 篇精读笔记</a>
+      <a href="index.html" style="padding:8px 14px;background:#fffaf0;border:1px solid #ddd2ba;border-radius:999px;text-decoration:none;font-size:13px">📖 32 篇原文</a>
+    </div>
+  </header>
+  <nav class="study-nav">
+    <button data-view="demos" class="active">🧩 交互演示</button>
+    <button data-view="quiz">🎯 自测 · 160 题</button>
+    <button data-view="cards">🃏 闪卡 · 80 张</button>
+    <button data-view="gloss">📖 术语词典 · 95 条</button>
+    <button data-view="dash">📊 学习进度</button>
+  </nav>
+  <span id="demos" hidden></span><span id="quiz" hidden></span><span id="cards" hidden></span>
+  <span id="gloss" hidden></span><span id="dash" hidden></span>
+  <section id="view-demos" class="study-view active"><div id="demos-app"></div></section>
+  <section id="view-quiz" class="study-view"><div id="quiz-app"></div></section>
+  <section id="view-cards" class="study-view"><div id="cards-app"></div></section>
+  <section id="view-gloss" class="study-view"><div id="gloss-app"></div></section>
+  <section id="view-dash" class="study-view"><div id="dash-app"></div></section>
+  <footer class="study-footer">
+    <p>本页为 <a href="https://www.xuanyuancode.com/ai-llm" target="_blank" rel="noopener">轩辕的编程宇宙 · AI 大模型 30 课</a> 的配套学习材料；演示为便于理解做了极小化建模，数字与结论以原系列为准。</p>
+    <p><a href="index.html">← 返回系列目录</a>　·　<a href="notes.html">精读笔记</a>　·　<a href="/">博客首页</a></p>
+  </footer>
+</div>
+<script src="assets/lessons-xy.js"></script>
+<script src="assets/quiz-xy.js"></script>
+<script src="assets/glossary-xy.js"></script>
+<script src="assets/cards-xy.js"></script>
+<script src="assets/demos-xy.js"></script>
+<script src="assets/study.js"></script>
+</body>
+</html>

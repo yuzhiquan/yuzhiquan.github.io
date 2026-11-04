@@ -11,7 +11,8 @@
 <body>
 <div class="xy-topbar">
   <span class="xy-brand">AI 大模型 30 课 · 系列归档</span>
-  <a href="/llm-from-scratch/">交互教程</a>
+  <a href="notes.html">📝 精读笔记</a>
+  <a href="interactive.html">🧩 交互教程</a>
   <span class="xy-sep">·</span>
   <a href="/">博客首页</a>
 </div>
@@ -21,13 +22,16 @@
   <p>30 节清晰简洁的大模型教程，每课从一个一眼就懂的问题出发：先给最朴素的方案，再亲手发现不足、迭代改好——把向量、神经网络、注意力机制亲手「逼」出来。外加 2 篇附录（Transformer 全景交互图、《Attention Is All You Need》原文逐段翻译）。</p>
   <div class="xy-links">
     <a href="lessons/01-math-01-vector.html">从第 1 课出发 →</a>
+    <a href="notes.html">📝 32 篇精读笔记</a>
+    <a href="interactive.html">🧩 交互式教程（28 个演示）</a>
     <a href="https://www.xuanyuancode.com/ai-llm" target="_blank" rel="noopener">原站阅读 ↗</a>
-    <a href="/llm-from-scratch/">《从零开始理解大模型》交互教程</a>
+    <a href="/llm-from-scratch/">《从零开始理解大模型》</a>
     <a href="/">博客首页</a>
   </div>
   <div class="xy-stats">
     <div><b>30</b>节正课</div><div><b>2</b>篇附录</div>
-    <div><b>5</b>卷体系</div><div><b>60</b>道随课测验</div><div><b>100%</b>正文归档</div>
+    <div><b>5</b>卷体系</div><div><b>32</b>篇精读笔记</div>
+    <div><b>28</b>个交互演示</div><div><b>160</b>道自测题</div>
   </div>
 </header>
 <main class="xy-vols"><section class="xy-vol"><div class="xy-vol-head"><span class="xy-vol-badge">I</span><h2>基础数学</h2><span>把世界变成数字 · 6 篇</span></div><div class="xy-grid"><a class="xy-card" href="lessons/01-math-01-vector.html"><span class="xy-n">LESSON 01 · 卷I</span><h3>什么是向量</h3><p>计算机只认识数字，它怎么知道「猫」和「老虎」比「猫」和「金鱼」更像？</p></a><a class="xy-card" href="lessons/02-math-02-ops.html"><span class="xy-n">LESSON 02 · 卷I</span><h3>向量的常见运算</h3><p>「相似」可以被计算吗？——加法、点积、余弦相似度</p></a><a class="xy-card" href="lessons/03-math-03-matrix.html"><span class="xy-n">LESSON 03 · 卷I</span><h3>什么是矩阵</h3><p>神经网络每一层把一组数字变成另一组数字——这个变换用什么来表示？</p></a><a class="xy-card" href="lessons/04-math-03-transform.html"><span class="xy-n">LESSON 04 · 卷I</span><h3>什么是线性变换</h3><p>矩阵乘法到底在做什么？——把整个空间一起旋转、拉伸、搬动</p></a><a class="xy-card" href="lessons/05-math-04-gradient.html"><span class="xy-n">LESSON 05 · 卷I</span><h3>什么是梯度</h3><p>蒙着眼睛站在山坡上，怎么走到山谷最低点？</p></a><a class="xy-card" href="lessons/06-math-05-prob.html"><span class="xy-n">LESSON 06 · 卷I</span><h3>概率与信息</h3><p>神经网络的输出为什么叫「概率」？——从频率到交叉熵损失</p></a></div></section><section class="xy-vol"><div class="xy-vol-head"><span class="xy-vol-badge">II</span><h2>神经网络</h2><span>让数字学会学习 · 7 篇</span></div><div class="xy-grid"><a class="xy-card" href="lessons/07-nn-01-neuron.html"><span class="xy-n">LESSON 07 · 卷II</span><h3>神经元结构</h3><p>一个只会「加权投票」的小开关，凭什么是智能的起点？</p></a><a class="xy-card" href="lessons/08-nn-02-activation.html"><span class="xy-n">LESSON 08 · 卷II</span><h3>激活函数</h3><p>为什么一百层直线叠起来还是直线？——给网络引入「弯折」</p></a><a class="xy-card" href="lessons/09-nn-03-network.html"><span class="xy-n">LESSON 09 · 卷II</span><h3>神经网络与训练</h3><p>神经元叠成一张网，再让它自己「学」——「训练」到底在做什么？</p></a><a class="xy-card" href="lessons/10-nn-03-loss.html"><span class="xy-n">LESSON 10 · 卷II</span><h3>损失函数</h3><p>「错得有多离谱」怎么变成一个可以比较的数？</p></a><a class="xy-card" href="lessons/11-nn-04-softmax.html"><span class="xy-n">LESSON 11 · 卷II</span><h3>Softmax</h3><p>一组任意大小的分数，怎么变成一组加起来等于 1 的概率？</p></a><a class="xy-card" href="lessons/12-nn-05-sgd.html"><span class="xy-n">LESSON 12 · 卷II</span><h3>梯度下降与优化器</h3><p>知道了往哪边走是下坡，一步该迈多大？</p></a><a class="xy-card" href="lessons/13-nn-06-backprop.html"><span class="xy-n">LESSON 13 · 卷II</span><h3>反向传播</h3><p>输出层错了，第一层的某个权重该负多大责任？</p></a></div></section><section class="xy-vol"><div class="xy-vol-head"><span class="xy-vol-badge">III</span><h2>自然语言处理</h2><span>教机器读懂语言 · 5 篇</span></div><div class="xy-grid"><a class="xy-card" href="lessons/14-nlp-01-ngram.html"><span class="xy-n">LESSON 14 · 卷III</span><h3>语言的概率游戏：N-gram</h3><p>不懂语法、不懂语义，光靠「数数」能不能接出下一个词？</p></a><a class="xy-card" href="lessons/15-nlp-02-word2vec.html"><span class="xy-n">LESSON 15 · 卷III</span><h3>词向量</h3><p>为什么「国王 − 男人 + 女人 ≈ 女王」？词的含义如何变成坐标？</p></a><a class="xy-card" href="lessons/16-nlp-03-ffnn-lm.html"><span class="xy-n">LESSON 16 · 卷III</span><h3>前馈神经网络语言模型</h3><p>N-gram 的稀疏灾难是怎么被绕开的？</p></a><a class="xy-card" href="lessons/17-nlp-04-rnn.html"><span class="xy-n">LESSON 17 · 卷III</span><h3>RNN 循环神经网络</h3><p>固定窗口看不到更早的词——能不能给网络装上「记忆」？</p></a><a class="xy-card" href="lessons/18-nlp-05-lstm.html"><span class="xy-n">LESSON 18 · 卷III</span><h3>LSTM 长短期记忆网络</h3><p>RNN 的记忆为什么传不远？——给记忆装上「阀门」</p></a></div></section><section class="xy-vol"><div class="xy-vol-head"><span class="xy-vol-badge">IV</span><h2>大语言模型</h2><span>一路长成 ChatGPT · 12 篇</span></div><div class="xy-grid"><a class="xy-card" href="lessons/19-tf-01-attention.html"><span class="xy-n">LESSON 19 · 卷IV</span><h3>注意力机制</h3><p>「它太累了」——「它」指谁？让每个词自己决定该看向哪里</p></a><a class="xy-card" href="lessons/20-tf-02-multihead.html"><span class="xy-n">LESSON 20 · 卷IV</span><h3>多头注意力</h3><p>一句话里既有指代、又有语法、又有情感——一个「头」忙得过来吗？</p></a><a class="xy-card" href="lessons/21-tf-transformer.html"><span class="xy-n">LESSON 21 · 卷IV</span><h3>Transformer 架构</h3><p>把注意力、FFN、残差拼在一起——2017 年那篇论文到底做了什么？</p></a><a class="xy-card" href="lessons/22-tf-03-tokenizer.html"><span class="xy-n">LESSON 22 · 卷IV</span><h3>Tokenizer 分词器</h3><p>模型眼里的「字」是什么？为什么 strawberry 数不对 r 的个数？</p></a><a class="xy-card" href="lessons/23-tf-04-arch.html"><span class="xy-n">LESSON 23 · 卷IV</span><h3>编码器、解码器与大语言模型</h3><p>同样是 Transformer，BERT 为什么不能生成文章，GPT 为什么是主流？</p></a><a class="xy-card" href="lessons/24-tf-05-residual.html"><span class="xy-n">LESSON 24 · 卷IV</span><h3>残差连接与层归一化</h3><p>96 层 Transformer——梯度怎么从第 96 层传回第 1 层而不消失？</p></a><a class="xy-card" href="lessons/25-tf-06-training.html"><span class="xy-n">LESSON 25 · 卷IV</span><h3>预训练 · 监督微调 · 强化学习</h3><p>「会接话」和「会帮忙」之间有一道鸿沟——ChatGPT 的三个训练阶段</p></a><a class="xy-card" href="lessons/26-tf-07-sparse.html"><span class="xy-n">LESSON 26 · 卷IV</span><h3>KV 缓存、稀疏注意力与 FlashAttention</h3><p>注意力的账单是 O(n²)——处理一本书，工程师用什么手段把它变快？</p></a><a class="xy-card" href="lessons/27-tf-08-moe.html"><span class="xy-n">LESSON 27 · 卷IV</span><h3>MoE 混合专家架构</h3><p>GPT-4 据说有 1.8 万亿参数——推理每次却只用其中一小部分，怎么做到的？</p></a><a class="xy-card" href="lessons/28-tf-09-distill.html"><span class="xy-n">LESSON 28 · 卷IV</span><h3>模型蒸馏</h3><p>大模型的能力能「传授」给小模型吗——软标签里藏着什么「暗知识」？</p></a><a class="xy-card" href="lessons/29-tf-10-recap.html"><span class="xy-n">LESSON 29 · 卷IV</span><h3>串讲：从 N-gram 到 Transformer</h3><p>学了这么多细节，怎么把它们重新串成一条线？——每一代技术，都是来解上一代死结的</p></a><a class="xy-card" href="lessons/30-tf-11-frontier.html"><span class="xy-n">LESSON 30 · 卷IV</span><h3>前沿与未来：下一程</h3><p>ChatGPT 之后呢？——当下最活跃的研究方向，与大模型可能的演变</p></a></div></section><section class="xy-vol"><div class="xy-vol-head"><span class="xy-vol-badge">V</span><h2>附录</h2><span>回到原典与全景 · 2 篇</span></div><div class="xy-grid"><a class="xy-card" href="lessons/31-appendix-transformer-3d.html"><span class="xy-n">LESSON 附1 · 卷V</span><h3>Transformer全景图</h3><p></p></a><a class="xy-card" href="lessons/32-appendix-attention-paper.html"><span class="xy-n">LESSON 附2 · 卷V</span><h3>《Attention Is All You Need》原文</h3><p>按论文原文顺序逐段翻译，从摘要、架构、公式、实验表格到参考文献，完整读完 Transformer 的起点</p></a></div></section></main>
@@ -35,7 +39,9 @@
   <p><strong>来源与版权</strong>：本系列全部内容来自
     <a href="https://www.xuanyuancode.com/ai-llm" target="_blank" rel="noopener">轩辕的编程宇宙 · xuanyuancode.com/ai-llm</a>，
     版权归原作者所有。本页为个人学习用途的离线归档镜像，保留原站排版、SVG 插图、KaTeX 公式与随课测验；
-    如需引用或获取最新修订，请以原站为准。</p>
+    如需引用或获取最新修订，请以原站为准。<br>
+    本站另配的 <a href="notes.html">32 篇精读笔记</a> 与 <a href="interactive.html">交互式教程</a>（28 个演示 / 160 道自测 / 80 张闪卡 / 95 条术语）
+    是围绕该系列重新编写的学习材料，并非原站内容。</p>
 </footer>
 </body>
 </html>
