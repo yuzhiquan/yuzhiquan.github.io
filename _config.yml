@@ -106,12 +106,20 @@ comments:
     repo:
     issue_term:
   # Giscus options › https://giscus.app/zh-CN
+  #
+  # TO ENABLE COMMENTS (3 steps, ~2 min):
+  #  1. Repo Settings → General → Features → check "Discussions"
+  #  2. Install the giscus app: https://github.com/apps/giscus (grant access to this repo)
+  #  3. Open https://giscus.app/zh-CN , enter "yuzhiquan/yuzhiquan.github.io",
+  #     then copy the generated repo_id / category / category_id into the fields below,
+  #     and set `provider: giscus` above.
+  #
+  # Deliberately left blank: hard-coded IDs from the REST API use the legacy
+  # node-id format and may not match what giscus expects.
   giscus:
     repo: yuzhiquan/yuzhiquan.github.io
-    repo_id: MDEwOlJlcG9zaXRvcnk3NDMzMDY5NA==
-    category: Announcements
-    # TODO: fill in category_id from https://giscus.app/zh-CN
-    # (requires enabling Discussions on this repository first)
+    repo_id:
+    category:
     category_id:
     mapping: pathname
     strict: 0
