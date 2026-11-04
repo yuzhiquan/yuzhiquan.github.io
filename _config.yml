@@ -73,7 +73,7 @@ pageviews:
 # Prefer color scheme setting.
 # Keep empty to follow the system preference; a toggle is always available
 # at the bottom-left of the sidebar.
-theme_mode: dark # [light | dark]
+theme_mode: light # [light | dark]
 
 # The CDN endpoint for media resources.
 cdn:
