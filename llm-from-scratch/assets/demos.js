@@ -770,6 +770,338 @@ DEMOS.operators=function(c){
   draw();
 };
 
+/* ================= 01b top-k / top-p 采样 ================= */
+DEMOS.sampling=function(c){
+  const toks=['the','cat','sat','on','mat'];
+  const logits=[2.1,1.2,0.8,0.5,0.3];
+  const kIn=h('input',{attrs:{type:'range',min:'1',max:'5',step:'1',value:'5'},on:{input:render}});
+  const pIn=h('input',{attrs:{type:'range',min:'0',max:'1',step:'0.05',value:'1'},on:{input:render}});
+  const orig=h('div'); const trunc=h('div');
+  const sampleBtn=h('button',{cls:'btn',text:'抽样一次 🎲',on:{click:doSample}});
+  const out=h('div',{cls:'demo-note'});
+  function softmax(arr){ const m=Math.max(...arr); const e=arr.map(x=>Math.exp(x-m)); const s=e.reduce((a,b)=>a+b,0); return e.map(x=>x/s); }
+  function render(){
+    const K=+kIn.value, P=+pIn.value;
+    const ps=softmax(logits);
+    const order=logits.map((l,i)=>i).sort((a,b)=>logits[b]-logits[a]);
+    const keepK=new Set(order.slice(0,K));
+    let cum=0; const keepP=new Set();
+    for(const i of order){ keepP.add(i); cum+=ps[i]; if(cum>=P) break; }
+    orig.innerHTML=''; trunc.innerHTML='';
+    const maxP=Math.max(...ps);
+    toks.forEach((t,i)=>{
+      orig.appendChild(barRow(t,ps[i],maxP,(ps[i]*100).toFixed(1)+'%'));
+      const kept=keepK.has(i)&&keepP.has(i);
+      const row=barRow(t+(kept?'':' ✕'),kept?ps[i]:0,maxP,(kept?(ps[i]*100).toFixed(1):'0')+'%');
+      const fill=row.querySelector('.bar-fill'); if(fill) fill.style.opacity=kept?'1':'0.18';
+      trunc.appendChild(row);
+    });
+    out.innerHTML=`top-k=<b>${K}</b> 仅保留概率最高的 ${K} 个；top-p=<b>${P}</b> 保留累计概率≥${P} 的最小集合。两者取<b>交集</b>参与采样——这就是「既不胡来、又留余地」的机制。`;
+  }
+  function doSample(){
+    const K=+kIn.value,P=+pIn.value;
+    const ps=softmax(logits);
+    const order=logits.map((l,i)=>i).sort((a,b)=>logits[b]-logits[a]);
+    const keepK=new Set(order.slice(0,K));
+    let cum=0; const keepP=new Set();
+    for(const i of order){ keepP.add(i); cum+=ps[i]; if(cum>=P) break; }
+    let s=0; const r=Math.random();
+    for(const i of order){ if(keepK.has(i)&&keepP.has(i)){ s+=ps[i]; if(r<=s){ out.innerHTML+=`<br>🎯 本次抽到：<b>${toks[i]}</b>（候选概率 ${(ps[i]*100).toFixed(1)}%）`; break; } } }
+  }
+  c.appendChild(h('div',{cls:'demo-title',text:'top-k / top-p：采样前的两次截断'}));
+  c.appendChild(h('div',{cls:'ctrl'},h('label',{},'top-k ',h('span',{text:'5'})),kIn));
+  c.appendChild(h('div',{cls:'ctrl'},h('label',{},'top-p ',h('span',{text:'1.0'})),pIn));
+  c.appendChild(h('div',{cls:'demo-stage'},
+    h('div',{cls:'demo-col'},h('div',{cls:'demo-title',text:'① 原始 softmax 概率'}),orig),
+    h('div',{cls:'demo-col'},h('div',{cls:'demo-title',text:'② 截断后（✕ = 被屏蔽）'}),trunc)));
+  c.appendChild(h('div',{cls:'btn-row'},sampleBtn)); c.appendChild(out);
+  render();
+};
+
+/* ================= 02b 实时分词计数 ================= */
+DEMOS.liveTok=function(c){
+  const ta=h('textarea',{attrs:{placeholder:'输入一段中英文混合文本…'},text:'你好 world，大模型 LLM 帮我写代码！'});
+  const stat=h('div',{cls:'demo-note'}); const chips=h('div');
+  function run(){
+    const s=ta.value; const toks=[]; let i=0; const reCJK=/[一-鿿]/;
+    while(i<s.length){ const ch=s[i];
+      if(reCJK.test(ch)){ toks.push(ch); i++; }
+      else if(/[a-zA-Z]/.test(ch)){ let j=i; while(j<s.length&&/[a-zA-Z]/.test(s[j])) j++;
+        const w=s.slice(i,j); const n=Math.max(1,Math.ceil(w.length/4));
+        for(let k=0;k<n;k++) toks.push(w.length<=6?w:w.slice(Math.floor(k*w.length/n),Math.floor((k+1)*w.length/n)));
+        i=j; }
+      else if(/\s/.test(ch)){ i++; } else { toks.push(ch); i++; } }
+    chips.innerHTML='';
+    toks.forEach(t=>chips.appendChild(h('span',{cls:'kv',attrs:{style:'display:inline-block;margin:3px'},text:t})));
+    const cjk=(s.match(/[一-鿿]/g)||[]).length;
+    const latin=(s.match(/[a-zA-Z]+/g)||[]).length;
+    const bytes=new Blob([s]).size;
+    stat.innerHTML=`估算 token：<b>${toks.length}</b> ｜ 中文字 ${cjk} ｜ 英文词 ${latin} ｜ UTF-8 字节 ${bytes}。<br>注意：中文约 <b>1 字≈1 token</b>，英文词按子词拆（教学估算）；真实分词器数字会不同，但「中文更费 token」的结论不变。`;
+  }
+  ta.addEventListener('input',run);
+  c.appendChild(h('div',{cls:'demo-title',text:'实时分词计数（估算）'}));
+  c.appendChild(h('div',{cls:'ctrl'},ta)); c.appendChild(chips); c.appendChild(stat);
+  run();
+};
+
+/* ================= 03b embedding 2D 散点 ================= */
+DEMOS.embScatter=function(c){
+  const V={king:[1,0,0,0],queen:[1,1,0,0],man:[0,0,0,0],woman:[0,1,0,0],paris:[0,0,1,0],france:[0,0,0,1],cat:[2,0,1,0],dog:[2,0,0,1]};
+  const names=Object.keys(V);
+  function cos(a,b){let d=0,na=0,nb=0;for(let i=0;i<a.length;i++){d+=a[i]*b[i];na+=a[i]*a[i];nb+=b[i]*b[i];}return d/(Math.sqrt(na)*Math.sqrt(nb));}
+  const SIZE=320, cv=h('canvas',{attrs:{width:String(SIZE),height:String(SIZE)}});
+  const info=h('div',{cls:'demo-note'});
+  const btn=h('button',{cls:'btn',text:'画出 king − man + woman →',on:{click:showAna}});
+  function map(v){ return [v[0], v[1]]; } // 用前 2 维投影（教学）
+  function draw(hi){
+    const ctx=cv.getContext('2d'); ctx.clearRect(0,0,SIZE,SIZE);
+    ctx.fillStyle='#fbfbfd'; ctx.fillRect(0,0,SIZE,SIZE);
+    ctx.strokeStyle='#e6e8ee'; ctx.beginPath(); ctx.moveTo(SIZE/2,0); ctx.lineTo(SIZE/2,SIZE); ctx.moveTo(0,SIZE/2); ctx.lineTo(SIZE,SIZE/2); ctx.stroke();
+    const pts=names.map(n=>{ const xy=map(V[n]); return {n,x:SIZE/2+xy[0]*90,y:SIZE/2-xy[1]*90}; });
+    pts.forEach(p=>{ ctx.fillStyle=(hi===p.n)?'#e03131':'#3b5bdb'; ctx.beginPath(); ctx.arc(p.x,p.y,7,0,7); ctx.fill();
+      ctx.fillStyle='#1b1f2a'; ctx.font='12px monospace'; ctx.fillText(p.n,p.x+10,p.y+4); });
+    return pts;
+  }
+  function nearest(n){
+    const sorted=names.filter(x=>x!==n).map(x=>({x, s:cos(V[n],V[x])})).sort((a,b)=>b.s-a.s);
+    info.innerHTML=`<b>${n}</b> 在 4D 向量空间里的最近邻：<br>`+sorted.slice(0,3).map(o=>`${o.x}（cos=${o.s.toFixed(3)}）`).join('、');
+    draw(n);
+  }
+  function showAna(){
+    const r=V.king.map((x,i)=>x-V.man[i]+V.woman[i]);
+    let best=null,bc=-2; names.forEach(n=>{ if(n==='king')return; const s=cos(r,V[n]); if(s>bc){bc=s;best=n;} });
+    const pts=draw(); const rp={x:SIZE/2+r[0]*90,y:SIZE/2-r[1]*90};
+    const ctx=cv.getContext('2d'); ctx.fillStyle='#e8a33d'; ctx.beginPath(); ctx.arc(rp.x,rp.y,8,0,7); ctx.fill();
+    ctx.strokeStyle='#e8a33d'; ctx.beginPath(); ctx.arc(pts.find(p=>p.n==='queen').x,pts.find(p=>p.n==='queen').y,12,0,7); ctx.stroke();
+    info.innerHTML=`king − man + woman = [${r.join(', ')}]，其最近邻 → <b style="color:#e03131">${best}</b>（cos=${bc.toFixed(3)}）。橙色点是运算结果的向量位置，恰好落在 queen 上。`;
+  }
+  cv.addEventListener('click',ev=>{ const rect=cv.getBoundingClientRect(); const x=ev.clientX-rect.left, y=ev.clientY-rect.top;
+    const pts=names.map(n=>{const xy=map(V[n]);return{n,x:SIZE/2+xy[0]*90,y:SIZE/2-xy[1]*90};});
+    let best=null,bd=1e9; pts.forEach(p=>{ const d=(p.x-x)**2+(p.y-y)**2; if(d<bd){bd=d;best=p.n;} });
+    if(bd<400) nearest(best); });
+  c.appendChild(h('div',{cls:'demo-title',text:'2D 投影散点（点我查看最近邻）'}));
+  c.appendChild(cv); c.appendChild(h('div',{cls:'btn-row'},btn)); c.appendChild(info);
+  draw();
+};
+
+/* ================= 04b 多头注意力 ================= */
+DEMOS.multihead=function(c){
+  const Tok=['Thank','you','very'];
+  const head1=[[1,0.1,0.1],[0.1,1,0.1],[0.1,0.1,1]];   // 偏向自身/对角
+  const head2=[[0.2,0.6,0.2],[0.6,0.2,0.6],[0.2,0.6,0.2]]; // 偏向邻居/局部
+  const mk=M=>{ const m=Math.max(...M.flat()); return M.map(r=>r.map(v=>Math.exp(v-m))).map(r=>{const s=r.reduce((a,b)=>a+b,0);return r.map(x=>x/s);}); };
+  const w1=mk(head1), w2=mk(head2);
+  const b1=h('div'); const b2=h('div');
+  b1.appendChild(h('div',{cls:'demo-title',text:'头 ①：偏向「自身」（对角强）'}));
+  b1.appendChild(matToTable(w1,{rowHeads:Tok,colHeads:Tok,heat:true,maxAbs:1,fmt:v=>v.toFixed(2)}));
+  b2.appendChild(h('div',{cls:'demo-title',text:'头 ②：偏向「相邻 token」'}));
+  b2.appendChild(matToTable(w2,{rowHeads:Tok,colHeads:Tok,heat:true,maxAbs:1,fmt:v=>v.toFixed(2)}));
+  c.appendChild(h('div',{cls:'demo-title',text:'同一个输入，不同头学到不同关注模式'}));
+  c.appendChild(h('div',{cls:'demo-stage'},b1,b2));
+  c.appendChild(h('div',{cls:'demo-note',html:'每个 head 有独立的 Q/K/V 投影，因此能并行捕捉不同关系：有的看句法、有的看位置、有的看指代。最后把所有头的输出拼接，再过 <code>W_O</code> 融合——这就是「多头」比单头表达能力强的来源。'}));
+};
+
+/* ================= 05b 前向算力估算 ================= */
+DEMOS.fwdFlops=function(c){
+  const models=(window.DATA&&window.DATA.models)||[{name:'GPT-2',params:124.4e6},{name:'≈7B',params:7e9},{name:'≈70B',params:70e9}];
+  const mSel=h('select'); models.forEach((m,i)=>mSel.appendChild(h('option',{text:m.name,attrs:{value:String(i)}})));
+  const L=h('input',{attrs:{type:'range',min:'128',max:'32768',step:'128',value:'2048'},on:{input:calc}});
+  const B=h('input',{attrs:{type:'range',min:'1',max:'128',step:'1',value:'8'},on:{input:calc}});
+  const bars=h('div'); const info=h('div',{cls:'demo-note'});
+  c.appendChild(h('div',{cls:'demo-title',text:'一次前向的算力（FLOPs）'}));
+  c.appendChild(h('div',{cls:'ctrl'},h('label',{text:'模型'}),mSel));
+  c.appendChild(h('div',{cls:'ctrl'},h('label',{},'序列长 L ',h('span',{id:'fl-L',text:'2048'})),L));
+  c.appendChild(h('div',{cls:'ctrl'},h('label',{},'批大小 B ',h('span',{id:'fl-B',text:'8'})),B));
+  c.appendChild(bars); c.appendChild(info);
+  function calc(){
+    const m=models[+mSel.value], l=+L.value, b=+B.value;
+    document.getElementById('fl-L').textContent=l; document.getElementById('fl-B').textContent=b;
+    const perTok=2*m.params;                 // 每个 token 前向 ≈ 2P 次乘加
+    const seq=perTok*l;                       // 整条序列前向
+    const total=seq*b;                        // 整批
+    const train=total*3;                      // 训练 = 前向 + 2×反向
+    bars.innerHTML='';
+    bars.appendChild(barRow('每 token 前向',perTok,total,perTok.toExponential(2)));
+    bars.appendChild(barRow('整序列前向',seq,total,seq.toExponential(2)));
+    bars.appendChild(barRow('整批(×B)前向',total,total,total.toExponential(2)));
+    bars.appendChild(barRow('整批训练(×3)',train,Math.max(train,1),train.toExponential(2)));
+    info.innerHTML=`估算：每 token 前向 ≈ <b>2P</b> = ${perTok.toExponential(2)} FLOPs；训练（前向+2×反向）约为前向的 3 倍。这也是 Scaling Law 里 <code>C≈6ND</code> 的来源（D 为训练 token 数）。`;
+  }
+  calc();
+};
+
+/* ================= 07b 解码吞吐模拟 ================= */
+DEMOS.decodeSim=function(c){
+  const models=(window.DATA&&window.DATA.models)||[{name:'7B',params:7e9},{name:'70B',params:70e9}];
+  const bw=2000; // A100 GB/s 默认
+  let mi=0;
+  const mSel=h('select',{on:{change:()=>{mi=+mSel.value;calc();}}});
+  models.forEach((m,i)=>mSel.appendChild(h('option',{text:m.name,attrs:{value:String(i)}})));
+  const N=h('input',{attrs:{type:'range',min:'256',max:'131072',step:'256',value:'4096'},on:{input:calc}});
+  const toggle=h('input',{attrs:{type:'checkbox'}}); toggle.checked=true; toggle.addEventListener('change',calc);
+  const bars=h('div'); const info=h('div',{cls:'demo-note'});
+  c.appendChild(h('div',{cls:'demo-title',text:'逐字生成：有/无 KV Cache 的耗时差'}));
+  c.appendChild(h('div',{cls:'ctrl'},h('label',{text:'模型'}),mSel));
+  c.appendChild(h('div',{cls:'ctrl'},h('label',{},'要生成的序列长 N ',h('span',{id:'ds-N',text:'4096'})),N));
+  c.appendChild(h('div',{cls:'ctrl'},h('label',{},'启用 KV Cache ',toggle)));
+  c.appendChild(bars); c.appendChild(info);
+  function calc(){
+    const m=models[mi], n=+N.value; document.getElementById('ds-N').textContent=n;
+    const tStep=m.params*2/(bw*1e9)*1000; // 每步读权重耗时(ms)
+    let totalMs, tps;
+    if(toggle.checked){ totalMs=tStep*n; tps=n/totalMs*1000; }
+    else { // 无 cache：第 i 步要重算前 i 个 token，累计 ∝ n²/2
+      totalMs=tStep*n*(n+1)/2; tps=n/totalMs*1000; }
+    bars.innerHTML='';
+    bars.appendChild(barRow('总生成耗时',totalMs,totalMs,totalMs>1000?(totalMs/1000).toFixed(1)+' s':totalMs.toFixed(0)+' ms'));
+    bars.appendChild(barRow('吞吐 tokens/s',tps,Math.max(tps,1),tps.toFixed(0)+' tok/s'));
+    info.innerHTML=`单步读权重耗时 ≈ <b>${tStep.toFixed(1)} ms</b>。<br>${toggle.checked?'有 KV Cache：每步只算 1 个新 token，总耗时 ∝ N，吞吐稳定。':'无 KV Cache：每步要重算前面全部 token，总耗时 ∝ N²，序列越长崩得越狠。'}<br>这正是「首字慢、后面快」且长上下文昂贵的根本原因。`;
+  }
+  calc();
+};
+
+/* ================= 09b 算力预算计算器 ================= */
+DEMOS.budgetCalc=function(c){
+  const D=window.DATA&&window.DATA.scaling;
+  const nIn=h('input',{attrs:{type:'range',min:'7',max:'12',step:'0.1',value:'10'},on:{input:calcN}});
+  const lIn=h('input',{attrs:{type:'range',min:'2.0',max:'3.6',step:'0.05',value:'2.56'},on:{input:calcL}});
+  const bars=h('div'); const info=h('div',{cls:'demo-note'});
+  c.appendChild(h('div',{cls:'demo-title',text:'算力预算：参数 ↔ 训练 FLOPs ↔ 目标损失'}));
+  c.appendChild(h('div',{cls:'ctrl'},h('label',{},'参数量 N（log10） ',h('span',{id:'bc-N',text:'1e10'})),nIn));
+  c.appendChild(h('div',{cls:'ctrl'},h('label',{},'目标 Loss ',h('span',{id:'bc-L',text:'2.56'})),lIn));
+  c.appendChild(bars); c.appendChild(info);
+  function calcN(){
+    const N=Math.pow(10,+nIn.value); document.getElementById('bc-N').textContent='1e'+nIn.value;
+    const tokens=20*N;                 // Chinchilla: D≈20N
+    const flops=6*N*tokens;            // C≈6ND
+    const usd=flops/1e18;              // 粗略 ~$1 / 1e18 FLOPs
+    bars.innerHTML='';
+    bars.appendChild(barRow('训练 token 数 D(≈20N)',tokens,tokens,tokens.toExponential(2)));
+    bars.appendChild(barRow('训练 FLOPs(≈6ND)',flops,flops,flops.toExponential(2)));
+    bars.appendChild(barRow('粗略成本(≈$1/1e18)',usd,Math.max(usd,1e-6),'$'+usd.toExponential(2)));
+    info.innerHTML=`给定 N=1e${nIn.value}：按 Chinchilla 配 <b>D≈20N</b>，训练算力 <b>C≈6ND</b> ≈ ${flops.toExponential(2)} FLOPs（约 $${usd.toExponential(2)}，极粗略估算）。`;
+  }
+  function calcL(){
+    const L=+lIn.value; document.getElementById('bc-L').textContent=L.toFixed(2);
+    const a=1, alpha=(D&&D.alpha)||0.0616;
+    const N=Math.pow(L/a, -1/alpha);
+    bars.innerHTML='';
+    bars.appendChild(barRow('达到 Loss '+L.toFixed(2)+' 所需 N',N,N,N.toExponential(2)));
+    bars.appendChild(barRow('对应训练 FLOPs(≈6N·20N)',6*N*20*N,6*N*20*N,(6*N*20*N).toExponential(2)));
+    info.innerHTML=`反推：由 L ≈ ${a}·N<sup>−${alpha}</sup> 得所需参数 <b>N ≈ ${N.toExponential(2)}</b>。Loss 每降一点，参数/算力要指数级增长——这就是大模型「烧钱」的本质。`;
+  }
+  calcN();
+};
+
+/* ================= 12b 训练显存计算器 ================= */
+DEMOS.memCalc=function(c){
+  const models=(window.DATA&&window.DATA.models)||[{name:'GPT-2',params:124.4e6},{name:'≈7B',params:7e9},{name:'≈70B',params:70e9}];
+  let mi=0;
+  const mSel=h('select',{on:{change:()=>{mi=+mSel.value;calc();}}});
+  models.forEach((m,i)=>mSel.appendChild(h('option',{text:m.name,attrs:{value:String(i)}})));
+  const B=h('input',{attrs:{type:'range',min:'1',max:'64',step:'1',value:'8'},on:{input:calc}});
+  const L=h('input',{attrs:{type:'range',min:'512',max:'32768',step:'512',value:'4096'},on:{input:calc}});
+  const bars=h('div'); const info=h('div',{cls:'demo-note'});
+  c.appendChild(h('div',{cls:'demo-title',text:'训练显存账（峰值占用）'}));
+  c.appendChild(h('div',{cls:'ctrl'},h('label',{text:'模型'}),mSel));
+  c.appendChild(h('div',{cls:'ctrl'},h('label',{},'批大小 B ',h('span',{id:'mc-B',text:'8'})),B));
+  c.appendChild(h('div',{cls:'ctrl'},h('label',{},'序列长 L ',h('span',{id:'mc-L',text:'4096'})),L));
+  c.appendChild(bars); c.appendChild(info);
+  function calc(){
+    const m=models[mi], b=+B.value, l=+L.value; document.getElementById('mc-B').textContent=b; document.getElementById('mc-L').textContent=l;
+    const P=m.params;
+    const w=P*2, g=P*2, adam=P*12;                  // fp16 权重 / 梯度 / Adam 状态
+    const layers=(m.layers)||32, d=(m.d)||4096;
+    const act=2*layers*l*d*b*2;                     // 激活（粗略）
+    const total=w+g+adam+act;
+    const parts=[['权重 fp16',w],['梯度 fp16',g],['优化器状态',adam],['激活',act]];
+    bars.innerHTML='';
+    parts.forEach(p=>bars.appendChild(barRow(p[0],p[1],total,fmtBytes(p[1]))));
+    info.innerHTML=`峰值显存 ≈ <b>${fmtBytes(total)}</b>。其中<b>优化器状态约占 12 字节/参数</b>（Adam 的 m、v 与 fp32 副本），是最大头；所以「能不能训」往往卡在显存而非算力。`;
+  }
+  calc();
+};
+
+/* ================= 13b 模型成本对比 ================= */
+DEMOS.costCompare=function(c){
+  const models=(window.DATA&&window.DATA.pricing)||[{name:'DeepSeek V4 Pro',hit:1,input:12,output:24},{name:'Flash',hit:0.2,input:1,output:2}];
+  const hit=h('input',{attrs:{type:'number',value:'1500'},on:{input:calc}});
+  const nin=h('input',{attrs:{type:'number',value:'500'},on:{input:calc}});
+  const out=h('input',{attrs:{type:'number',value:'800'},on:{input:calc}});
+  const bars=h('div'); const info=h('div',{cls:'demo-note'});
+  c.appendChild(h('div',{cls:'demo-title',text:'不同模型 API 成本对比（元 / 百万 token）'}));
+  c.appendChild(h('div',{cls:'ctrl'},h('label',{text:'命中缓存输入'}),hit));
+  c.appendChild(h('div',{cls:'ctrl'},h('label',{text:'新增输入'}),nin));
+  c.appendChild(h('div',{cls:'ctrl'},h('label',{text:'输出'}),out));
+  c.appendChild(bars); c.appendChild(info);
+  function calc(){
+    const H=+hit.value||0,I=+nin.value||0,O=+out.value||0;
+    const rows=models.map(m=>({name:m.name, cost:(H*m.hit+I*m.input+O*m.output)/1e6}));
+    const max=Math.max(...rows.map(r=>r.cost),1e-6);
+    bars.innerHTML='';
+    rows.sort((a,b)=>b.cost-a.cost).forEach(r=>bars.appendChild(barRow(r.name,r.cost,max,'¥'+r.cost.toFixed(4))));
+    info.innerHTML=`同样负载下各模型总价（元）。输出最贵、命中缓存最便宜——所以「少输出 + 复用缓存」对哪个模型都成立。`;
+  }
+  calc();
+};
+
+/* ================= 15b MoE vs Dense ================= */
+DEMOS.moeToggle=function(c){
+  const M=window.DATA&&window.DATA.moe;
+  const total=M?M.total:1.6e12, active=M?M.active:49e9;
+  let moe=true;
+  const btn=h('button',{cls:'btn',text:'切换：MoE ↔ Dense',on:{click:()=>{moe=!moe;draw();}}});
+  const bars=h('div'); const info=h('div',{cls:'demo-note'});
+  c.appendChild(h('div',{cls:'demo-title',text:'MoE vs Dense：容量与单次计算解耦'}));
+  c.appendChild(h('div',{cls:'btn-row'},btn)); c.appendChild(bars); c.appendChild(info);
+  function draw(){
+    btn.textContent = moe ? '当前：MoE（切换为 Dense）' : '当前：Dense（切换为 MoE）';
+    bars.innerHTML='';
+    if(moe){
+      const relAct=active/total;
+      bars.appendChild(barRow('激活参数(每 token 计算)',active,total,fmtBytes(active)+`（${(relAct*100).toFixed(1)}%）`));
+      bars.appendChild(barRow('需装入显存(全部专家)',total,total,fmtBytes(total)));
+      bars.appendChild(barRow('单次计算量(相对)',relAct,1,(relAct).toFixed(3)+'×'));
+      info.innerHTML=`MoE：总参数 <b>${fmtBytes(total)}</b> 全要进显存，但每 token 只激活 top-2 专家 ≈ <b>${fmtBytes(active)}</b>。计算量只有 Dense 的 <b>${(relAct*100).toFixed(1)}%</b>，显存却一样——「用显存换算力」。`;
+    } else {
+      bars.appendChild(barRow('激活参数(每 token 计算)',total,total,fmtBytes(total)));
+      bars.appendChild(barRow('需装入显存',total,total,fmtBytes(total)));
+      bars.appendChild(barRow('单次计算量(相对)',1,1,'1.000×'));
+      info.innerHTML=`Dense：每个 token 都要过全部 <b>${fmtBytes(total)}</b> 参数，计算量与显存占用相等。相比 MoE，同样显存下算得更慢。`;
+    }
+  }
+  draw();
+};
+
+/* ================= 16b 算子：算力受限 vs 带宽受限 ================= */
+DEMOS.opTimeline=function(c){
+  const PEAK={H100:990e12,A100:312e12,CPU:2e12};
+  const BW={H100:3350,A100:2000,CPU:80};
+  const models=(window.DATA&&window.DATA.models)||[{name:'7B',params:7e9},{name:'70B',params:70e9}];
+  let mi=0, ci=0;
+  const mSel=h('select',{on:{change:()=>{mi=+mSel.value;calc();}}});
+  models.forEach((m,i)=>mSel.appendChild(h('option',{text:m.name,attrs:{value:String(i)}})));
+  const cSel=h('select',{on:{change:()=>{ci=+cSel.value;calc();}}});
+  Object.keys(PEAK).forEach((k,i)=>cSel.appendChild(h('option',{text:k,attrs:{value:String(i)}})));
+  cSel.value='0';
+  const bars=h('div'); const info=h('div',{cls:'demo-note'});
+  c.appendChild(h('div',{cls:'demo-title',text:'单 token 前向：受算力限制还是带宽限制？'}));
+  c.appendChild(h('div',{cls:'ctrl'},h('label',{text:'模型'}),mSel));
+  c.appendChild(h('div',{cls:'ctrl'},h('label',{text:'芯片'}),cSel));
+  c.appendChild(bars); c.appendChild(info);
+  function calc(){
+    const P=models[mi].params, chip=Object.keys(PEAK)[ci];
+    const comp=P*2/PEAK[chip];          // 算力受限耗时(s)
+    const mem=P*2/BW[chip]/1e9;          // 带宽受限耗时(s)
+    const dom=mem>comp?'带宽受限（memory-bound）':'算力受限（compute-bound）';
+    bars.innerHTML='';
+    bars.appendChild(barRow('算力受限耗时',comp,Math.max(comp,mem),comp.toExponential(2)+' s'));
+    bars.appendChild(barRow('带宽受限耗时',mem,Math.max(comp,mem),mem.toExponential(2)+' s'));
+    info.innerHTML=`${models[mi].name} @ ${chip}：单 token 前向需 2P 次运算、且要把 2P 字节的权重从显存读一遍。<br>实际耗时 ≈ <b>max(算力, 带宽)</b> → 大模型几乎都是 <b>${dom}</b>。这意味着堆算力不如堆带宽（HBM），也是 FlashAttention 想省的就是「带宽」。`;
+  }
+  calc();
+};
+
 /* 暴露 */
 window.DEMOS=DEMOS;
 window.__HUD=HUD;

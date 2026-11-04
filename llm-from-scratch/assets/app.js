@@ -8,6 +8,12 @@ const DEMOS = window.DEMOS || {};
 const HUD = window.__HUD;
 const STEPPER = new Set(['attention','kvcache','agent']);
 const STORE_KEY = 'llm_from_scratch_done_v1';
+// 每章的额外演示（在主演示之外再挂一个或多个）
+const EXTRA_DEMOS = {
+  ch01:['sampling'], ch02:['liveTok'], ch03:['embScatter'], ch04:['multihead'],
+  ch05:['fwdFlops'], ch07:['decodeSim'], ch09:['budgetCalc'], ch12:['memCalc'],
+  ch13:['costCompare'], ch15:['moeToggle'], ch16:['opTimeline']
+};
 
 /* ---------- 状态 ---------- */
 function loadDone(){ try{ return new Set(JSON.parse(localStorage.getItem(STORE_KEY)||'[]')); }catch(e){ return new Set(); } }
@@ -46,6 +52,13 @@ CH.forEach((ch,idx)=>{
     `<div class="ch-badge">${String(ch.n).padStart(2,'0')}</div>`+
     `<div class="ch-titles"><h2>${ch.title}</h2><div class="ch-en">${ch.en||''}</div></div>`));
   sec.appendChild(el('div','ch-oneliner', ch.one));
+
+  // 跨系列连接：跳到本篇对应的精读笔记
+  const noteLink = el('a','xref-banner','📝 看本篇精读笔记（第 '+ch.n+' 篇）→');
+  noteLink.href = 'javascript:void(0)';
+  noteLink.addEventListener('click',()=>{ if(window.goToNote) window.goToNote(ch.n); });
+  sec.appendChild(noteLink);
+
   const body = el('div','ch-body');
   (ch.blocks||[]).forEach(b=>body.appendChild(blockToNode(b)));
   sec.appendChild(body);
@@ -53,7 +66,12 @@ CH.forEach((ch,idx)=>{
   // Demo
   if(ch.demo && DEMOS[ch.demo]){
     const demo = el('div','demo');
-    demo.appendChild(el('div','demo-head','<span class="demo-dot"></span><span class="demo-title">🧩 交互演示</span>'));
+    const demoHead = el('div','demo-head','<span class="demo-dot"></span><span class="demo-title">🧩 交互演示</span>');
+    const demoNote = el('a','xref','📝 对应笔记');
+    demoNote.href = 'javascript:void(0)';
+    demoNote.addEventListener('click',()=>{ if(window.goToNote) window.goToNote(ch.n); });
+    demoHead.appendChild(demoNote);
+    demo.appendChild(demoHead);
     demo.appendChild(el('div','demo-sub','动手玩：下面这个部件是本章概念的可视化，拖动/点击它会实时变化。'));
     const container = el('div','demo-container');
     demo.appendChild(container);
@@ -61,6 +79,22 @@ CH.forEach((ch,idx)=>{
     if(STEPPER.has(ch.demo)){ demo.dataset.stepper='1'; demo._container=container; demo._demo=ch.demo; }
     else { try{ DEMOS[ch.demo](container); }catch(e){ container.appendChild(el('div','demo-note','演示加载失败：'+e.message)); } }
   }
+
+  // 额外演示（每章可多于一个）
+  (EXTRA_DEMOS[ch.id]||[]).forEach((dn,di)=>{
+    if(!DEMOS[dn]) return;
+    const demo=el('div','demo');
+    const head=el('div','demo-head',`<span class="demo-dot"></span><span class="demo-title">🧩 交互演示 ${String.fromCharCode(0x2461+di)}</span>`);
+    const nl=el('a','xref','📝 对应笔记');
+    nl.href='javascript:void(0)';
+    nl.addEventListener('click',()=>{ if(window.goToNote) window.goToNote(ch.n); });
+    head.appendChild(nl); demo.appendChild(head);
+    demo.appendChild(el('div','demo-sub','同一个概念的另一种玩法：'));
+    const container=el('div','demo-container');
+    demo.appendChild(container);
+    sec.appendChild(demo);
+    try{ DEMOS[dn](container); }catch(e){ container.appendChild(el('div','demo-note','演示加载失败：'+e.message)); }
+  });
 
   // Panels: keyPoints, numbers, analogy, mistakes, quiz
   if(ch.keyPoints && ch.keyPoints.length){

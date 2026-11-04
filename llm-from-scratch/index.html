@@ -9,12 +9,21 @@
 <body>
 <div id="progress-top"><div id="progress-top-fill"></div></div>
 
+<nav id="topnav">
+  <button class="nav-btn active" data-view="course">📚 教程</button>
+  <button class="nav-btn" data-view="notes">📝 精读笔记</button>
+  <button class="nav-btn" data-view="quiz">🎯 自测</button>
+  <button class="nav-btn" data-view="cards">🃏 闪卡</button>
+  <button class="nav-btn" data-view="dash">📊 仪表盘</button>
+  <button class="nav-btn" data-view="gloss">📖 词典</button>
+</nav>
+
 <div id="layout">
   <!-- 侧边栏 -->
   <aside id="sidebar">
     <div class="brand">
       <div class="brand-mark">LLM<span>·</span>FROM<span>·</span>SCRATCH</div>
-      <div class="brand-sub">交互式教程 · 16 篇</div>
+      <div class="brand-sub">交互教程 + 精读笔记 · 16 篇</div>
     </div>
 
     <div class="progress-card">
@@ -40,6 +49,7 @@
 
   <!-- 主内容 -->
   <main id="main">
+    <div id="view-course" class="view active">
     <header id="hero">
       <div class="hero-kicker">INTERACTIVE COURSE</div>
       <h1>从零开始理解大模型</h1>
@@ -47,10 +57,16 @@
         把 16 篇《llm-from-scratch》教程变成可动手的交互式讲解：每一章都有<strong>能跑的演示</strong>，
         拖动滑块、点开热力图、单步执行 Agent 循环——边玩边懂。
       </p>
+      <p class="notes-source">
+        📖 内容来自
+        <a href="https://github.com/GitHubxsy/nanoAgent/blob/book/llm/README.md" target="_blank" rel="noopener">GitHubxsy/nanoAgent · book/llm/README.md</a>
+        （《从零开始理解大模型》16 篇）；配套 16 篇精读笔记已作为独立系列收录，可在顶部「📝 精读笔记」切换。
+      </p>
       <div class="hero-meta">
         <span>📚 16 章</span>
-        <span>🧩 16 个交互演示</span>
-        <span>🎯 45+ 自测题</span>
+        <span>🧩 27 个交互演示</span>
+        <span>📝 16 篇精读笔记</span>
+        <span>🎯 128 道自测题</span>
         <span>💾 进度本地保存</span>
       </div>
       <div class="hero-start">
@@ -61,10 +77,58 @@
     <div id="chapters"><!-- 由 app.js 渲染 --></div>
 
     <footer id="footer">
-      <p>本教程内容整理自 GitHub 仓库 <code>GitHubxsy/nanoAgent</code> 分支
-        <code>claude/organize-teaching-materials-4hnRP</code> 下的 <code>llm-from-scratch</code> 系列文档。</p>
-      <p class="muted">所有数字、公式、代码均来自原教程；交互演示为便于理解做了极小化建模。</p>
+      <p>本教程内容整理自
+        <a href="https://github.com/GitHubxsy/nanoAgent/blob/book/llm/README.md" target="_blank" rel="noopener">GitHubxsy/nanoAgent · book/llm/README.md</a>
+        （《从零开始理解大模型》正篇 10 篇 + 番外 6 篇）。</p>
+      <p class="muted">配套精读笔记整理自
+        <a href="https://github.com/yuzhiquan/llm-starter/tree/main/%E7%B2%BE%E8%AF%BB%E7%AC%94%E8%AE%B0" target="_blank" rel="noopener">yuzhiquan/llm-starter · 精读笔记</a>。
+        所有数字、公式、代码均来自原教程；交互演示为便于理解做了极小化建模。</p>
     </footer>
+    </div><!-- /view-course -->
+
+    <div id="view-notes" class="view">
+      <header class="notes-hero">
+        <div class="hero-kicker">CLOSE READING · 16 NOTES</div>
+        <h1>精读笔记 · 16 篇</h1>
+        <p class="hero-lead">
+          和交互教程配套的深度伴读。每篇结构统一：
+          <strong>三句话抓要点 → 概念逐层拆 → 手算推演 → 代码逐行 → 数字速查 → 类比拆解 → 五个误区 → 自测 8 题 → 一页速记</strong>。
+          遇到不懂的机制，直接点「看交互演示」回到对应章节动手验证。
+        </p>
+        <p class="notes-source">
+          📖 原文来自
+          <a href="https://github.com/GitHubxsy/nanoAgent/blob/book/llm/README.md" target="_blank" rel="noopener">GitHubxsy/nanoAgent · book/llm/README.md</a>；
+          精读笔记整理自
+          <a href="https://github.com/yuzhiquan/llm-starter/tree/main/%E7%B2%BE%E8%AF%BB%E7%AC%94%E8%AE%B0" target="_blank" rel="noopener">yuzhiquan/llm-starter · 精读笔记</a>。
+        </p>
+        <div class="notes-actions">
+          <button class="btn ghost" id="notes-back">← 回到交互教程</button>
+        </div>
+      </header>
+      <nav id="notes-toc" class="notes-toc"><!-- 由 modules.js 渲染 --></nav>
+      <div id="notes-app"><!-- 由 modules.js 渲染 --></div>
+    </div>
+
+    <div id="view-quiz" class="view">
+      <div class="view-head"><h2>🎯 交互式自测 + 错题本</h2><p class="view-sub">逐题选择、即时判分；答错的自动进错题本，可随时复习。</p></div>
+      <div id="quiz-app"></div>
+    </div>
+
+    <div id="view-cards" class="view">
+      <div class="view-head"><h2>🃏 概念闪卡</h2><p class="view-sub">点击翻转看释义，标记「已掌握」可过滤。适合碎片时间过一遍。</p></div>
+      <div id="cards-app"></div>
+    </div>
+
+    <div id="view-dash" class="view">
+      <div class="view-head"><h2>📊 学习仪表盘</h2><p class="view-sub">你的学习数据可视化。</p></div>
+      <div id="dash-app"></div>
+    </div>
+
+    <div id="view-gloss" class="view">
+      <div class="view-head"><h2>📖 术语词典</h2><p class="view-sub">搜索术语，点开看英文名、一句解释与所在章节。</p></div>
+      <div class="gloss-search"><input id="gloss-input" type="text" placeholder="搜索术语 / 英文…" autocomplete="off"></div>
+      <div id="gloss-app"></div>
+    </div>
   </main>
 </div>
 
@@ -77,8 +141,13 @@
   <button id="step-play" title="播放 / 暂停 (空格)">▶ 播放</button>
 </div>
 
-<script src="assets/content.js"></script>
-<script src="assets/demos.js"></script>
-<script src="assets/app.js"></script>
+<script src="assets/quiz.js?v=3"></script>
+<script src="assets/glossary.js?v=3"></script>
+<script src="assets/data.js?v=3"></script>
+<script src="assets/content.js?v=3"></script>
+<script src="assets/notes.js?v=3"></script>
+<script src="assets/demos.js?v=3"></script>
+<script src="assets/app.js?v=3"></script>
+<script src="assets/modules.js?v=3"></script>
 </body>
 </html>
