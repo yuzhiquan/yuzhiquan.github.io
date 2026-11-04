@@ -13,4 +13,4 @@ Cloud Native / Kubernetes / Go，现在也写点 LLM 基础设施。
 
 👉 **[从零开始理解大模型 · 交互式教程](/llm-from-scratch/)** —— 一个可以动手调参、看注意力与采样过程的交互教程。
 
-👉 **[轩辕的编程宇宙 · AI 大模型 30 课](/ai-llm/)** —— 从向量到 Transformer 的 30 课 + 2 篇附录全文归档，另一个独立系列。
+👉 **[轩辕的编程宇宙 · AI 大模型 30 课](/ai-llm/)** —— 从向量到 Transformer 的 30 课 + 2 篇附录全文归档，另一个独立系列，另配 [32 篇精读笔记](/ai-llm/notes.html) 与 [交互式教程](/ai-llm/interactive.html)。

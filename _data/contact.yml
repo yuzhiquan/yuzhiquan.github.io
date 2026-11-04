@@ -23,6 +23,16 @@
   icon: "fas fa-book-open"
   url: "https://yuzhiquan.github.io/ai-llm/"
   noblank: true
+
+- type: ai-llm-notes
+  icon: "fas fa-book"
+  url: "https://yuzhiquan.github.io/ai-llm/notes.html"
+  noblank: true
+
+- type: ai-llm-lab
+  icon: "fas fa-flask"
+  url: "https://yuzhiquan.github.io/ai-llm/interactive.html"
+  noblank: true
 # Uncomment and complete the url below to enable more contact options
 #
 # - type: mastodon
