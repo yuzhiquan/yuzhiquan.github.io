@@ -1,0 +1,267 @@
+---
+---
+
+@use 'abstracts/variables' with (
+  $theme: '{{ site.theme_mode }}'
+);
+
+/* prettier-ignore */
+@use 'main
+{%- if jekyll.environment == 'production' -%}
+  .bundle
+{%- endif -%}
+';
+
+/* ==========================================================================
+   Custom style — "llm-from-scratch" inspired look
+   Light gray canvas (#f6f7f9) + white cards + indigo accent (#3b5bdb)
+   with a blue→purple gradient, large radius, soft shadows and dark code
+   blocks. Mirrors the visual language of /llm-from-scratch/.
+   ========================================================================== */
+
+/* ---- 1. Theme tokens (light = target look) ----------------------------- */
+[data-bs-theme=light] {
+  --bs-primary: #3b5bdb;
+  --bs-primary-rgb: 59, 91, 219;
+  --bs-link-color: #3b5bdb;
+  --bs-link-hover-color: #28408f;
+  --bs-link-underline-color: #b9c4f5;
+  --bs-body-bg: #f6f7f9;
+  --bs-body-color: #1b1f2a;
+  --bs-border-color: #e6e8ee;
+  --bs-border-color-translucent: rgba(20, 30, 60, 0.08);
+  --bs-secondary-bg: #fbfbfd;
+  --bs-tertiary-bg: #fbfbfd;
+  --bs-card-bg: #ffffff;
+  --bs-card-border-color: #e6e8ee;
+  --bs-card-cap-bg: #fbfbfd;
+  --bs-border-radius: 10px;
+  --bs-border-radius-sm: 9px;
+  --bs-border-radius-lg: 14px;
+  --bs-border-radius-xl: 16px;
+  --bs-body-font-family: system-ui, -apple-system, "Segoe UI", "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+
+  /* Chirpy-specific vars */
+  --text-color: #1b1f2a;
+  --text-muted-color: #5a6275;
+  --card-bg: #ffffff;
+  --sidebar-bg: #ffffff;
+  --topbar-bg: rgba(255, 255, 255, 0.92);
+  --link-color: #3b5bdb;
+  --link-underline-color: #b9c4f5;
+  --blockquote-border-color: #e6e8ee;
+  --blockquote-text-color: #5a6275;
+  --mask-bg: rgba(20, 30, 60, 0.28);
+  --main-bg: #f6f7f9;
+  --main-border-color: #e6e8ee;
+
+  /* helpers reused below */
+  --accent: #3b5bdb;
+  --accent-ink: #28408f;
+  --accent-soft: #e7ecff;
+  --grad: linear-gradient(135deg, #3b5bdb, #7048e8);
+  --radius: 14px;
+  --radius-sm: 9px;
+  --shadow: 0 1px 2px rgba(20, 30, 60, 0.05), 0 8px 24px rgba(20, 30, 60, 0.06);
+}
+
+/* ---- 1b. Dark mode: keep elegant, switch accent to indigo ------------- */
+[data-bs-theme=dark] {
+  --bs-primary: #5c7cfa;
+  --bs-primary-rgb: 92, 124, 250;
+  --bs-link-color: #8aa0ff;
+  --bs-link-hover-color: #b9c4f5;
+  --bs-card-bg: #1e1f24;
+  --bs-border-color: #2c2e34;
+  --bs-secondary-bg: #232428;
+  --bs-tertiary-bg: #232428;
+
+  --text-color: #d8dae0;
+  --text-muted-color: #9aa0ad;
+  --card-bg: #1e1f24;
+  --sidebar-bg: #1e1f24;
+  --topbar-bg: rgba(27, 27, 30, 0.85);
+  --link-color: #8aa0ff;
+  --blockquote-border-color: #34363d;
+  --blockquote-text-color: #9aa0ad;
+  --main-bg: #181a1e;
+  --main-border-color: #2c2e34;
+
+  --accent: #5c7cfa;
+  --accent-ink: #b9c4f5;
+  --accent-soft: rgba(92, 124, 250, 0.16);
+  --grad: linear-gradient(135deg, #5c7cfa, #9775fa);
+  --radius: 14px;
+  --radius-sm: 9px;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+/* ---- 2. Cards: white panel + soft shadow + big radius ---------------- */
+.card-wrapper.card,
+.card {
+  border-radius: var(--radius) !important;
+  border-color: var(--bs-border-color) !important;
+  background: var(--bs-card-bg) !important;
+  box-shadow: var(--shadow) !important;
+}
+.card .card-body {
+  padding: 1.25rem 1.4rem;
+}
+.card-title,
+.card-title a {
+  color: var(--text-color) !important;
+  letter-spacing: -0.2px;
+}
+.card .content {
+  color: var(--text-muted-color) !important;
+}
+#post-list .post-preview {
+  padding: 1.1rem 0;
+}
+
+/* ---- 3. Headings: tight tracking + accent left bar (like llm notes) -- */
+.post-content h1,
+.post-content h2,
+.post-content h3 {
+  letter-spacing: -0.2px;
+}
+.post-content h2 {
+  border-left: 3px solid var(--accent);
+  padding-left: 12px;
+  margin-top: 2rem;
+}
+.post-content h3 {
+  border-left: 3px solid var(--accent);
+  padding-left: 10px;
+}
+
+/* ---- 4. Inline code: soft indigo chip -------------------------------- */
+:not(pre) > code {
+  font-family: var(--bs-font-monospace);
+  font-size: 0.88em;
+  background: var(--accent-soft) !important;
+  color: var(--accent-ink) !important;
+  padding: 0.12em 0.4em !important;
+  border-radius: 5px !important;
+}
+
+/* ---- 5. Code blocks: dark, like llm-from-scratch --------------------- */
+.highlight,
+.highlight pre,
+pre,
+.highlighter-rouge,
+.highlighter-rouge pre,
+.post-content pre {
+  background: #0f1320 !important;
+  color: #e6e9f2 !important;
+  border-radius: var(--radius-sm) !important;
+  border: 1px solid #1d2433 !important;
+}
+.highlight pre {
+  padding: 1rem 1.1rem;
+  overflow: auto;
+}
+.highlight .c, .highlight .cm, .highlight .c1, .highlight .cs,
+.highlight .cp, .highlight .ch {
+  color: #7f8aa3 !important;
+  font-style: italic;
+}
+.highlight .k, .highlight .kd, .highlight .kn, .highlight .kp,
+.highlight .kr, .highlight .kt {
+  color: #ffd479 !important;
+}
+.highlight .o, .highlight .ow { color: #cdd6f4 !important; }
+.highlight .s, .highlight .s1, .highlight .s2, .highlight .sb,
+.highlight .sc, .highlight .sd, .highlight .se, .highlight .sh,
+.highlight .si, .highlight .sx, .highlight .sr, .highlight .ss,
+.highlight .string { color: #a5d6a7 !important; }
+.highlight .n, .highlight .mi, .highlight .mf, .highlight .mh,
+.highlight .mo, .highlight .il, .highlight .m, .highlight .na,
+.highlight .nb, .highlight .nc, .highlight .nf, .highlight .nx,
+.highlight .nn, .highlight .nt, .highlight .nv, .highlight .ni,
+.highlight .nl { color: #82d2ff !important; }
+.highlight .err { color: #ff6b6b !important; }
+
+/* ---- 6. Tags: rounded indigo pills ----------------------------------- */
+.post-tag.btn.btn-outline-primary {
+  border-radius: 99px !important;
+  border-color: var(--bs-border-color) !important;
+  color: var(--accent-ink) !important;
+  background: var(--accent-soft) !important;
+  padding: 0.2rem 0.7rem !important;
+  font-size: 0.8rem;
+}
+.post-tag.btn.btn-outline-primary:hover {
+  background: var(--accent) !important;
+  color: #fff !important;
+  border-color: var(--accent) !important;
+}
+
+/* ---- 7. Buttons: gradient primary ------------------------------------ */
+.btn-primary {
+  background: var(--grad) !important;
+  border-color: transparent !important;
+  color: #fff !important;
+}
+.btn-primary:hover,
+.btn-primary:focus {
+  filter: brightness(1.06);
+  color: #fff !important;
+}
+.btn-outline-primary {
+  color: var(--accent-ink) !important;
+  border-color: var(--bs-border-color) !important;
+  background: var(--accent-soft) !important;
+}
+.btn-outline-primary:hover {
+  background: var(--grad) !important;
+  border-color: transparent !important;
+  color: #fff !important;
+}
+
+/* ---- 8. Chrome: sidebar, topbar, back-to-top -------------------------- */
+#sidebar {
+  background: var(--sidebar-bg) !important;
+  border-right: 1px solid var(--bs-border-color) !important;
+}
+#topbar,
+#topbar-wrapper {
+  background: var(--topbar-bg) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--bs-border-color) !important;
+}
+#back-to-top {
+  background: var(--grad) !important;
+  color: #fff !important;
+  border: none;
+}
+
+/* active nav / current category uses accent */
+.nav-link.active,
+#sidebar .nav-item.active > .nav-link {
+  color: var(--accent-ink) !important;
+}
+
+/* ---- 9. Blockquote + tables ------------------------------------------- */
+.post-content blockquote {
+  border-left: 3px solid var(--bs-border-color);
+  color: var(--text-muted-color);
+  background: var(--bs-secondary-bg);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: 0.6rem 1rem;
+}
+.table-wrapper table {
+  border-radius: var(--radius-sm) !important;
+  overflow: hidden;
+}
+.table-wrapper th {
+  background: var(--bs-secondary-bg) !important;
+}
+
+/* ---- 10. Post meta ---------------------------------------------------- */
+.post-meta,
+.post-meta a {
+  color: var(--text-muted-color) !important;
+}
