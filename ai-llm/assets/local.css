@@ -1,0 +1,76 @@
+
+/* ===== 本地壳层：不改原站正文样式，只补导航与可读性 ===== */
+:root{
+  --xy-bg:#f5eddb; --xy-ink:#232a31; --xy-dim:#6b6255; --xy-line:#ddd2ba;
+  --xy-accent:#C0481E; --xy-blue:#3E6B8F; --xy-card:#fffaf0;
+}
+html,body{margin:0;padding:0}
+body{background:var(--xy-bg);color:var(--xy-ink);
+  font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased}
+a{color:var(--xy-blue)}
+/* 原站 CSS 里 .reveal 默认 opacity:0 依赖 JS 触发，静态页强制显示 */
+.reveal{opacity:1!important;transform:none!important;transition:none!important}
+.xy-topbar{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:16px;
+  padding:10px 22px;background:rgba(28,28,28,.96);color:#f7f2e6;
+  border-bottom:1px solid rgba(255,255,255,.12);font-size:13px;flex-wrap:wrap}
+.xy-topbar a{color:#f7f2e6;text-decoration:none}
+.xy-topbar a:hover{color:#FAC94A}
+.xy-brand{font-weight:700;letter-spacing:.02em;margin-right:auto;color:#FAC94A}
+.xy-topbar .xy-sep{opacity:.4}
+.ai-llm-scope{display:block}
+.xy-content{max-width:860px;margin:0 auto;padding:34px 22px 80px}
+.lesson-hero{margin-bottom:30px}
+.lesson-hero h1{font-size:clamp(30px,5vw,46px);line-height:1.2;margin:8px 0 14px}
+.lesson-lede{font-size:18px;line-height:1.75;color:var(--xy-dim);margin:0}
+.lesson-meta{font-size:12px;letter-spacing:.12em;color:var(--xy-accent);font-weight:700}
+.lesson-body{font-size:16px;line-height:1.9}
+.lesson-body svg{max-width:100%;height:auto}
+.lesson-body img{max-width:100%;height:auto}
+.lesson-body table{display:block;overflow-x:auto;max-width:100%}
+.lesson-body iframe{width:100%;height:760px;border:0;border-radius:10px;background:#f5eddb}
+.think-answer{margin-top:12px;padding:14px 18px;background:#fff6e2;
+  border-left:3px solid var(--xy-accent);border-radius:0 8px 8px 0;line-height:1.85}
+.think-answer[hidden]{display:none}
+.quiz-explain{margin-top:14px;padding:14px 18px;background:#eef4f8;
+  border-left:3px solid var(--xy-blue);border-radius:0 8px 8px 0;line-height:1.8;font-size:15px}
+.xy-pager{display:flex;justify-content:space-between;gap:12px;margin:44px 0 24px;flex-wrap:wrap}
+.xy-pager a{flex:1;min-width:200px;padding:14px 18px;background:var(--xy-card);
+  border:1px solid var(--xy-line);border-radius:10px;text-decoration:none;
+  color:var(--xy-ink);font-size:14px;transition:.15s}
+.xy-pager a:hover{border-color:var(--xy-accent);transform:translateY(-2px)}
+.xy-pager .xy-p-next{text-align:right}
+.xy-pager small{display:block;color:var(--xy-dim);margin-bottom:4px}
+.xy-source{border-top:1px solid var(--xy-line);padding-top:20px;margin-top:20px;
+  font-size:13px;line-height:1.9;color:var(--xy-dim)}
+/* ===== 目录页 ===== */
+.xy-index-hero{max-width:1000px;margin:0 auto;padding:56px 22px 30px}
+.xy-index-hero h1{font-size:clamp(32px,5vw,52px);margin:0 0 16px;line-height:1.25}
+.xy-index-hero .xy-kicker{color:var(--xy-accent);font-weight:800;letter-spacing:.18em;font-size:13px}
+.xy-index-hero p{font-size:17px;line-height:1.9;color:var(--xy-dim);max-width:760px}
+.xy-links{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+.xy-links a{padding:8px 14px;background:var(--xy-card);border:1px solid var(--xy-line);
+  border-radius:999px;text-decoration:none;font-size:13px}
+.xy-links a:hover{border-color:var(--xy-accent)}
+.xy-stats{display:flex;gap:26px;flex-wrap:wrap;margin:26px 0 0;font-size:14px;color:var(--xy-dim)}
+.xy-stats b{font-size:26px;color:var(--xy-ink);display:block;font-weight:800}
+.xy-vols{max-width:1000px;margin:0 auto;padding:10px 22px 90px}
+.xy-vol{margin-top:40px}
+.xy-vol-head{display:flex;align-items:baseline;gap:12px;border-bottom:2px solid var(--xy-ink);
+  padding-bottom:10px;margin-bottom:18px}
+.xy-vol-badge{font-size:22px;font-weight:900;color:var(--xy-accent)}
+.xy-vol-head h2{font-size:22px;margin:0}
+.xy-vol-head span{font-size:13px;color:var(--xy-dim);margin-left:auto}
+.xy-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.xy-card{display:block;background:var(--xy-card);border:1px solid var(--xy-line);
+  border-radius:12px;padding:16px 18px;text-decoration:none;color:var(--xy-ink);transition:.15s}
+.xy-card:hover{border-color:var(--xy-accent);transform:translateY(-3px);box-shadow:0 8px 22px rgba(60,45,25,.09)}
+.xy-card .xy-n{font-size:12px;font-weight:800;color:var(--xy-accent);letter-spacing:.1em}
+.xy-card h3{margin:6px 0 8px;font-size:17px;line-height:1.4}
+.xy-card p{margin:0;font-size:13px;color:var(--xy-dim);line-height:1.65}
+@media (max-width:720px){
+  .xy-content{padding:22px 16px 60px}
+  .xy-grid{grid-template-columns:1fr}
+  .lesson-body iframe{height:520px}
+  .xy-topbar{padding:9px 14px;font-size:12px}
+}

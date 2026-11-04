@@ -18,6 +18,11 @@
   icon: "fas fa-brain"
   url: "https://yuzhiquan.github.io/llm-from-scratch/"
   noblank: true
+
+- type: ai-llm
+  icon: "fas fa-book-open"
+  url: "https://yuzhiquan.github.io/ai-llm/"
+  noblank: true
 # Uncomment and complete the url below to enable more contact options
 #
 # - type: mastodon

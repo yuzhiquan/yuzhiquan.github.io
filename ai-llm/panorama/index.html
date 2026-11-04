@@ -1,0 +1,7 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#f5eddb"><title>Transformer全景图</title><link rel="stylesheet" href="style.css"></head><body>
+
+<main>
+<section class="map-shell"><div class="map-top"><span><i></i> 完整计算图 <small>DECODER-ONLY · PRE-NORM</small></span><div class="view-tools"><button id="immersive">⛶ 沉浸模式</button></div></div><section class="toolbar"><div class="prompt-area"><label for="prompt">输入 Token <span>空格分隔</span></label><div><input id="prompt" value="轩辕 养了 一只 虎皮" maxlength="60"><button id="apply">更新 ↵</button></div></div><div class="playback"><button id="reset" aria-label="重新开始">↺</button><button id="play">▶ 播放数据流</button></div><label class="temperature">温度 <input id="temperature" type="range" min="0.2" max="2" value="0.8" step="0.1"><span id="tempValue">0.8</span></label></section><div class="map-scroll" id="mapScroll"><svg id="map" viewBox="-242 0 1740 760" role="img" aria-label="完整 Transformer 计算图。输入词元查表得到词嵌入，与位置编码逐元素相加，再沿多条彩色线路经过 QKV、注意力、残差、前馈网络和堆叠层，最后得到下一词概率。"></svg></div></section>
+
+
+<div id="status" role="status"></div></main><script src="model.js"></script><script src="app.js"></script><script src="embed.js"></script></body></html>
