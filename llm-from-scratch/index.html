@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>从零开始理解大模型 · 交互式教程</title>
+<link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+<div id="progress-top"><div id="progress-top-fill"></div></div>
+
+<div id="layout">
+  <!-- 侧边栏 -->
+  <aside id="sidebar">
+    <div class="brand">
+      <div class="brand-mark">LLM<span>·</span>FROM<span>·</span>SCRATCH</div>
+      <div class="brand-sub">交互式教程 · 16 篇</div>
+    </div>
+
+    <div class="progress-card">
+      <div class="progress-row">
+        <span>学习进度</span>
+        <span id="progress-text">0 / 16</span>
+      </div>
+      <div class="progress-bar"><div id="progress-fill"></div></div>
+      <div class="progress-hint">进度只保存在本浏览器</div>
+      <button id="reset-progress" class="link-btn">清除进度</button>
+    </div>
+
+    <div class="search-wrap">
+      <input id="search" type="text" placeholder="搜索章节 / 概念…" autocomplete="off" />
+    </div>
+
+    <nav id="toc"><!-- 由 app.js 渲染 --></nav>
+
+    <div class="sidebar-foot">
+      <span>↑↓ 切换章节 · 空格 播放演示</span>
+    </div>
+  </aside>
+
+  <!-- 主内容 -->
+  <main id="main">
+    <header id="hero">
+      <div class="hero-kicker">INTERACTIVE COURSE</div>
+      <h1>从零开始理解大模型</h1>
+      <p class="hero-lead">
+        把 16 篇《llm-from-scratch》教程变成可动手的交互式讲解：每一章都有<strong>能跑的演示</strong>，
+        拖动滑块、点开热力图、单步执行 Agent 循环——边玩边懂。
+      </p>
+      <div class="hero-meta">
+        <span>📚 16 章</span>
+        <span>🧩 16 个交互演示</span>
+        <span>🎯 45+ 自测题</span>
+        <span>💾 进度本地保存</span>
+      </div>
+      <div class="hero-start">
+        向下滚动开始，或用左侧目录跳转 →
+      </div>
+    </header>
+
+    <div id="chapters"><!-- 由 app.js 渲染 --></div>
+
+    <footer id="footer">
+      <p>本教程内容整理自 GitHub 仓库 <code>GitHubxsy/nanoAgent</code> 分支
+        <code>claude/organize-teaching-materials-4hnRP</code> 下的 <code>llm-from-scratch</code> 系列文档。</p>
+      <p class="muted">所有数字、公式、代码均来自原教程；交互演示为便于理解做了极小化建模。</p>
+    </footer>
+  </main>
+</div>
+
+<!-- 步进演示的全局播放控件（浮层） -->
+<div id="step-hud" class="hidden">
+  <span id="step-hud-label">演示</span>
+  <button id="step-prev" title="上一步 (←)">◀</button>
+  <span id="step-counter">0 / 0</span>
+  <button id="step-next" title="下一步 (→)">▶</button>
+  <button id="step-play" title="播放 / 暂停 (空格)">▶ 播放</button>
+</div>
+
+<script src="assets/content.js"></script>
+<script src="assets/demos.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>

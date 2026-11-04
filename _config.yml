@@ -1,0 +1,208 @@
+# The Site Configuration
+
+# Import the theme
+theme: jekyll-theme-chirpy
+
+# The language of the webpage
+lang: zh-CN
+
+# Change to your timezone
+timezone: Asia/Shanghai
+
+# jekyll-seo-tag settings
+# ↓ --------------------------
+
+title: 小胖鱼@Think # the main title
+
+tagline: CloudNative / Kubernetes / Go # it will display as the subtitle
+
+description: >- # used by seo meta and the atom feed
+  Cloud Native、Kubernetes、Go 与 LLM 基础设施的技术笔记。
+
+# Fill in the protocol & hostname for your site.
+url: "https://yuzhiquan.github.io"
+
+github:
+  username: yuzhiquan # change to your GitHub username
+
+twitter:
+  username: ZhiquanYu # change to your Twitter username
+
+social:
+  # Change to your full name.
+  name: yuzhiquan
+  email: yuzhiquanlong@gmail.com
+  links:
+    # The first element serves as the copyright owner's link
+    - https://github.com/yuzhiquan
+    - https://twitter.com/ZhiquanYu
+
+# Site Verification Settings (kept from the old Hexo site)
+webmaster_verifications:
+  google: TZE0rZyIqLl10trYu3BWBWa1Vmz6HFwhb2OcNEK4u-s
+  bing:
+  alexa:
+  yandex:
+  baidu:
+  facebook:
+
+# ↑ --------------------------
+# The end of `jekyll-seo-tag` settings
+
+# Web Analytics Settings
+analytics:
+  google:
+    id:
+  goatcounter:
+    id:
+  umami:
+    id:
+    domain:
+  matomo:
+    id:
+    domain:
+  cloudflare:
+    id:
+  fathom:
+    id:
+
+# Page views settings
+pageviews:
+  provider:
+
+# Prefer color scheme setting.
+# Keep empty to follow the system preference; a toggle is always available
+# at the bottom-left of the sidebar.
+theme_mode: dark # [light | dark]
+
+# The CDN endpoint for media resources.
+cdn:
+
+# the avatar on sidebar (LLM-style logo, watermark removed)
+avatar: /assets/img/llm_logo.png
+
+# The URL of the site-wide social preview image
+social_preview_image: /assets/img/llm_logo.png
+
+# boolean type, the global switch for TOC in posts.
+toc: true
+
+actions:
+  edit_post:
+    enabled: false
+    url: ""
+    static_url: false
+
+comments:
+  # Global switch for the post-comment system. Keeping it empty means disabled.
+  # provider is intentionally left empty until category_id is filled in.
+  # chirpy renders the giscus script whenever 'provider: giscus', and an empty
+  # category_id produces a broken comment box. Enable it after finishing the
+  # two steps described in the delivery notes (enable Discussions + giscus.app).
+  provider: # [disqus | utterances | giscus]
+  disqus:
+    shortname:
+  utterances:
+    repo:
+    issue_term:
+  # Giscus options › https://giscus.app/zh-CN
+  giscus:
+    repo: yuzhiquan/yuzhiquan.github.io
+    repo_id: MDEwOlJlcG9zaXRvcnk3NDMzMDY5NA==
+    category: Announcements
+    # TODO: fill in category_id from https://giscus.app/zh-CN
+    # (requires enabling Discussions on this repository first)
+    category_id:
+    mapping: pathname
+    strict: 0
+    input_position: bottom
+    lang: zh-CN
+    reactions_enabled: 1
+
+# Self-hosted static assets, optional
+assets:
+  self_host:
+    enabled:
+    env:
+
+pwa:
+  enabled: true
+  cache:
+    enabled: true
+    deny_paths:
+      # - "/example"
+
+paginate: 10
+
+# The base URL of your site
+baseurl: ""
+
+# ------------ The following options are not recommended to be modified ------------------
+
+kramdown:
+  footnote_backlink: "&#8617;&#xfe0e;"
+  syntax_highlighter: rouge
+  syntax_highlighter_opts:
+    css_class: highlight
+    span:
+      line_numbers: false
+    block:
+      line_numbers: true
+      start_line: 1
+
+collections:
+  tabs:
+    output: true
+    sort_by: order
+
+defaults:
+  - scope:
+      path: ""
+      type: posts
+    values:
+      layout: post
+      comments: true
+      toc: true
+      permalink: /posts/:title/
+  - scope:
+      path: _drafts
+    values:
+      comments: false
+  - scope:
+      path: ""
+      type: tabs
+    values:
+      layout: page
+      permalink: /:title/
+
+sass:
+  style: compressed
+
+compress_html:
+  clippings: all
+  comments: all
+  endings: all
+  profile: false
+  blanklines: false
+  ignore:
+    envs: [development]
+
+exclude:
+  - "*.gem"
+  - "*.gemspec"
+  - docs
+  - tools
+  - README.md
+  - LICENSE
+  - purgecss.js
+  - "*.config.js"
+  - "package*.json"
+
+jekyll-archives:
+  enabled: [categories, tags]
+  layouts:
+    category: category
+    tag: tag
+  permalinks:
+    tag: /tags/:name/
+    category: /categories/:name/
