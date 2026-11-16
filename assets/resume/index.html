@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>简历 · 中英切换 / 打印版（公开脱敏版）</title>
+<meta name="description" content="一份做过脱敏处理的基础设施与云原生方向公开简历，雇主与个人信息已泛化。">
+<style>
+  :root{
+    --bg:#f5f7fa;
+    --card:#ffffff;
+    --ink:#1b2531;
+    --muted:#5d6b7b;
+    --line:#e2e8f0;
+    --accent:#1c5f92;
+    --accent-soft:#eaf2f9;
+    --tag:#f1f4f8;
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:system-ui,-apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",Segoe UI,Roboto,sans-serif;
+    font-size:15.5px;
+    line-height:1.75;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:880px;margin:0 auto;padding:32px 20px 64px}
+  .toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+  .edition{
+    display:inline-flex;align-items:center;gap:8px;
+    background:var(--accent-soft);color:var(--accent);
+    border:1px solid #cfe0ee;border-radius:999px;
+    padding:5px 13px;font-size:12.5px;font-weight:600;letter-spacing:.02em;
+  }
+  .edition .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);display:inline-block}
+  .actions{display:flex;gap:8px;align-items:center}
+  .lang-switch{display:inline-flex;background:var(--card);border:1px solid var(--line);border-radius:9px;padding:3px}
+  .lang-switch button,.btn-print{
+    font:inherit;font-size:13px;cursor:pointer;border:0;background:transparent;
+    color:var(--muted);padding:6px 14px;border-radius:6px;line-height:1.4;
+  }
+  .lang-switch button[aria-pressed="true"]{background:var(--accent);color:#fff;font-weight:600}
+  .btn-print{border:1px solid var(--line);background:var(--card);color:var(--ink);text-decoration:none;display:inline-block}
+  .btn-print:hover,.lang-switch button:not([aria-pressed="true"]):hover{background:var(--tag)}
+  .paper{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:0 3px 18px rgba(28,45,70,.055);
+    padding:44px 52px 40px;
+  }
+  .masthead{border-bottom:2px solid var(--ink);padding-bottom:20px;margin-bottom:28px}
+  .masthead h1{font-size:29px;line-height:1.3;margin:0 0 6px;letter-spacing:-.01em}
+  .masthead .role{color:var(--accent);font-size:15px;font-weight:600;margin:0 0 10px}
+  .masthead .tagline{color:var(--muted);font-size:13.5px;margin:0}
+  .masthead .locations{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:12px 0 0;font-size:12.5px;color:var(--muted)}
+  .masthead .locations .label{color:var(--ink);font-weight:600;margin-right:3px}
+  .masthead .locations .period{font-size:12px;padding:2px 10px}
+  section{margin:0 0 30px}
+  section:last-of-type{margin-bottom:0}
+  h2{
+    font-size:13px;letter-spacing:.13em;text-transform:uppercase;
+    color:var(--accent);margin:0 0 16px;font-weight:700;
+    display:flex;align-items:center;gap:10px;
+  }
+  h2::after{content:"";flex:1;height:1px;background:var(--line)}
+  p.summary{margin:0;color:#2c3947}
+  .job{padding:0 0 22px;margin:0 0 22px;border-bottom:1px solid var(--line)}
+  .job:last-child{border-bottom:0;padding-bottom:0;margin-bottom:0}
+  .job-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:4px}
+  .job-title{font-size:16.5px;font-weight:700;line-height:1.45;margin:0}
+  .code{
+    display:inline-block;vertical-align:2px;margin-right:8px;
+    background:var(--ink);color:#fff;font-size:11px;font-weight:700;
+    border-radius:5px;padding:1px 7px;letter-spacing:.05em;
+  }
+  .period{
+    white-space:nowrap;font-size:12.5px;color:var(--muted);background:var(--tag);
+    border-radius:6px;padding:3px 10px;font-variant-numeric:tabular-nums;
+  }
+  .position{color:var(--muted);font-size:13.5px;margin:0 0 12px}
+  ul{margin:0;padding-left:19px}
+  li{margin:0 0 7px;padding-left:2px}
+  li:last-child{margin-bottom:0}
+  .skills{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px 26px;list-style:none;padding:0;margin:0}
+  .skills li{margin:0;padding:0 0 0 12px;border-left:2px solid var(--accent-soft)}
+  .skills b{color:var(--ink)}
+  .skills span{color:var(--muted)}
+  .note{
+    margin-top:32px;padding-top:18px;border-top:1px solid var(--line);
+    color:var(--muted);font-size:12.5px;line-height:1.7;
+  }
+  .note strong{color:var(--ink);font-weight:600}
+  [hidden]{display:none !important}
+  @media (max-width:640px){
+    .wrap{padding:18px 12px 40px}
+    .paper{padding:28px 22px 30px}
+    .masthead h1{font-size:23px}
+    .toolbar{gap:10px}
+    .actions{width:100%;justify-content:space-between}
+    body{font-size:15px}
+  }
+  @media print{
+    body{background:#fff;font-size:11.5pt;line-height:1.55}
+    .wrap{max-width:none;padding:0}
+    .toolbar{display:none}
+    .paper{border:0;box-shadow:none;padding:0;border-radius:0}
+    .job{break-inside:avoid;page-break-inside:avoid}
+    section{break-inside:auto}
+    h2{break-after:avoid}
+    a{color:inherit;text-decoration:none}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="toolbar">
+    <span class="edition"><span class="dot"></span><span data-i18n="edition">公开展示版 · 已泛化处理</span></span>
+    <div class="actions">
+      <div class="lang-switch" role="group" aria-label="Language">
+        <button type="button" data-lang-btn="zh" aria-pressed="true">中文</button>
+        <button type="button" data-lang-btn="en" aria-pressed="false">EN</button>
+      </div>
+      <button type="button" class="btn-print" id="printBtn" data-i18n="print">打印 / 存为 PDF</button>
+      <a class="btn-print" href="/resume/" data-i18n="back">← 返回博客</a>
+    </div>
+  </div>
+
+  <main class="paper">
+
+    <!-- 中文版 -->
+    <article data-lang-block="zh">
+      <header class="masthead">
+        <!-- 如需署名，把下面这行替换为你的博客昵称；请勿填回真实姓名 -->
+        <h1>一位云原生工程师</h1>
+        <p class="role">基础设施 / 云原生 · 容器平台与多集群治理</p>
+        <p class="tagline">12 年一线工程经验 · 公开展示版（雇主、联系方式与可识别细节已泛化）</p>
+        <p class="locations"><span class="label">期望工作地点</span><span class="period">北京</span><span class="period">上海</span><span class="period">Remote</span></p>
+      </header>
+
+      <section>
+        <h2>个人概述</h2>
+        <p class="summary">12 年基础设施与云原生经验，先后在多家中大型科技公司负责容器云平台、弹性调度与云原生基础设施。做过从 0 到 1 的容器云平台、全集群 Istio 落地和跨云多集群治理；长期向上游开源社区提交代码。</p>
+      </section>
+
+      <section>
+        <h2>工作经历</h2>
+
+        <div class="job">
+          <div class="job-head">
+            <h3 class="job-title"><span class="code">A</span>某海外流媒体平台</h3>
+            <span class="period">约 3 年 · 现任</span>
+          </div>
+          <p class="position">高级基础设施工程师</p>
+          <ul>
+            <li>负责云原生基础设施的建设与维护，覆盖 Kubernetes、服务网格、云上网络与节点池。</li>
+            <li>主导全集群 Istio 落地：南北向流量先收敛到 ingress gateway，再按 namespace 分批开启 sidecar 注入，统一超时、重试与熔断模板；业务代码零改动，全部服务获得一致的流量治理、mTLS 与黄金指标可观测性。</li>
+            <li>将网格扩展到跨公有云的多集群拓扑，为服务提供就近路由与故障域隔离；用 Terraform 统一云资源、网络和节点池交付，集群外 IaC、集群内 GitOps。</li>
+            <li>从 0 搭建 Oncall AI Agent：以内部知识库文档构建知识库、接入监控告警平台分析告警与问题，自动补齐上下文、给出排查路径，对例行告警与审批请求做自动复核；已接入日常值班流程，缩短响应链路。</li>
+          </ul>
+        </div>
+
+        <div class="job">
+          <div class="job-head">
+            <h3 class="job-title"><span class="code">B</span>某头部消费电子与互联网企业 · 弹性调度平台</h3>
+            <span class="period">约 2 年</span>
+          </div>
+          <p class="position">高级软件工程师（Kubernetes 方向架构师 / 技术负责人）</p>
+          <ul>
+            <li>负责容器集群的搭建与交付，开发自动化部署工具满足多个内部 Kubernetes 版本与自研工具的部署需求；以 kube‑on‑kube 思路建设元集群，用 CRD 纳管集群并集成 cluster‑autoscaler，打通集群生命周期与节点自动扩缩容，减少资源不足时的人工介入。</li>
+            <li>调研竞价实例并在公有云线上集群落地：按集群内节点与资源情况自动补充竞价实例，在业务无感知的前提下把集群整体成本降低约 30%。</li>
+            <li>负责容器集群核心组件的维护、线上核心故障处理与参数调优，保障线上集群稳定。</li>
+            <li>负责组内技术管理，包括代码与方案评审、技术调研和架构设计。</li>
+          </ul>
+        </div>
+
+        <div class="job">
+          <div class="job-head">
+            <h3 class="job-title"><span class="code">C</span>某大型互联网公司 · 容器云平台</h3>
+            <span class="period">约 3 年</span>
+          </div>
+          <p class="position">高级容器工程师（容器云平台技术负责人）</p>
+          <ul>
+            <li>作为技术负责人负责容器云平台的技术选型与架构设计，从 0 到 1 完成平台建设，支撑多条核心业务线上千个线上模块与线下任务迁移；建成多地近 1000 个节点、上万 Pod、QPS 百万+ 的容器集群，获公司年度优秀团队奖。</li>
+            <li>选型 underlay 网络插件并采用 SR‑IOV 虚拟化方案，自研 IPAM 模块，在保证网络性能的同时让容器网络与 IDC 物理网络紧密结合；解决 IP 配置后 ARP 连通、网络插件与内部 Service 连通等适配问题。</li>
+            <li>对域名负载均衡、监控、日志等模块做资源抽象并以 CRD 落地；建设标准日志采集、查询与备份机制，以及服务的默认监控与自定义监控。</li>
+          </ul>
+        </div>
+
+        <div class="job">
+          <div class="job-head">
+            <h3 class="job-title"><span class="code">D</span>某计算机视觉 AI 公司</h3>
+            <span class="period">约 2 年</span>
+          </div>
+          <p class="position">高级运维开发工程师</p>
+          <ul>
+            <li>开发构建部署自动化流程，把 K8s 平台的构建、部署、管理和维护整合进原有上线平台，与传统上线流程衔接；负责公有云上高可用 K8s 集群及周边监控、日志模块的搭建与维护。</li>
+            <li>独立完成内部版本发布系统的功能扩展与前端开发（后端 Go、前端 Bootstrap），补充快照、快速回滚与前后端 API，支撑业务快速迭代。</li>
+            <li>主导内部 IT 服务平台前后端开发，提供信息查询、个人资源管理与工单处理；完成资产管理、IT 后台、资产台账与各项自动化流程，并为内部云资源加上账号体系、权限控制、审计报表与资源有效期监控。</li>
+            <li>负责核心 AI 产品线的业务运维，以及统一认证、跳板机等内部公用系统的部署与维护，及时响应线上故障与业务需求。</li>
+          </ul>
+        </div>
+
+        <div class="job">
+          <div class="job-head">
+            <h3 class="job-title"><span class="code">C</span>同一家大型互联网公司 · 业务研发</h3>
+            <span class="period">约 2 年</span>
+          </div>
+          <p class="position">运维开发工程师</p>
+          <ul>
+            <li>开发数据管理系统，对业务监控、产品线运行任务等数据进行管理、维护和展示，减少运维重复工作与沟通成本。</li>
+            <li>负责多条搜索产品的前后端模块维护，包括日常发布、故障排查、服务迁移和环境搭建，保障线上稳定与各季度运维指标；多个季度绩效评级为 A。</li>
+          </ul>
+        </div>
+      </section>
+
+      <section>
+        <h2>技术栈</h2>
+        <ul class="skills">
+          <li><b>容器与编排</b><br><span>Kubernetes（调度器框架、CRD、cluster‑autoscaler）、kube‑on‑kube、Docker</span></li>
+          <li><b>服务网格与网络</b><br><span>Istio（Gateway、Sidecar、mTLS、流量治理）、SR‑IOV、Underlay 网络、IPAM</span></li>
+          <li><b>云与基础设施</b><br><span>海外与国内主流公有云、Terraform、GitOps、IaC</span></li>
+          <li><b>可观测与语言</b><br><span>Prometheus、主流监控告警平台、Go、Python、Shell</span></li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>开源与社区</h2>
+        <ul>
+          <li>Kubernetes org 成员，sig‑instrumentation member，部分 work group reviewer。</li>
+          <li>长期为 Kubernetes（scheduler、component‑base）、KLog、SRIOV‑CNI、Istio、agent‑sandbox 贡献代码。</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>教育经历</h2>
+        <ul>
+          <li>硕士（全日制统招 · 985 院校） · 电子与通信工程</li>
+          <li>本科（全日制统招 · 普通一本） · 电子信息工程</li>
+        </ul>
+      </section>
+
+      <p class="note"><strong>说明：</strong>本页为公开展示版本。姓名、联系方式、现居城市、雇主名称、内部系统名、学校名称与精确起止时间均已移除或泛化；时间线以大致时长表示，代号相同表示同一家雇主。</p>
+    </article>
+
+    <!-- English version -->
+    <article data-lang-block="en" hidden lang="en">
+      <header class="masthead">
+        <!-- Replace the line below with your blog handle if you want a byline; do not restore the real name -->
+        <h1>A Cloud-Native Engineer</h1>
+        <p class="role">Infrastructure / Cloud Native · Container Platforms &amp; Multi-Cluster</p>
+        <p class="tagline">12 years of hands-on engineering · Public, redacted edition (employers, contact details and identifying specifics generalized)</p>
+        <p class="locations"><span class="label">Open to</span><span class="period">Beijing</span><span class="period">Shanghai</span><span class="period">Remote</span></p>
+      </header>
+
+      <section>
+        <h2>Summary</h2>
+        <p class="summary">12 years in infrastructure and cloud-native engineering. Owned container platforms, elastic scheduling and cloud-native infrastructure at several mid-to-large technology companies. Built a container platform from scratch, rolled out Istio across an entire fleet, and ran multi-cluster deployments across clouds. Long-time contributor to upstream open-source projects.</p>
+      </section>
+
+      <section>
+        <h2>Experience</h2>
+
+        <div class="job">
+          <div class="job-head">
+            <h3 class="job-title"><span class="code">A</span>An overseas streaming platform</h3>
+            <span class="period">~3 yrs · current</span>
+          </div>
+          <p class="position">Senior Infrastructure Engineer</p>
+          <ul>
+            <li>Own the cloud-native infrastructure: Kubernetes clusters, service mesh, cloud networking and node pools.</li>
+            <li>Led the Istio rollout across the whole fleet: north-south traffic was consolidated onto the ingress gateway first, then sidecar injection was rolled out namespace by namespace, with standardized timeout, retry and circuit-breaking templates. Every service got consistent traffic governance, mTLS and golden-signal observability without application changes.</li>
+            <li>Extended the mesh into a multi-cluster topology across public clouds, giving services locality-first routing and clear failure-domain isolation. Standardized cloud resources, networking and node pools with Terraform: infrastructure as code outside the cluster, GitOps inside it.</li>
+            <li>Built an on-call AI agent from scratch: a knowledge base from internal docs plus alerts and metrics from the monitoring platform, so it pulls the full alert context, suggests an investigation path and auto-reviews routine alerts and approval requests. It now sits in the daily on-call workflow and shortens the response loop.</li>
+          </ul>
+        </div>
+
+        <div class="job">
+          <div class="job-head">
+            <h3 class="job-title"><span class="code">B</span>A leading consumer-electronics &amp; internet company · Elastic Scheduling</h3>
+            <span class="period">~2 yrs</span>
+          </div>
+          <p class="position">Senior Software Engineer (Kubernetes Architect / Tech Lead)</p>
+          <ul>
+            <li>Delivered Kubernetes clusters and the automation behind them, covering multiple in-house Kubernetes versions and self-developed tools. Designed a meta-cluster following kube‑on‑kube, managed clusters as CRDs and integrated cluster‑autoscaler, closing the loop on cluster lifecycle and node autoscaling and cutting manual intervention.</li>
+            <li>Evaluated spot instances and rolled them out on the public-cloud production fleet: capacity was added automatically from live node and resource state, cutting overall cluster cost by about 30% with no impact on stability or applications.</li>
+            <li>Maintained core cluster components, handled production incidents and tuned parameters to keep online clusters stable.</li>
+            <li>Led the team's technical work: code and design reviews, technology evaluation and architecture.</li>
+          </ul>
+        </div>
+
+        <div class="job">
+          <div class="job-head">
+            <h3 class="job-title"><span class="code">C</span>A large internet company · Container Cloud Platform</h3>
+            <span class="period">~3 yrs</span>
+          </div>
+          <p class="position">Senior Container Engineer (Tech Lead, Container Cloud Platform)</p>
+          <ul>
+            <li>As technical lead, owned technology selection and architecture and built the container cloud platform from scratch, supporting migration of over a thousand online modules and offline jobs across several core business lines. Grew it to nearly 1,000 nodes across sites and tens of thousands of pods at 1M+ QPS; the team won the company's annual outstanding team award.</li>
+            <li>Chose an underlay network plugin with SR‑IOV virtualization and built the IPAM module in-house, keeping network performance while tightly integrating container networking with the IDC physical network. Fixed ARP reachability after IP allocation and connectivity between the network plugin and in-cluster Services.</li>
+            <li>Abstracted domain load balancing, monitoring and logging into CRDs and shipped them; built standard log collection, query and backup, plus default and custom monitoring for services.</li>
+          </ul>
+        </div>
+
+        <div class="job">
+          <div class="job-head">
+            <h3 class="job-title"><span class="code">D</span>A computer-vision AI company</h3>
+            <span class="period">~2 yrs</span>
+          </div>
+          <p class="position">Senior DevOps Engineer</p>
+          <ul>
+            <li>Built the automated build-and-deploy pipeline and integrated K8s platform build, deployment, management and maintenance into the existing release platform; ran highly available K8s clusters on a public cloud with monitoring and logging.</li>
+            <li>Independently extended an internal release system and built its front end (Go back end, Bootstrap front end): added snapshots, fast rollback and the APIs the business needed to iterate faster.</li>
+            <li>Led front-end and back-end development of an internal IT service platform: information lookup, personal resource management and ticketing, plus asset management, IT back office, asset inventory and automation flows. Added accounts, permissions, audit reports, resource inventory and expiry monitoring to internal cloud resources.</li>
+            <li>Ran business operations for the core AI product line and maintained internal shared systems such as single sign-on and bastion hosts.</li>
+          </ul>
+        </div>
+
+        <div class="job">
+          <div class="job-head">
+            <h3 class="job-title"><span class="code">C</span>The same internet company · Business Engineering</h3>
+            <span class="period">~2 yrs</span>
+          </div>
+          <p class="position">DevOps Engineer</p>
+          <ul>
+            <li>Built a data management system to manage, maintain and present business monitoring and product-line job data, cutting repetitive ops work and communication overhead.</li>
+            <li>Maintained front-end and back-end modules of several search products: releases, troubleshooting, service migration and environment setup. Rated A in performance reviews for multiple quarters.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section>
+        <h2>Skills</h2>
+        <ul class="skills">
+          <li><b>Containers &amp; Orchestration</b><br><span>Kubernetes (scheduler framework, CRD, cluster‑autoscaler), kube‑on‑kube, Docker</span></li>
+          <li><b>Service Mesh &amp; Networking</b><br><span>Istio (gateway, sidecar, mTLS, traffic governance), SR‑IOV, underlay, IPAM</span></li>
+          <li><b>Cloud &amp; IaC</b><br><span>Major global and domestic public clouds, Terraform, GitOps, IaC</span></li>
+          <li><b>Observability &amp; Languages</b><br><span>Prometheus, mainstream monitoring platforms, Go, Python, Shell</span></li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Open Source &amp; Community</h2>
+        <ul>
+          <li>Member of the Kubernetes org; sig-instrumentation member and reviewer for parts of the work group.</li>
+          <li>Long-standing contributions to Kubernetes (scheduler, component-base), KLog, SRIOV-CNI, Istio and agent-sandbox.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Education</h2>
+        <ul>
+          <li>M.S. (Project 985 university, full-time) · Electronics and Communication Engineering</li>
+          <li>B.S. (regular first-tier university, full-time) · Electronic Information Engineering</li>
+        </ul>
+      </section>
+
+      <p class="note"><strong>Note:</strong> This is a public, redacted edition. Name, contact details, current city, employer names, internal system names, schools and exact dates have been removed or generalized. Tenure is shown as approximate duration; identical letter codes refer to the same employer.</p>
+    </article>
+
+  </main>
+
+  <p class="note" style="border:0;margin-top:18px;padding-top:0;text-align:center">
+    <span data-i18n="footer">可直接嵌入博客或部署为独立页面 · 中英切换支持 #en 链接</span>
+  </p>
+</div>
+
+<script>
+(function(){
+  var i18n = {
+    zh:{edition:'公开展示版 · 已泛化处理',print:'打印 / 存为 PDF',back:'← 返回博客',footer:'博客独立版 · 中英切换支持 #en 链接 · 打印按钮可导出 PDF'},
+    en:{edition:'Public edition · redacted',print:'Print / Save as PDF',back:'← Back to blog',footer:'Standalone edition · share the English view with #en · use the print button to export a PDF'}
+  };
+  var buttons = document.querySelectorAll('[data-lang-btn]');
+  var blocks  = document.querySelectorAll('[data-lang-block]');
+  function setLang(lang){
+    if(lang !== 'en') lang = 'zh';
+    buttons.forEach(function(b){ b.setAttribute('aria-pressed', String(b.dataset.langBtn === lang)); });
+    blocks.forEach(function(a){ a.hidden = a.dataset.langBlock !== lang; });
+    document.querySelectorAll('[data-i18n]').forEach(function(el){
+      var key = el.dataset.i18n;
+      if(i18n[lang][key]) el.textContent = i18n[lang][key];
+    });
+    document.documentElement.lang = lang === 'en' ? 'en' : 'zh-CN';
+    document.title = lang === 'en' ? 'Resume · Bilingual / Print Edition (Redacted)' : '简历 · 中英切换 / 打印版（公开脱敏版）';
+    try {
+      if(lang === 'en' && location.hash !== '#en') history.replaceState(null, '', '#en');
+      if(lang === 'zh' && location.hash === '#en') history.replaceState(null, '', location.pathname + location.search);
+    } catch(e) { /* file:// contexts may block history edits */ }
+  }
+  buttons.forEach(function(b){ b.addEventListener('click', function(){ setLang(b.dataset.langBtn); }); });
+  document.getElementById('printBtn').addEventListener('click', function(){ window.print(); });
+  window.addEventListener('hashchange', function(){ setLang(location.hash.slice(1)); });
+  setLang(location.hash.slice(1));
+})();
+</script>
+</body>
+</html>
