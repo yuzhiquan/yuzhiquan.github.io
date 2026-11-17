@@ -66,10 +66,17 @@ footer{text-align:center;color:var(--muted);font-size:13px;padding:26px 20px 50p
 </div></header>
 
 <main>
-  <div class="intro">本系列持续收录调度器相关的深度文章，每篇都是自包含的富 HTML 长文。当前已发布 <b>5 篇</b>：从 Kueue、Volcano 两大核心原理出发，延伸到两者的对比与协同，最后落到 AI/GPU 调度方案全景。建议按「原理 → 对比 → 协同 → 全景」顺序阅读，其余主题在规划中。</div>
+  <div class="intro">本系列持续收录调度器相关的深度文章，每篇都是自包含的富 HTML 长文。当前已发布 <b>7 篇</b>：从 kube-scheduler、Kueue、Volcano 三大核心原理出发，延伸到两者的对比与协同，落到 AI/GPU 调度方案全景与 Koordinator 混部超卖实战。建议按「原理 → 对比 → 协同 → 全景」顺序阅读。</div>
 
   <h2 class="sec-head">核心原理</h2>
   <div class="grid">
+    <a class="card" href="kube-scheduler-framework.html">
+      <span class="tag">调度底座</span>
+      <h3>kube-scheduler 调度框架解剖：扩展点、队列与抢占</h3>
+      <p>从职责边界出发，拆解调度/绑定双周期、ActiveQ/BackoffQ/UnschedulableQ 三队列与事件驱动、Scheduling Framework 13 个扩展点、过滤打分算法、抢占与 nominatedNodeName 真相，并给出插件开发骨架与 Pending 排障清单。</p>
+      <span class="cta">开始阅读 →</span>
+      <div class="meta"><span>🕒 约 35 分钟</span><span>📘 11 章</span><span>🎯 K8s v1.28+</span></div>
+    </a>
     <a class="card" href="kueue.html">
       <span class="tag">深度指南</span>
       <h3>Kueue 深度指南：从调度流程到核心机制</h3>
@@ -113,22 +120,13 @@ footer{text-align:center;color:var(--muted);font-size:13px;padding:26px 20px 50p
       <span class="cta">开始阅读 →</span>
       <div class="meta"><span>🕒 约 35 分钟</span><span>🗺️ 全景</span><span>🖥️ 共享对比</span></div>
     </a>
-  </div>
-
-  <h2 class="sec-head" style="margin-top:38px">规划中</h2>
-  <div class="grid">
-    <div class="card soon">
-      <span class="tag soon">规划中</span>
-      <h3>kube-scheduler 调度框架解剖</h3>
-      <p>调度周期与 Binding 周期、QueueSort / Filter / Score / Permit 扩展点、调度插件开发与抢占（Preemption）源码走读。</p>
-      <div class="meta"><span>敬请期待</span></div>
-    </div>
-    <div class="card soon">
-      <span class="tag soon">规划中</span>
-      <h3>Koordinator 混部与超卖实战</h3>
-      <p>在线离线混部、CPU burst、弹性资源与 QoS 治理；与 Kueue/Volcano 在混部场景下的协同与边界。</p>
-      <div class="meta"><span>敬请期待</span></div>
-    </div>
+    <a class="card" href="koordinator-colocation.html">
+      <span class="tag teal">混部实战</span>
+      <h3>Koordinator 混部与超卖实战：从 QoS 到干扰抑制</h3>
+      <p>在线闲置、离线饥饿——用 QoS 分级、资源超卖、CPU Burst 与干扰抑制把利用率翻倍又不打穿在线 SLO；理清与 Kueue/Volcano 的分层边界，并给出落地配置与排障。</p>
+      <span class="cta">开始阅读 →</span>
+      <div class="meta"><span>🕒 约 35 分钟</span><span>⚡ 混部超卖</span><span>🎯 Koordinator v1.6+</span></div>
+    </a>
   </div>
 </main>
 

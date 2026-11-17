@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="系统拆解 Koordinator 混部体系：资源浪费根源、架构总览、QoS 分级、资源超卖模型、CPU Burst、干扰检测与抑制、弹性资源，以及与 Kueue/Volcano 的协同边界和落地配置。">
+<title>Koordinator 混部与超卖实战：从 QoS 到干扰抑制｜小胖鱼@Think</title>
+<style>
+:root{
+  --primary:#2563eb; --primary-d:#1e40af; --primary-l:#dbeafe;
+  --ink:#1e293b; --ink-soft:#475569; --muted:#94a3b8;
+  --bg:#f1f5f9; --card:#ffffff; --line:#e2e8f0;
+  --accent:#0ea5e9; --shadow:0 10px 30px rgba(15,23,42,.08);
+  --code-bg:#0f172a; --radius:14px;
+  --green:#16a34a; --green-l:#f0fdf4; --amber:#f59e0b; --amber-l:#fffbeb;
+  --violet:#6366f1; --violet-l:#eef2ff; --rose:#e11d48; --rose-l:#fff1f2;
+  --teal:#0d9488; --teal-l:#f0fdfa;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif;
+  line-height:1.85;font-size:16px;-webkit-font-smoothing:antialiased}
+
+.topbar{background:#0f172a;color:#e2e8f0;font-size:14px}
+.topbar-inner{max-width:1240px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.topbar a{color:#93c5fd;text-decoration:none}
+.topbar a:hover{color:#fff;text-decoration:underline}
+.topbar .brand{font-weight:700;color:#fff}
+
+.hero{background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 55%,#0ea5e9 100%);
+  color:#fff;padding:64px 24px 120px;position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;inset:0;
+  background:radial-gradient(circle at 85% 20%,rgba(255,255,255,.18),transparent 45%),
+             radial-gradient(circle at 15% 80%,rgba(255,255,255,.12),transparent 40%)}
+.hero-inner{max-width:960px;margin:0 auto;position:relative;z-index:1}
+.hero .kicker{display:inline-block;font-size:13px;letter-spacing:2px;font-weight:600;
+  background:rgba(255,255,255,.16);padding:6px 14px;border-radius:999px;margin-bottom:20px}
+.hero h1{font-size:clamp(28px,4.5vw,46px);line-height:1.25;margin:0 0 18px;font-weight:800;letter-spacing:.5px}
+.hero p{font-size:clamp(15px,2vw,18px);opacity:.92;max-width:780px;margin:0 0 26px}
+.badges{display:flex;flex-wrap:wrap;gap:10px}
+.badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);
+  padding:6px 13px;border-radius:8px;font-size:13px;backdrop-filter:blur(4px)}
+
+.wrap{max-width:1240px;margin:-70px auto 60px;padding:0 24px;position:relative;z-index:2;
+  display:grid;grid-template-columns:270px minmax(0,1fr);gap:28px;align-items:start}
+
+aside.toc{position:sticky;top:24px;background:var(--card);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:22px 18px;max-height:calc(100vh - 48px);overflow-y:auto}
+.toc h3{margin:0 0 14px;font-size:15px;color:var(--primary-d);display:flex;align-items:center;gap:8px}
+.toc h3::before{content:"";width:4px;height:16px;background:var(--primary);border-radius:2px}
+.toc-list,.toc-sub{list-style:none;margin:0;padding:0}
+.toc a{display:block;color:var(--ink-soft);text-decoration:none;font-size:13.5px;
+  padding:6px 10px;border-radius:7px;line-height:1.5;transition:.18s}
+.toc a:hover{background:var(--primary-l);color:var(--primary-d)}
+.toc .toc-l2>a{font-weight:600;color:var(--ink)}
+.toc a.active{background:var(--primary);color:#fff}
+.toc-list::-webkit-scrollbar{width:5px}
+.toc-list::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:5px}
+
+article{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);
+  padding:42px clamp(22px,4vw,56px);min-width:0}
+article h1,article h2,article h3,article h4{color:var(--ink);scroll-margin-top:24px;line-height:1.35}
+article h2{font-size:24px;margin:44px 0 16px;padding:0 0 12px;border-bottom:2px solid var(--line);font-weight:800}
+article h2::before{content:"";display:inline-block;width:8px;height:8px;background:var(--primary);
+  border-radius:2px;margin-right:11px;vertical-align:middle}
+article h3{font-size:19px;margin:28px 0 12px;font-weight:700;color:var(--primary-d)}
+article h4{font-size:16px;margin:20px 0 8px;font-weight:700;color:var(--teal)}
+article p{margin:14px 0}
+article strong{color:var(--primary-d);font-weight:700}
+article a{color:var(--primary);text-decoration:none;border-bottom:1px dashed var(--primary)}
+blockquote{margin:18px 0;padding:14px 20px;background:var(--primary-l);
+  border-left:4px solid var(--primary);border-radius:0 10px 10px 0;color:var(--ink-soft)}
+blockquote p{margin:0}
+.lead{font-size:17px;line-height:1.9;color:var(--ink-soft);
+  padding:2px 0 2px 18px;border-left:3px solid var(--accent);margin:20px 0}
+
+.callout{margin:20px 0;padding:16px 20px;background:var(--green-l);border-left:4px solid var(--green);
+  border-radius:0 10px 10px 0;color:#14532d;font-size:14.5px}
+.callout.warn{background:var(--amber-l);border-left-color:var(--amber);color:#78350f}
+.callout.tip{background:var(--violet-l);border-left-color:var(--violet);color:#312e81}
+.callout.rose{background:var(--rose-l);border-left-color:var(--rose);color:#9f1239}
+.callout p{margin:6px 0 0}
+
+table{width:100%;border-collapse:collapse;margin:20px 0;font-size:14.5px;
+  border-radius:10px;overflow:hidden;box-shadow:0 0 0 1px var(--line)}
+thead th{background:linear-gradient(135deg,#1e40af,#2563eb);color:#fff;
+  text-align:left;padding:12px 14px;font-weight:600;white-space:nowrap}
+tbody td{padding:11px 14px;border-top:1px solid var(--line);vertical-align:top}
+tbody tr:nth-child(even){background:#f8fafc}
+tbody tr:hover{background:var(--primary-l)}
+.table-wrap{overflow-x:auto;margin:20px 0}
+.table-wrap table{margin:0}
+caption{caption-side:bottom;text-align:center;color:var(--muted);font-size:12.5px;padding:10px}
+
+pre{background:var(--code-bg);color:#e2e8f0;padding:18px 20px;border-radius:12px;
+  overflow-x:auto;font-size:13.5px;line-height:1.7;margin:18px 0;position:relative}
+pre code{font-family:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,"Noto Sans Mono CJK SC",monospace}
+code{background:#f1f5f9;color:#db2777;padding:2px 6px;border-radius:5px;font-size:.9em;
+  font-family:"SFMono-Regular",Consolas,monospace}
+pre code{background:none;color:inherit;padding:0}
+
+article ol,article ul{padding-left:24px;margin:14px 0}
+article li{margin:7px 0}
+
+/* ---- 组件：卡片网格 ---- */
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin:22px 0}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:22px 0}
+.box{background:#f8fafc;border:1px solid var(--line);border-radius:12px;padding:18px 20px}
+.box .box-h{display:flex;align-items:center;gap:9px;font-weight:700;color:var(--primary-d);
+  font-size:15.5px;margin-bottom:8px}
+.box p{margin:6px 0;font-size:14px;color:var(--ink-soft)}
+.box.blue{background:var(--primary-l);border-color:#bfdbfe}
+.box.green{background:var(--green-l);border-color:#bbf7d0}
+.box.green .box-h{color:#15803d}
+.box.amber{background:var(--amber-l);border-color:#fde68a}
+.box.amber .box-h{color:#b45309}
+.box.violet{background:var(--violet-l);border-color:#c7d2fe}
+.box.violet .box-h{color:#4338ca}
+.box.teal{background:var(--teal-l);border-color:#99f6e4}
+.box.teal .box-h{color:#0f766e}
+.box.rose{background:var(--rose-l);border-color:#fecdd3}
+.box.rose .box-h{color:#be123c}
+.tag{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.3px;
+  padding:3px 9px;border-radius:999px;background:var(--primary-l);color:var(--primary-d);margin-right:6px}
+.tag.g{background:#dcfce7;color:#15803d}.tag.a{background:#fef3c7;color:#b45309}
+.tag.v{background:#e0e7ff;color:#4338ca}.tag.r{background:#ffe4e6;color:#be123c}
+.tag.t{background:#ccfbf1;color:#0f766e}
+
+/* ---- 组件：横向流程 pipeline ---- */
+.pipeline{display:flex;flex-wrap:wrap;align-items:stretch;gap:6px;margin:22px 0}
+.pnode{flex:1 1 130px;min-width:118px;background:var(--card);border:1.5px solid var(--primary-l);
+  border-radius:10px;padding:12px 12px;text-align:center;box-shadow:0 4px 14px rgba(15,23,42,.05)}
+.pnode .pn-t{font-weight:700;color:var(--primary-d);font-size:14px;line-height:1.4}
+.pnode .pn-d{font-size:12px;color:var(--ink-soft);margin-top:5px;line-height:1.5}
+.parrow{align-self:center;color:var(--primary);font-size:20px;font-weight:800;flex:0 0 auto}
+
+/* ---- 组件：纵向步骤 flow ---- */
+.flow{list-style:none;margin:22px 0;padding:0;counter-reset:fl}
+.flow li{position:relative;padding:14px 18px 14px 58px;margin:0 0 10px;background:#f8fafc;
+  border:1px solid var(--line);border-radius:12px}
+.flow li::before{counter-increment:fl;content:counter(fl);position:absolute;left:16px;top:14px;
+  width:28px;height:28px;border-radius:50%;background:var(--primary);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px}
+.flow li b{color:var(--primary-d)}
+.flow li .fd{color:var(--ink-soft);font-size:14px;margin-top:3px}
+.flow li::after{content:"↓";position:absolute;left:29px;bottom:-12px;color:var(--primary);font-weight:800}
+.flow li:last-child::after{display:none}
+
+/* ---- 组件：问题→对策 pq ---- */
+.pq{display:grid;grid-template-columns:1fr 34px 1fr;gap:8px;align-items:center;margin:10px 0}
+.pq .prob,.pq .sol{border-radius:12px;padding:14px 16px;height:100%}
+.pq .prob{background:var(--rose-l);border:1px solid #fecdd3}
+.pq .sol{background:var(--green-l);border:1px solid #bbf7d0}
+.pq .prob b{color:#be123c}.pq .sol b{color:#15803d}
+.pq .prob p,.pq .sol p{margin:5px 0 0;font-size:13.5px;color:var(--ink-soft)}
+.pq .arw{text-align:center;color:var(--primary);font-size:22px;font-weight:800}
+.pq .tagline{font-size:11.5px;color:var(--muted);display:block;margin-top:8px;font-family:Consolas,monospace}
+
+/* ---- 组件：VS 双栏 ---- */
+.vs{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:22px 0}
+.vs .side{border-radius:12px;padding:18px 20px}
+.vs .side.hl{background:var(--primary-l);border:1px solid #bfdbfe}
+.vs .side.alt{background:var(--violet-l);border:1px solid #c7d2fe}
+.vs .side h4{margin:0 0 10px;font-size:17px}
+.vs .side.hl h4{color:var(--primary-d)}.vs .side.alt h4{color:#4338ca}
+.vs .side ul{margin:0;padding-left:20px;font-size:14px}
+
+/* ---- 组件：矩阵圆点 ---- */
+.dot{display:inline-block;width:11px;height:11px;border-radius:50%;vertical-align:middle}
+.dot.on{background:var(--primary)}.dot.off{background:#e2e8f0;border:1px solid #cbd5e1}
+
+/* ---- 组件：分层架构 ---- */
+.layer{border-radius:12px;padding:14px 18px;margin:10px 0;border-left:5px solid}
+.layer.dp{background:#eff6ff;border-color:#3b82f6}
+.layer.cp{background:#fefce8;border-color:#eab308}
+.layer.pl{background:#f5f3ff;border-color:#8b5cf6}
+.layer .lt{font-weight:800;font-size:15px;margin-bottom:6px}
+.layer.dp .lt{color:#1d4ed8}.layer.cp .lt{color:#a16207}.layer.pl .lt{color:#6d28d9}
+.layer .lc{font-size:13.5px;color:var(--ink-soft)}
+
+/* ---- 组件：KPI ---- */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:22px 0}
+.kpi{background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;border-radius:12px;
+  padding:18px;text-align:center}
+.kpi .kv{font-size:26px;font-weight:800;line-height:1.2}
+.kpi .kl{font-size:12.5px;opacity:.9;margin-top:6px}
+
+.note{font-size:13px;color:var(--muted)}
+.divider{height:1px;background:var(--line);margin:30px 0}
+
+#toTop{position:fixed;right:26px;bottom:26px;width:46px;height:46px;border:none;
+  border-radius:50%;background:var(--primary);color:#fff;font-size:20px;cursor:pointer;
+  box-shadow:0 8px 20px rgba(37,99,235,.4);opacity:0;pointer-events:none;transition:.3s;z-index:50}
+#toTop.show{opacity:1;pointer-events:auto}
+#toTop:hover{background:var(--primary-d);transform:translateY(-3px)}
+
+footer{text-align:center;color:var(--muted);font-size:13px;padding:30px 20px 50px}
+.pager{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:36px;padding-top:22px;border-top:1px solid var(--line)}
+.pager a{color:var(--primary);text-decoration:none;font-size:14px}
+
+@media(max-width:960px){
+  .wrap{grid-template-columns:1fr;margin-top:-50px}
+  aside.toc{position:static;max-height:none}
+  .toc-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:2px}
+  article{padding:28px 20px}
+  .hero{padding-bottom:90px}
+  .vs,.pq{grid-template-columns:1fr}
+  .pq .arw{transform:rotate(90deg)}
+}
+</style>
+</head>
+<body>
+<div class="topbar"><div class="topbar-inner">
+  <a class="brand" href="/">小胖鱼@Think</a><span>·</span>
+  <a href="/scheduler/">调度器系列</a>
+  <span style="margin-left:auto"><a href="/">博客首页</a></span>
+</div></div>
+
+<header class="hero"><div class="hero-inner">
+  <span class="kicker">KUBERNETES · COLOCATION · RESOURCE EFFICIENCY</span>
+  <h1>Koordinator 混部与超卖实战<br>从 QoS 到干扰抑制</h1>
+  <p>在线闲置、离线 hunger——混部如何把利用率翻倍又不打穿在线 SLO？本文讲透 Koordinator 的 QoS 分级、资源超卖模型、CPU Burst、干扰抑制与弹性资源，理清它与 Kueue/Volcano 的分层边界，并给出可落地的配置与排障清单。</p>
+  <div class="badges">
+    <span class="badge">📘 11 章正文</span>
+    <span class="badge">⚡ 混部超卖</span>
+    <span class="badge">🎯 Koordinator v1.6+</span>
+    <span class="badge">⏱️ 约 35 分钟</span>
+  </div>
+</div></header>
+
+<div class="wrap">
+<aside class="toc">
+  <h3>目录导航</h3>
+  <ul class="toc-list">
+<li><a href="#abstract">摘要：为什么需要混部</a></li>
+<li class="toc-l2"><a href="#problem">1. 资源浪费的根源</a></li>
+<li class="toc-l2"><a href="#arch">2. Koordinator 架构总览</a></li>
+<li class="toc-l2"><a href="#qos">3. QoS 分级：在线与离线分层</a></li>
+<li class="toc-l2"><a href="#oversell">4. 资源超卖模型</a></li>
+<li class="toc-l2"><a href="#cpu">5. CPU Burst：兼顾延迟与利用率</a></li>
+<li class="toc-l2"><a href="#interfere">6. 干扰检测与抑制</a></li>
+<li class="toc-l2"><a href="#elastic">7. 弹性资源与离线调度</a></li>
+<li class="toc-l2"><a href="#coord">8. 与 Kueue / Volcano 的协同与边界</a></li>
+<li class="toc-l2"><a href="#practice">9. 落地实战配置</a></li>
+<li class="toc-l2"><a href="#observe">10. 可观测性与排障</a></li>
+<li class="toc-l2"><a href="#qa">11. 高频面试题</a></li>
+<li><a href="#meta">元信息</a></li>
+  </ul>
+</aside>
+
+<article>
+
+<h2 id="abstract">摘要：为什么需要混部</h2>
+<p class="lead"><strong>在线服务白天吃满、夜间闲置，离线训练昼夜饥饿却总被抢占——混部（colocation）的目标就是把这两类负载放进同一批机器，用「在线优先、离线填缝」把集群平均 CPU 利用率从 10–20% 拉到 40–60%。</strong>Koordinator 是阿里云开源的混部调度系统，通过 QoS 分级、资源超卖、CPU Burst、干扰检测与弹性资源，把「超卖」做得可控、可观测、可回滚。本文从资源浪费的根源出发，逐层讲清它的架构、关键机制、与 Kueue/Volcano 的边界，以及可落地的配置。</p>
+
+<div class="callout tip"><strong>阅读前提</strong>：混部解决的是「节点资源怎么超卖与隔离」，与 Kueue 的「准入配额」、Volcano 的「作业级 gang 调度」是不同层次。建议先读 <a href="kueue-vs-volcano.html">Kueue vs Volcano</a> 与 <a href="ai-gpu-scheduling.html">AI GPU 调度全景</a>，再看本篇如何补齐「资源效率」这一层。</div>
+
+<!-- ============ 1 ============ -->
+<h2 id="problem">1. 资源浪费的根源</h2>
+<p>在线服务（Web/API/数据库）为了应对流量峰值和故障冗余，按<strong>峰值 × 副本冗余</strong>申请资源，日均利用率常只有 10–20%；离线作业（训练、批处理、数据分析）能吃满 CPU 却对延迟不敏感。把二者分开部署，等于让一半机器长期空转。</p>
+<div class="pq">
+  <div class="prob"><b>在线集群</b><p>按峰值申请，requests 高、平均利用率低，夜间大量 CPU 闲置；但延迟敏感，绝不能被抢占抖动。</p></div><div class="arw">→</div>
+  <div class="sol"><b>混部思路</b><p>离线作业填「在线用不完的缝」。在线优先保障，离线用低优先级 + 被压制机制，在在线需要时秒级让出资源。</p></div>
+</div>
+<div class="callout warn"><strong>核心矛盾</strong>：超卖必然带来干扰（CPU 争抢、内存带宽、缓存、IO）。混部的成败不在「能不能超卖」，而在「超卖后能不能保证在线 SLO 不被破坏」。Koordinator 的全部机制都围绕这一点设计。</div>
+
+<!-- ============ 2 ============ -->
+<h2 id="arch">2. Koordinator 架构总览</h2>
+<p>Koordinator 由控制面组件与节点 agent 协作完成混部，既有调度侧决策，也有节点侧执行与反馈。</p>
+<div class="layer dp"><div class="lt">koord-scheduler · 调度侧</div><div class="lc">基于 kube-scheduler Framework 扩展，负责 QoS 感知调度、资源超卖分配、Reservation（资源预留）、NUMA 感知、gang 与设备共享等。与原生调度器一脉相承，可增量替换。</div></div>
+<div class="layer cp"><div class="lt">koord-manager · 控制面</div><div class="lc">管理 CRD（如 Reservation、NodeMetric、ConfigMigration），提供全局资源视图与配置下发，为调度决策和节点执行提供控制面能力。</div></div>
+<div class="layer pl"><div class="lt">koordlet · 节点侧 agent</div><div class="lc">真正执行混部策略：上报节点资源指标、实施 CPU 压制/唤醒、内存回收、CPU Burst，并把干扰与资源使用反馈给控制面——这是「超卖可控」的执行末端。</div></div>
+<div class="callout"><strong>关键分工</strong>：调度侧决定「离线 Pod 能不能放上来（按超卖后的可用量）」，节点侧决定「在线忙起来时怎么压制离线」。两者缺一不可：只调度不压制，在线 SLO 会被打穿；只压制不调度，超卖量无法被利用。</div>
+
+<!-- ============ 3 ============ -->
+<h2 id="qos">3. QoS 分级：在线与离线分层</h2>
+<p>Koordinator 用 <code>koordinator.sh/qosClass</code> 把 Pod 分级，这是所有差异化策略的基础。它比 Kubernetes 原生 QoS（Guaranteed/Burstable/BestEffort）语义更丰富、更贴近混部场景。</p>
+<div class="table-wrap"><table>
+<thead><tr><th>QoS 等级</th><th>定位</th><th>典型负载</th><th>资源策略</th></tr></thead>
+<tbody>
+<tr><td><span class="tag r">LSE</span></td><td>Latency Sensitive Exclusive</td><td>极致延迟敏感、独占</td><td>独占 CPU 核，严格隔离</td></tr>
+<tr><td><span class="tag a">LSR</span></td><td>Latency Sensitive Reserved</td><td>延迟敏感、需预留</td><td>绑定 CPU 核，保证最低份额</td></tr>
+<tr><td><span class="tag">LS</span></td><td>Latency Sensitive</td><td>普通在线服务</td><td>优先保障，可被 Burst 加速</td></tr>
+<tr><td><span class="tag t">BE</span></td><td>Best Effort</td><td>离线训练、批处理</td><td>填缝使用，可被压制/驱逐</td></tr>
+<tr><td><span class="tag v">System</span></td><td>系统组件</td><td>DaemonSet 等</td><td>特殊管理，不参与混部竞技</td></tr>
+</tbody>
+</table></div>
+<div class="callout tip"><strong>设计要点</strong>：LSE/LSR 用「核级隔离」给最敏感的负载兜底；LS 是主体在线服务；BE 是可牺牲的离线。混部主要发生在 <strong>LS ↔ BE</strong> 之间——BE 用 LS 的闲置资源，LS 忙时 BE 让路。</div>
+
+<!-- ============ 4 ============ -->
+<h2 id="oversell">4. 资源超卖模型</h2>
+<p>超卖的核心是一个公式：节点上「可分配给 BE 的资源」= 节点容量 − 在线实际使用（而非在线 requests）。因为在线按峰值申请、实际用得少，中间差额就是可被 BE 利用的「隐藏资源」。</p>
+<div class="grid2">
+  <div class="box blue"><div class="box-h">传统调度视角</div><p>节点可分配 = 容量 − 已分配 requests。在线 requests 很高 → 留给离线的很少 → 大量 CPU 名义上「已分配」实则闲置。</p></div>
+  <div class="box green"><div class="box-h">Koordinator 超卖视角</div><p>koordlet 实时上报在线<strong>真实使用量</strong>，调度侧据此计算 BE 可用量。BE Pod 的 requests 按「超卖资源」计量，从而把闲置部分真正利用起来。</p></div>
+</div>
+<div class="callout warn"><strong>超卖必须配合压制</strong>：如果在线突然冲高，BE 还在满跑，就会争抢 CPU 导致 LS 延迟劣化。所以超卖量不是越大越好，必须配合第 6 节的干扰抑制，并保留安全水位。</div>
+
+<!-- ============ 5 ============ -->
+<h2 id="cpu">5. CPU Burst：兼顾延迟与利用率</h2>
+<p>在线服务平时只用很少 CPU，但偶发尖峰时若被 CPU limit 卡住，请求延迟会瞬间飙升（CPU Throttling）。CPU Burst 允许 LS Pod 在宿主机有空闲时<strong>临时突破 limit</strong>，用闲置 CPU 消化尖峰；空闲结束自动收回。这是「既压低 requests 保利用率，又不牺牲尖峰延迟」的关键。</p>
+<div class="flow">
+  <li><b>常态</b><div class="fd">LS Pod 按较低 limit 运行，留出大量 CPU 给 BE 使用，提升利用率。</div></li>
+  <li><b>尖峰到来</b><div class="fd">koordlet 检测到该 Pod CPU  throttled 且节点有空闲，临时上调其 CPU quota（Burst）。</div></li>
+  <li><b>吸收尖峰</b><div class="fd">Pod 用突发额度快速处理请求，避免排队与延迟毛刺。</div></li>
+  <li><b>自动回收</b><div class="fd">尖峰过去、或节点 CPU 紧张时，quota 回落；同时压制 BE 优先保障 LS。</div></li>
+</div>
+<div class="callout"><strong>价值</strong>：没有 Burst，你只能把 limit 设得很高来兜尖峰（利用率低），或设得很低（延迟差）。Burst 让「低限额定 + 按需突发」成为可能，是混部里在线侧体验不受损的重要保障。</div>
+
+<!-- ============ 6 ============ -->
+<h2 id="interfere">6. 干扰检测与抑制</h2>
+<p>当在线与离线共享节点，CPU、内存带宽、Last Level Cache、IO 都会互相干扰。Koordinator 在节点侧做多层抑制，把干扰控制在在线 SLO 可接受范围。</p>
+<div class="table-wrap"><table>
+<thead><tr><th>干扰维度</th><th>检测信号</th><th>抑制手段</th></tr></thead>
+<tbody>
+<tr><td>CPU</td><td>在线 CPU 使用率、throttling 时长</td><td>压制 BE 的 CPU quota / cgroup 权重，必要时驱逐 BE</td></tr>
+<tr><td>内存</td><td>节点内存水位、在线采用了多少</td><td>内存回收、回收 BE 页缓存，OOM 时优先杀 BE</td></tr>
+<tr><td>CPU Cache / 带宽</td><td>LLC 占用、内存带宽压力</td><td>核级隔离（LSE/LSR）、resctrl 资源控制</td></tr>
+<tr><td>IO</td><td>磁盘/网络延迟</td><td>IO 权重与限流，保障在线 IO 优先</td></tr>
+</tbody>
+</table></div>
+<div class="callout rose"><strong>底线机制</strong>：当压制仍不足以保障在线 SLO，koordlet 会对 BE Pod 执行<strong>驱逐/驱逐重调度</strong>，把离线作业挪到别的节点。这是混部的最后一道防线——牺牲离线可用性，保在线 SLO。</div>
+
+<!-- ============ 7 ============ -->
+<h2 id="elastic">7. 弹性资源与离线调度</h2>
+<p>为了让离线作业能「安全地使用超卖资源」，Koordinator 提供了弹性资源与资源预留等机制，把「不确定的空闲」变成「可调度的资源」。</p>
+<div class="grid2">
+  <div class="box"><div class="box-h">弹性资源（Elastic Resource）</div><p>把在线低峰期的闲置资源以「弹性」形式计量给离线使用；在线回收时，离线 Pod 可被平滑压制或迁移，而非直接杀死。</p></div>
+  <div class="box"><div class="box-h">Reservation 资源预留</div><p>为即将到来的Pod（如扩容、gang 作业）提前预留资源，避免「调度时算得开、真正创建时资源被抢」的竞态。</p></div>
+  <div class="box"><div class="box-h">Gang 与设备共享</div><p>koord-scheduler 也支持 gang 语义与 GPU 设备共享，让离线训练既能整组调度，也能细粒度使用 GPU。</p></div>
+  <div class="box"><div class="box-h">NUMA 感知</div><p>对延迟敏感与高吞吐负载做 NUMA 节点绑定，减少跨 NUMA 访问，提升 CPU/内存密集负载性能。</p></div>
+</div>
+
+<!-- ============ 8 ============ -->
+<h2 id="coord">8. 与 Kueue / Volcano 的协同与边界</h2>
+<p>这是最容易混淆的一节。三者解决的是资源链路上的不同问题，可以叠加，而不是三选一。</p>
+<div class="layer dp"><div class="lt">Kueue · 准入与配额治理（「谁能进场、占多少」）</div><div class="lc">决定一个作业是否被 admit、用哪个 ClusterQueue 的配额。停在 Pod 创建之前。可与 Koordinator 叠加：Kueue 管配额账本，Koordinator 管节点上的超卖与隔离。</div></div>
+<div class="layer cp"><div class="lt">Volcano · 作业级调度（「一组作业怎么排、放哪」）</div><div class="lc">Session + Action + Plugin 的批处理调度引擎，强在 gang、DRF 公平、抢占回收。koord-scheduler 可与 Volcano 配合：Volcano 决定作业编排，Koordinator 提供节点资源效率与混部隔离。</div></div>
+<div class="layer pl"><div class="lt">Koordinator · 资源效率与隔离（「同一台机器怎么塞更多而不互相伤害」）</div><div class="lc">聚焦 QoS 分级、超卖、干扰抑制——这是 Kueue/Volcano 都不覆盖的「节点内资源效率」层。三者组合可覆盖从准入、编排到节点执行的完整链路。</div></div>
+<div class="callout tip"><strong>一句话边界</strong>：Kueue 管「配额账本」，Volcano 管「作业编排」，Koordinator 管「容器落位后的资源超卖与干扰」。面试时先分层再谈组合，就不会乱。</div>
+
+<!-- ============ 9 ============ -->
+<h2 id="practice">9. 落地实战配置</h2>
+<h3>给离线作业标记 QoS 为 BE</h3>
+<pre><code>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: offline-training
+spec:
+  template:
+    metadata:
+      labels:
+        koordinator.sh/qosClass: "BE"   # 声明为离线、可被压制
+    spec:
+      priorityClassName: koord-batch    # 低优先级，便于抢占让路
+      containers:
+        - name: trainer
+          resources:
+            requests: {cpu: "2", memory: "4Gi"}
+            limits:   {cpu: "2", memory: "4Gi"}
+</code></pre>
+<h3>为在线服务开启 CPU Burst</h3>
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: web-api
+  annotations:
+    koordinator.sh/cpuBurst: '{"enable": true, "policy": "CPUCompression"}'  # 允许突发并支持压缩回收
+spec:
+  containers:
+    - name: app
+      resources:
+        requests: {cpu: "1"}
+        limits:   {cpu: "1"}   # limit 保持较低，靠 Burst 吸收尖峰
+</code></pre>
+<div class="callout warn"><strong>上线节奏</strong>：先在非核心集群灰度 → 用指标确认在线 SLO（P99 延迟、throttling 时长）无劣化 → 逐步提高超卖比例 → 保留一键关闭混部的能力。切勿一开始就在核心在线集群开大超卖。</div>
+
+<!-- ============ 10 ============ -->
+<h2 id="observe">10. 可观测性与排障</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>现象</th><th>可能原因</th><th>排查方向</th></tr></thead>
+<tbody>
+<tr><td>在线 P99 延迟升高</td><td>BE 抢占 CPU、超卖过高、Burst 未生效</td><td>看在线 throttling 时长、BE CPU 占用、节点压制是否触发</td></tr>
+<tr><td>BE 作业频繁被杀</td><td>节点内存压力大、安全水位过低</td><td>检查内存回收日志、驱逐事件，适当下调超卖比例</td></tr>
+<tr><td>BE Pod 一直 Pending</td><td>koord-scheduler 未接管、超卖资源算不出来</td><td>确认 schedulerName、koordlet 指标是否正常上报</td></tr>
+<tr><td>CPU Burst 不生效</td><td>注解格式错误、节点无空闲 CPU</td><td>核对 annotation、koordlet 版本与节点余量</td></tr>
+</tbody>
+</table></div>
+<div class="callout"><strong>核心观测指标</strong>：节点真实利用率 vs requests、在线 throttling 时长、BE 被压制时长/次数、驱逐次数、在线 P99 延迟。混部的健康度要看「利用率提升」与「在线 SLO 保持」两条曲线同时达标。</div>
+
+<!-- ============ 11 ============ -->
+<h2 id="qa">11. 高频面试题</h2>
+<div class="qa"><p><strong>Q1：什么是混部？为什么需要 Koordinator？</strong></p><p>A：混部是在同一批节点上同时跑在线与离线负载，用离线填在线的闲置资源，提升利用率。难点是超卖可能干扰在线 SLO。Koordinator 通过 QoS 分级、资源超卖、CPU Burst、干扰抑制把超卖做得可控——不是简单把离线调度上来，而是能在在线需要时秒级让路。</p></div>
+<div class="qa"><p><strong>Q2：CPU Burst 解决了什么问题？</strong></p><p>A：在线服务若把 CPU limit 设低以提利用率，遇到流量尖峰会被 throttling 拖累延迟；设高又浪费。CPU Burst 允许 LS Pod 在节点空闲时临时突破 limit 吸收尖峰，空闲后回收，兼顾利用率与延迟。</p></div>
+<div class="qa"><p><strong>Q3：BE 作业会不会影响在线 SLO？如何保障？</strong></p><p>A：会有风险。Koordinator 用多层机制保障：调度侧按超卖后的可用量放置；节点侧 koordlet 实时检测，在线忙时压制 BE 的 CPU/内存/IO；必要时驱逐 BE。观测在线 throttling 与 P99 延迟，必要时下调超卖比例。</p></div>
+<div class="qa"><p><strong>Q4：Koordinator 和 Kueue、Volcano 的关系？</strong></p><p>A：不同层次可叠加。Kueue 管准入与配额（谁能进场、占多少），Volcano 管作业级编排（gang、公平、抢占），Koordinator 管节点内的资源超卖与干扰隔离（怎么塞更多而不互相伤害）。三者组合覆盖从准入到节点执行的完整链路。</p></div>
+<div class="qa"><p><strong>Q5：混部上线的最大风险是什么？怎么规避？</strong></p><p>A：最大风险是在线 SLO 被打穿。规避：非核心集群灰度、逐步提高超卖比例、全程观测在线 P99 与 throttling、保留一键关闭混部能力；LSE/LSR 用核级隔离给最敏感负载兜底。</p></div>
+
+<h2 id="meta">元信息</h2>
+<p class="note">关键词：混部 Colocation、资源超卖、QoS 分级（LSE/LSR/LS/BE）、CPU Burst、干扰检测与抑制、Reservation、NUMA 感知、与 Kueue/Volcano 协同。本文为「调度器系列」第 7 篇，聚焦节点资源效率与隔离。Koordinator 为阿里云开源项目，具体配置以官方文档最新版本为准。</p>
+
+
+<div class="pager">
+<a href="/scheduler/">← 返回调度器系列目录</a><a href="ai-gpu-scheduling.html">AI GPU 调度全景 →</a>
+</div>
+</article>
+</div>
+
+<button id="toTop" title="回到顶部">↑</button>
+<footer>© Koordinator 混部与超卖实战 · 基于 Koordinator 官方文档与公开资料整理 · 小胖鱼@Think · 调度器系列</footer>
+<script>
+var toTop=document.getElementById('toTop');
+window.addEventListener('scroll',function(){toTop.classList.toggle('show',window.scrollY>400);});
+toTop.addEventListener('click',function(){window.scrollTo({top:0,behavior:'smooth'});});
+var links=document.querySelectorAll('.toc a');
+var sections=[];
+links.forEach(function(a){var el=document.querySelector(a.getAttribute('href')); if(el) sections.push({a:a,el:el});});
+window.addEventListener('scroll',function(){
+  var y=window.scrollY+120, cur=null;
+  sections.forEach(function(s){if(s.el.offsetTop<=y) cur=s.a;});
+  links.forEach(function(a){a.classList.remove('active');});
+  if(cur) cur.classList.add('active');
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="从职责边界出发，系统拆解 kube-scheduler 的调度/绑定双周期、三个调度队列与事件驱动、Scheduling Framework 13 个扩展点、过滤打分算法、抢占机制、插件开发与 Pending 排障。">
+<title>kube-scheduler 调度框架解剖：扩展点、队列与抢占｜小胖鱼@Think</title>
+<style>
+:root{
+  --primary:#2563eb; --primary-d:#1e40af; --primary-l:#dbeafe;
+  --ink:#1e293b; --ink-soft:#475569; --muted:#94a3b8;
+  --bg:#f1f5f9; --card:#ffffff; --line:#e2e8f0;
+  --accent:#0ea5e9; --shadow:0 10px 30px rgba(15,23,42,.08);
+  --code-bg:#0f172a; --radius:14px;
+  --green:#16a34a; --green-l:#f0fdf4; --amber:#f59e0b; --amber-l:#fffbeb;
+  --violet:#6366f1; --violet-l:#eef2ff; --rose:#e11d48; --rose-l:#fff1f2;
+  --teal:#0d9488; --teal-l:#f0fdfa;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif;
+  line-height:1.85;font-size:16px;-webkit-font-smoothing:antialiased}
+
+.topbar{background:#0f172a;color:#e2e8f0;font-size:14px}
+.topbar-inner{max-width:1240px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.topbar a{color:#93c5fd;text-decoration:none}
+.topbar a:hover{color:#fff;text-decoration:underline}
+.topbar .brand{font-weight:700;color:#fff}
+
+.hero{background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 55%,#0ea5e9 100%);
+  color:#fff;padding:64px 24px 120px;position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;inset:0;
+  background:radial-gradient(circle at 85% 20%,rgba(255,255,255,.18),transparent 45%),
+             radial-gradient(circle at 15% 80%,rgba(255,255,255,.12),transparent 40%)}
+.hero-inner{max-width:960px;margin:0 auto;position:relative;z-index:1}
+.hero .kicker{display:inline-block;font-size:13px;letter-spacing:2px;font-weight:600;
+  background:rgba(255,255,255,.16);padding:6px 14px;border-radius:999px;margin-bottom:20px}
+.hero h1{font-size:clamp(28px,4.5vw,46px);line-height:1.25;margin:0 0 18px;font-weight:800;letter-spacing:.5px}
+.hero p{font-size:clamp(15px,2vw,18px);opacity:.92;max-width:780px;margin:0 0 26px}
+.badges{display:flex;flex-wrap:wrap;gap:10px}
+.badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);
+  padding:6px 13px;border-radius:8px;font-size:13px;backdrop-filter:blur(4px)}
+
+.wrap{max-width:1240px;margin:-70px auto 60px;padding:0 24px;position:relative;z-index:2;
+  display:grid;grid-template-columns:270px minmax(0,1fr);gap:28px;align-items:start}
+
+aside.toc{position:sticky;top:24px;background:var(--card);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:22px 18px;max-height:calc(100vh - 48px);overflow-y:auto}
+.toc h3{margin:0 0 14px;font-size:15px;color:var(--primary-d);display:flex;align-items:center;gap:8px}
+.toc h3::before{content:"";width:4px;height:16px;background:var(--primary);border-radius:2px}
+.toc-list,.toc-sub{list-style:none;margin:0;padding:0}
+.toc a{display:block;color:var(--ink-soft);text-decoration:none;font-size:13.5px;
+  padding:6px 10px;border-radius:7px;line-height:1.5;transition:.18s}
+.toc a:hover{background:var(--primary-l);color:var(--primary-d)}
+.toc .toc-l2>a{font-weight:600;color:var(--ink)}
+.toc a.active{background:var(--primary);color:#fff}
+.toc-list::-webkit-scrollbar{width:5px}
+.toc-list::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:5px}
+
+article{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);
+  padding:42px clamp(22px,4vw,56px);min-width:0}
+article h1,article h2,article h3,article h4{color:var(--ink);scroll-margin-top:24px;line-height:1.35}
+article h2{font-size:24px;margin:44px 0 16px;padding:0 0 12px;border-bottom:2px solid var(--line);font-weight:800}
+article h2::before{content:"";display:inline-block;width:8px;height:8px;background:var(--primary);
+  border-radius:2px;margin-right:11px;vertical-align:middle}
+article h3{font-size:19px;margin:28px 0 12px;font-weight:700;color:var(--primary-d)}
+article h4{font-size:16px;margin:20px 0 8px;font-weight:700;color:var(--teal)}
+article p{margin:14px 0}
+article strong{color:var(--primary-d);font-weight:700}
+article a{color:var(--primary);text-decoration:none;border-bottom:1px dashed var(--primary)}
+blockquote{margin:18px 0;padding:14px 20px;background:var(--primary-l);
+  border-left:4px solid var(--primary);border-radius:0 10px 10px 0;color:var(--ink-soft)}
+blockquote p{margin:0}
+.lead{font-size:17px;line-height:1.9;color:var(--ink-soft);
+  padding:2px 0 2px 18px;border-left:3px solid var(--accent);margin:20px 0}
+
+.callout{margin:20px 0;padding:16px 20px;background:var(--green-l);border-left:4px solid var(--green);
+  border-radius:0 10px 10px 0;color:#14532d;font-size:14.5px}
+.callout.warn{background:var(--amber-l);border-left-color:var(--amber);color:#78350f}
+.callout.tip{background:var(--violet-l);border-left-color:var(--violet);color:#312e81}
+.callout.rose{background:var(--rose-l);border-left-color:var(--rose);color:#9f1239}
+.callout p{margin:6px 0 0}
+
+table{width:100%;border-collapse:collapse;margin:20px 0;font-size:14.5px;
+  border-radius:10px;overflow:hidden;box-shadow:0 0 0 1px var(--line)}
+thead th{background:linear-gradient(135deg,#1e40af,#2563eb);color:#fff;
+  text-align:left;padding:12px 14px;font-weight:600;white-space:nowrap}
+tbody td{padding:11px 14px;border-top:1px solid var(--line);vertical-align:top}
+tbody tr:nth-child(even){background:#f8fafc}
+tbody tr:hover{background:var(--primary-l)}
+.table-wrap{overflow-x:auto;margin:20px 0}
+.table-wrap table{margin:0}
+caption{caption-side:bottom;text-align:center;color:var(--muted);font-size:12.5px;padding:10px}
+
+pre{background:var(--code-bg);color:#e2e8f0;padding:18px 20px;border-radius:12px;
+  overflow-x:auto;font-size:13.5px;line-height:1.7;margin:18px 0;position:relative}
+pre code{font-family:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,"Noto Sans Mono CJK SC",monospace}
+code{background:#f1f5f9;color:#db2777;padding:2px 6px;border-radius:5px;font-size:.9em;
+  font-family:"SFMono-Regular",Consolas,monospace}
+pre code{background:none;color:inherit;padding:0}
+
+article ol,article ul{padding-left:24px;margin:14px 0}
+article li{margin:7px 0}
+
+/* ---- 组件：卡片网格 ---- */
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin:22px 0}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:22px 0}
+.box{background:#f8fafc;border:1px solid var(--line);border-radius:12px;padding:18px 20px}
+.box .box-h{display:flex;align-items:center;gap:9px;font-weight:700;color:var(--primary-d);
+  font-size:15.5px;margin-bottom:8px}
+.box p{margin:6px 0;font-size:14px;color:var(--ink-soft)}
+.box.blue{background:var(--primary-l);border-color:#bfdbfe}
+.box.green{background:var(--green-l);border-color:#bbf7d0}
+.box.green .box-h{color:#15803d}
+.box.amber{background:var(--amber-l);border-color:#fde68a}
+.box.amber .box-h{color:#b45309}
+.box.violet{background:var(--violet-l);border-color:#c7d2fe}
+.box.violet .box-h{color:#4338ca}
+.box.teal{background:var(--teal-l);border-color:#99f6e4}
+.box.teal .box-h{color:#0f766e}
+.box.rose{background:var(--rose-l);border-color:#fecdd3}
+.box.rose .box-h{color:#be123c}
+.tag{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.3px;
+  padding:3px 9px;border-radius:999px;background:var(--primary-l);color:var(--primary-d);margin-right:6px}
+.tag.g{background:#dcfce7;color:#15803d}.tag.a{background:#fef3c7;color:#b45309}
+.tag.v{background:#e0e7ff;color:#4338ca}.tag.r{background:#ffe4e6;color:#be123c}
+.tag.t{background:#ccfbf1;color:#0f766e}
+
+/* ---- 组件：横向流程 pipeline ---- */
+.pipeline{display:flex;flex-wrap:wrap;align-items:stretch;gap:6px;margin:22px 0}
+.pnode{flex:1 1 130px;min-width:118px;background:var(--card);border:1.5px solid var(--primary-l);
+  border-radius:10px;padding:12px 12px;text-align:center;box-shadow:0 4px 14px rgba(15,23,42,.05)}
+.pnode .pn-t{font-weight:700;color:var(--primary-d);font-size:14px;line-height:1.4}
+.pnode .pn-d{font-size:12px;color:var(--ink-soft);margin-top:5px;line-height:1.5}
+.parrow{align-self:center;color:var(--primary);font-size:20px;font-weight:800;flex:0 0 auto}
+
+/* ---- 组件：纵向步骤 flow ---- */
+.flow{list-style:none;margin:22px 0;padding:0;counter-reset:fl}
+.flow li{position:relative;padding:14px 18px 14px 58px;margin:0 0 10px;background:#f8fafc;
+  border:1px solid var(--line);border-radius:12px}
+.flow li::before{counter-increment:fl;content:counter(fl);position:absolute;left:16px;top:14px;
+  width:28px;height:28px;border-radius:50%;background:var(--primary);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px}
+.flow li b{color:var(--primary-d)}
+.flow li .fd{color:var(--ink-soft);font-size:14px;margin-top:3px}
+.flow li::after{content:"↓";position:absolute;left:29px;bottom:-12px;color:var(--primary);font-weight:800}
+.flow li:last-child::after{display:none}
+
+/* ---- 组件：问题→对策 pq ---- */
+.pq{display:grid;grid-template-columns:1fr 34px 1fr;gap:8px;align-items:center;margin:10px 0}
+.pq .prob,.pq .sol{border-radius:12px;padding:14px 16px;height:100%}
+.pq .prob{background:var(--rose-l);border:1px solid #fecdd3}
+.pq .sol{background:var(--green-l);border:1px solid #bbf7d0}
+.pq .prob b{color:#be123c}.pq .sol b{color:#15803d}
+.pq .prob p,.pq .sol p{margin:5px 0 0;font-size:13.5px;color:var(--ink-soft)}
+.pq .arw{text-align:center;color:var(--primary);font-size:22px;font-weight:800}
+.pq .tagline{font-size:11.5px;color:var(--muted);display:block;margin-top:8px;font-family:Consolas,monospace}
+
+/* ---- 组件：VS 双栏 ---- */
+.vs{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:22px 0}
+.vs .side{border-radius:12px;padding:18px 20px}
+.vs .side.hl{background:var(--primary-l);border:1px solid #bfdbfe}
+.vs .side.alt{background:var(--violet-l);border:1px solid #c7d2fe}
+.vs .side h4{margin:0 0 10px;font-size:17px}
+.vs .side.hl h4{color:var(--primary-d)}.vs .side.alt h4{color:#4338ca}
+.vs .side ul{margin:0;padding-left:20px;font-size:14px}
+
+/* ---- 组件：矩阵圆点 ---- */
+.dot{display:inline-block;width:11px;height:11px;border-radius:50%;vertical-align:middle}
+.dot.on{background:var(--primary)}.dot.off{background:#e2e8f0;border:1px solid #cbd5e1}
+
+/* ---- 组件：分层架构 ---- */
+.layer{border-radius:12px;padding:14px 18px;margin:10px 0;border-left:5px solid}
+.layer.dp{background:#eff6ff;border-color:#3b82f6}
+.layer.cp{background:#fefce8;border-color:#eab308}
+.layer.pl{background:#f5f3ff;border-color:#8b5cf6}
+.layer .lt{font-weight:800;font-size:15px;margin-bottom:6px}
+.layer.dp .lt{color:#1d4ed8}.layer.cp .lt{color:#a16207}.layer.pl .lt{color:#6d28d9}
+.layer .lc{font-size:13.5px;color:var(--ink-soft)}
+
+/* ---- 组件：KPI ---- */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:22px 0}
+.kpi{background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;border-radius:12px;
+  padding:18px;text-align:center}
+.kpi .kv{font-size:26px;font-weight:800;line-height:1.2}
+.kpi .kl{font-size:12.5px;opacity:.9;margin-top:6px}
+
+.note{font-size:13px;color:var(--muted)}
+.divider{height:1px;background:var(--line);margin:30px 0}
+
+#toTop{position:fixed;right:26px;bottom:26px;width:46px;height:46px;border:none;
+  border-radius:50%;background:var(--primary);color:#fff;font-size:20px;cursor:pointer;
+  box-shadow:0 8px 20px rgba(37,99,235,.4);opacity:0;pointer-events:none;transition:.3s;z-index:50}
+#toTop.show{opacity:1;pointer-events:auto}
+#toTop:hover{background:var(--primary-d);transform:translateY(-3px)}
+
+footer{text-align:center;color:var(--muted);font-size:13px;padding:30px 20px 50px}
+.pager{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:36px;padding-top:22px;border-top:1px solid var(--line)}
+.pager a{color:var(--primary);text-decoration:none;font-size:14px}
+
+@media(max-width:960px){
+  .wrap{grid-template-columns:1fr;margin-top:-50px}
+  aside.toc{position:static;max-height:none}
+  .toc-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:2px}
+  article{padding:28px 20px}
+  .hero{padding-bottom:90px}
+  .vs,.pq{grid-template-columns:1fr}
+  .pq .arw{transform:rotate(90deg)}
+}
+</style>
+</head>
+<body>
+<div class="topbar"><div class="topbar-inner">
+  <a class="brand" href="/">小胖鱼@Think</a><span>·</span>
+  <a href="/scheduler/">调度器系列</a>
+  <span style="margin-left:auto"><a href="/">博客首页</a></span>
+</div></div>
+
+<header class="hero"><div class="hero-inner">
+  <span class="kicker">KUBERNETES · SCHEDULING FRAMEWORK · CORE</span>
+  <h1>kube-scheduler 调度框架解剖<br>扩展点、队列与抢占</h1>
+  <p>调度器到底做什么、不做什么？本文从职责边界出发，把一次调度拆成调度周期与绑定周期，逐层讲透三个调度队列、13 个扩展点、过滤打分算法、抢占与 nominatedNodeName 真相，并给出插件开发骨架与生产排障清单。</p>
+  <div class="badges">
+    <span class="badge">📘 11 章正文</span>
+    <span class="badge">🧩 13 扩展点</span>
+    <span class="badge">🎯 K8s v1.28+</span>
+    <span class="badge">⏱️ 约 35 分钟</span>
+  </div>
+</div></header>
+
+<div class="wrap">
+<aside class="toc">
+  <h3>目录导航</h3>
+  <ul class="toc-list">
+<li><a href="#abstract">摘要：调度器到底做什么</a></li>
+<li class="toc-l2"><a href="#boundary">1. 职责边界：它不管什么</a></li>
+<li class="toc-l2"><a href="#journey">2. 一个 Pod 的调度之旅</a></li>
+<li class="toc-l2"><a href="#queue">3. 调度队列与事件驱动</a></li>
+<li class="toc-l2"><a href="#framework">4. Scheduling Framework 扩展点全景</a></li>
+<li class="toc-l2"><a href="#points">5. 扩展点逐一精讲</a></li>
+<li class="toc-l2"><a href="#algorithm">6. 调度算法核心：过滤与打分</a></li>
+<li class="toc-l2"><a href="#preempt">7. 抢占机制深挖</a></li>
+<li class="toc-l2"><a href="#plugin">8. 插件开发与配置实战</a></li>
+<li class="toc-l2"><a href="#observe">9. 可观测性与 Pending 排障</a></li>
+<li class="toc-l2"><a href="#tuning">10. 大规模集群调优</a></li>
+<li class="toc-l2"><a href="#qa">11. 高频面试题</a></li>
+<li><a href="#meta">元信息</a></li>
+  </ul>
+</aside>
+
+<article>
+
+<h2 id="abstract">摘要：调度器到底做什么</h2>
+<p class="lead"><strong>kube-scheduler 只做一件事：为 <code>spec.nodeName</code> 为空的 Pod 选一个合适的节点，并把绑定写回控制面。</strong>它不管配额、不拉镜像、不启动容器、不做节点故障驱逐。理解了这条边界，再看 Scheduling Framework 的 13 个扩展点、三个队列、抢占与插件开发，就不会把它和 Kueue（准入治理）、Volcano（作业级调度）混为一谈。本文按「边界 → 全流程 → 队列 → 扩展点 → 算法 → 抢占 → 插件 → 排障」的顺序，把 kube-scheduler 从源码级拆开。</p>
+
+<div class="callout tip"><strong>阅读前提</strong>：本文聚焦 Kubernetes 原生调度器。若你想先看作业级队列与配额，可读 <a href="kueue.html">Kueue 深度指南</a> 与 <a href="volcano.html">Volcano 原理详解</a>；两者的对比见 <a href="kueue-vs-volcano.html">Kueue vs Volcano</a>，本篇是理解它们「Pod 放置」这一层的底座。</div>
+
+<!-- ============ 1 ============ -->
+<h2 id="boundary">1. 职责边界：它不管什么</h2>
+<p>面试里最容易被追问的，不是「它会做什么」，而是「它不做什么」。把边界讲清，才显得真正理解调度器在控制面中的位置。</p>
+<div class="vs">
+  <div class="side hl"><h4>◆ kube-scheduler 负责</h4><ul>
+    <li>监听未绑定的 Pod（<code>spec.nodeName == ""</code>）</li>
+    <li>按资源、亲和性、拓扑、污点等条件<strong>筛选可行节点</strong></li>
+    <li>对可行节点<strong>打分排序</strong>，选出最优</li>
+    <li>把 <code>Pod → Node</code> 的绑定写入 API Server（Binding 对象）</li>
+  </ul></div>
+  <div class="side alt"><h4>▲ 它不负责</h4><ul>
+    <li>配额与准入（Kueue / ResourceQuota 的事）</li>
+    <li>真正把容器跑起来（kubelet + CRI 的事）</li>
+    <li>节点故障后的 Pod 驱逐与重调度（node-controller / 上层控制器）</li>
+    <li>NetworkPolicy、Service 路由、存储挂载</li>
+    <li>保证 gang 原子性（原生调度器逐个 Pod 独立决策）</li>
+  </ul></div>
+</div>
+<div class="callout warn"><strong>经典误区</strong>：「调度器保证 Pod 一定被调度成功」是错的。它只做「尽力而为的放置」——没有可行节点时 Pod 保持 Pending 并发出 <code>FailedScheduling</code> 事件，等待条件变化后重试。是否「必须整组一起上」是 Kueue/Volcano 在更上层或用 Permit 扩展点解决的问题。</div>
+
+<!-- ============ 2 ============ -->
+<h2 id="journey">2. 一个 Pod 的调度之旅</h2>
+<p>从用户提交 Pod 到它在节点上跑起来，调度器参与的是中间一段。整个流程分成两个周期，理解这个划分是掌握扩展点顺序的钥匙。</p>
+<div class="pipeline">
+  <div class="pnode"><div class="pn-t">提交 Pod</div><div class="pn-d">nodeName 为空</div></div><div class="parrow">→</div>
+  <div class="pnode"><div class="pn-t">入调度队列</div><div class="pn-d">ActiveQ</div></div><div class="parrow">→</div>
+  <div class="pnode"><div class="pn-t">调度周期</div><div class="pn-d">选节点（串行）</div></div><div class="parrow">→</div>
+  <div class="pnode"><div class="pn-t">绑定周期</div><div class="pn-d">写 Binding（可并行）</div></div><div class="parrow">→</div>
+  <div class="pnode"><div class="pn-t">kubelet</div><div class="pn-d">拉镜像、起容器</div></div>
+</div>
+<div class="grid2">
+  <div class="box blue"><div class="box-h">① 调度周期 Scheduling Cycle</div>
+    <p>为单个 Pod 选节点，<strong>串行执行</strong>（同一时刻只调度一个 Pod），确保决策基于一致的集群快照。包含：Predicates/Filter 过滤 → Priorities/Score 打分 → 选出最优节点 → Reserve 预留资源。</p>
+    <p class="note">关键词：<code>Snapshot</code>、<code>Framework</code>、<code>cycleState</code></p>
+  </div>
+  <div class="box green"><div class="box-h">② 绑定周期 Binding Cycle</div>
+    <p>把决策落到 API Server，不同 Pod 的绑定<strong>可并行</strong>。包含：Permit（可等待/拒绝）→ PreBind → Bind → PostBind。任一步失败触发 <code>Unreserve</code> 回滚。</p>
+    <p class="note">关键词：<code>WaitOnPermit</code>、<code>Binding</code>、<code>Unreserve</code></p>
+  </div>
+</div>
+<div class="callout"><strong>为什么拆成两个周期？</strong>选节点需要全局一致快照所以必须串行；而写绑定是独立的 I/O，可以并行以提升吞吐。Permit 扩展点正是卡在两个周期之间——它让 gang 调度有机会「扣住」已选好节点的 Pod，等整组齐了再一起放行（Volcano 的思路之一）。</div>
+
+<!-- ============ 3 ============ -->
+<h2 id="queue">3. 调度队列与事件驱动</h2>
+<p>Pod 并不是来了就立刻调度。调度器维护三个内部队列，配合事件驱动机制决定「什么时候重新考虑一个 Pod」，这是 1.20 之后调度性能提升的关键。</p>
+<div class="table-wrap"><table>
+<thead><tr><th>队列</th><th>作用</th><th>进入条件</th><th>出队方式</th></tr></thead>
+<tbody>
+<tr><td><strong>ActiveQ</strong></td><td>可立即尝试调度的 Pod</td><td>新建、被事件唤醒、Backoff 到期</td><td>调度周期按序 Pop</td></tr>
+<tr><td><strong>BackoffQ</strong></td><td>刚失败、短期冷却的 Pod</td><td>调度失败后按退避时间放入</td><td>退避计时结束 → ActiveQ</td></tr>
+<tr><td><strong>UnschedulableQ</strong></td><td>明确不可调度的 Pod</td><td>Filter 失败且无可行节点</td><td>仅靠相关事件/超时唤醒 → ActiveQ</td></tr>
+</tbody>
+</table></div>
+<h3>QueueingHint：让无关事件不再惊动整个队列</h3>
+<p>早期实现中，集群里任何节点事件都会把所有 Unschedulable Pod 重新入队，大规模集群下造成「惊群」。现在每个插件可为失败原因注册 <code>QueueingHintFn</code>：只有当发生的事件<strong>确实可能解决</strong>该 Pod 的失败原因时，才把它移回 ActiveQ。</p>
+<div class="pq">
+  <div class="prob"><b>问题</b><p>Pod 因「节点 CPU 不足」失败，此时集群新增了一个标签事件——与本 Pod 无关，却触发全量重排队。</p></div><div class="arw">→</div>
+  <div class="sol"><b>对策</b><p>NodeResourcesFit 插件的 QueueingHint 判断：只有 <code>Node 资源增加 / 新节点加入</code> 才相关，标签事件被忽略。避免无谓调度尝试。</p></div>
+</div>
+<div class="callout tip"><strong>调度失败的三层状态</strong>：<code>FailedScheduling</code> 事件里会写明失败插件与原因（如 <code>0/12 nodes are available: 12 Insufficient cpu</code>）。配合 QueueingHint，Pod 的重试是「按需唤醒」而非「定时全扫」。</div>
+
+<!-- ============ 4 ============ -->
+<h2 id="framework">4. Scheduling Framework 扩展点全景</h2>
+<p>Scheduling Framework 把调度器做成「插件化骨架」：一次调度会依次经过若干扩展点，插件在扩展点上注册钩子函数。下图是完整顺序（含失败回滚路径）。</p>
+<div class="flow">
+  <li><b>QueueSort</b><div class="fd">决定调度队列中 Pod 的排序（如优先级高的先调度）。全局只能启用一个。</div></li>
+  <li><b>PreEnqueue</b><div class="fd">Pod 进入 ActiveQ 前的准入检查，可暂缓不满足条件的 Pod（如 Kueue 式的门控思路）。</div></li>
+  <li><b>PreFilter</b><div class="fd">调度前置处理与扩展点数据共享（cycleState），可提前判定 Pod 是否根本无法调度。</div></li>
+  <li><b>Filter</b><div class="fd"><strong>过滤阶段</strong>：逐个节点判断可行性，任一插件否决即淘汰该节点（等价旧版 Predicate）。</div></li>
+  <li><b>PostFilter</b><div class="fd">当没有任何可行节点时触发——<strong>抢占就在这里发生</strong>（默认 DefaultPreemption）。</div></li>
+  <li><b>PreScore / Score / NormalizeScore</b><div class="fd"><strong>打分阶段</strong>：对可行节点打分（0–100），NormalizeScore 做归一化，最终加权求和。</div></li>
+  <li><b>Reserve</b><div class="fd">通知插件「该 Pod 已选中此节点」，插件可预留资源（如 PVC、端口）。失败则走 Unreserve。</div></li>
+  <li><b>Permit</b><div class="fd">绑定前的最后审批，可 <code>Wait</code>（ gang 场景扣住 Pod）/ <code>Allow</code> / <code>Reject</code>。</div></li>
+  <li><b>PreBind → Bind → PostBind</b><div class="fd">绑定前准备 → 真正写 Binding 对象 → 绑定后清理通知。绑定周期可并行。</div></li>
+</div>
+<div class="callout warn"><strong>回滚钩子 Unreserve</strong>：Reserve 之后任一环节失败（Permit 拒绝、Bind 失败等），都会调用各插件的 <code>Unreserve</code> 释放已预留资源。写自定义插件时，凡是 Reserve 里做的预留，都必须在 Unreserve 里对称清理——这是最常见的 bug 来源。</div>
+
+<!-- ============ 5 ============ -->
+<h2 id="points">5. 扩展点逐一精讲</h2>
+<p>面试不必背全 13 个点，但几个「高产」扩展点必须讲得清、举得出例子。</p>
+<div class="grid2">
+  <div class="box"><div class="box-h">QueueSort</div><p>比较函数签名固定为 <code>Less(p1, p2)</code>。默认按 Priority 排序，可做「优先级相同则先来的先调度」。一个 profile 只能有一个。</p></div>
+  <div class="box"><div class="box-h">Filter</div><p>最核心的过滤点。典型：NodeResourcesFit（资源够不够）、NodeAffinity、PodTopologySpread、TaintToleration、VolumeBinding、InterPodAffinity。</p></div>
+  <div class="box"><div class="box-h">Score</div><p>默认 NodeResourcesFit 的 <code>LeastAllocated</code>（装箱）或 <code>MostAllocated</code>（打散）。InterPodAffinity 把亲和 Pod 拉近。各插件分数 × 权重求和。</p></div>
+  <div class="box"><div class="box-h">Permit</div><p>唯一能「等待」的扩展点。 gang 调度器常用它：凑齐一组 Pod 前全部 Wait，齐了一起 Allow（可用定时器超时 Reject 回滚）。</p></div>
+  <div class="box"><div class="box-h">PreBind / Bind</div><p>PreBind 可先创建 PVC、配置网络；Bind 由默认插件把 Pod 写到目标节点。自定义 Bind 可替换整个绑定逻辑（如远程调度）。</p></div>
+  <div class="box"><div class="box-h">PreFilter</div><p>适合做「只算一次」的昂贵计算并放入 cycleState 供 Filter/Score 复用，例如统计 Pod  anti-affinity 相关 Pod 集合。</p></div>
+</div>
+
+<!-- ============ 6 ============ -->
+<h2 id="algorithm">6. 调度算法核心：过滤与打分</h2>
+<p>去掉插件外壳，调度算法本质是「先筛后评」两步，外加一个性能采样优化。</p>
+<h3>① 过滤（Feasible Nodes）</h3>
+<p>遍历候选节点，逐个跑 Filter 插件链。任何一个插件返回 <code>Unschedulable</code>，该节点即淘汰。过滤结果可用节点数量若为 0，进入 PostFilter（抢占）。</p>
+<h3>② 打分（Scoring）</h3>
+<p>对可行节点跑 Score 插件链，每个插件给出 0–100，乘以配置的权重后求和，取最高分节点。分数相同时按一定策略（如节点名）打破平局。</p>
+<div class="kpis">
+  <div class="kpi"><div class="kv">Filter</div><div class="kl">硬性条件 · 一票否决</div></div>
+  <div class="kpi"><div class="kv">Score</div><div class="kl">软性偏好 · 加权求和</div></div>
+  <div class="kpi"><div class="kv">Permit</div><div class="kl">最终审批 · 可等待</div></div>
+</div>
+<h3>③ 百分比采样（percentageOfNodesToScore）</h3>
+<p>超大集群不必遍历所有节点打分。找到足够数量的可行节点后即可停止过滤，并对其中一部分评分，用少量精度换取调度延迟下降。默认值随集群规模动态调整，也可通过 <code>--percentage-of-nodes-to-score</code> 配置（最小值约 5%）。</p>
+<div class="callout tip"><strong>面试一句话</strong>：「过滤解决能不能放，打分解决放哪里最好，采样解决节点多时别太慢。」</div>
+
+<!-- ============ 7 ============ -->
+<h2 id="preempt">7. 抢占机制深挖</h2>
+<p>当 Filter 后没有可行节点，PostFilter 扩展点尝试抢占：牺牲低优先级 Pod，为高优先级 Pod 腾出空间。这是最容易被深挖的主题。</p>
+<div class="flow">
+  <li><b>触发前提</b><div class="fd">Pod 有较高 <code>priorityClassName</code>，且 <code>preemptionPolicy</code> 非 Never。默认优先级 Pod 不抢占别人。</div></li>
+  <li><b>找牺牲者</b><div class="fd">在每个节点上模拟移除若干低优先级 Pod，直到待调度 Pod 可放置；候选牺牲者按优先级、资源匹配度排序。</div></li>
+  <li><b>选最优节点</b><div class="fd">综合牺牲者数量/优先级、PDB 约束等，选出抢占收益最大的节点。</div></li>
+  <li><b>执行驱逐</b><div class="fd">设置牺牲者 Pod 的 <code>nominatedNodeName</code>，由 API Server 触发其删除；等资源释放后，被抢占 Pod 才真正绑定。</div></li>
+</div>
+<div class="vs">
+  <div class="side hl"><h4>◆ nominatedNodeName 是「预约」</h4><ul>
+    <li>它表示「这个 Pod 计划在某节点上跑，正等资源释放」</li>
+    <li><strong>不是绑定</strong>——真正的绑定仍是 Binding 对象 + <code>spec.nodeName</code></li>
+    <li>是尽力而为的提示，不保证最终一定落在该节点</li>
+  </ul></div>
+  <div class="side alt"><h4>▲ PDB 会压制抢占</h4><ul>
+    <li>PodDisruptionBudget 保证应用的最小可用副本</li>
+    <li>DefaultPreemption 会跳过违反 PDB 的节点/牺牲者</li>
+    <li>没有 PDB 时，低优先级副本可能被「一扫而空」</li>
+  </ul></div>
+</div>
+<div class="callout rose"><strong>生产建议</strong>：默认优先级的 Pod 应显式设 <code>preemptionPolicy: Never</code>，避免误伤；关键负载配置 PDB；抢占是「最后手段」，优先考虑扩容或配额调整。Kueue/Volcano 的抢占建立在自己更丰富的作业语义上，与这里的 Pod 级抢占不是一回事。</div>
+
+<!-- ============ 8 ============ -->
+<h2 id="plugin">8. 插件开发与配置实战</h2>
+<p>调度器通过 <code>KubeSchedulerConfiguration</code> 用 profile 组织插件：每个扩展点启哪些插件、权重多少都可配。开发一个自定义插件需实现扩展点接口并注册。</p>
+<h3>配置骨架（v1）</h3>
+<pre><code>apiVersion: kubescheduler.config.k8s.io/v1
+kind: KubeSchedulerConfiguration
+profiles:
+  - schedulerName: default-scheduler
+    plugins:
+      filter:
+        enabled:
+          - name: NodeResourcesFit
+      score:
+        enabled:
+          - name: NodeResourcesFit
+            weight: 3
+          - name: InterPodAffinity
+            weight: 1
+        disabled:
+          - name: SelectorSpread
+    pluginConfig:
+      - name: NodeResourcesFit
+        args:
+          scoringStrategy:
+            type: LeastAllocated
+</code></pre>
+<h3>自定义插件最小骨架（Go）</h3>
+<pre><code>type MyPlugin struct{ handle framework.Handle }
+
+func New(_ runtime.Object, h framework.Handle) (framework.Plugin, error) {
+    return &amp;MyPlugin{handle: h}, nil
+}
+func (p *MyPlugin) Name() string { return "MyPlugin" }
+
+// 实现 Filter 扩展点：拒绝 label=forbidden 的节点
+func (p *MyPlugin) Filter(ctx context.Context, state *framework.CycleState,
+    pod *v1.Pod, nodeInfo *framework.NodeInfo) *framework.Status {
+    if nodeInfo.Node().Labels["gpu"] == "forbidden" {
+        return framework.NewStatus(framework.Unschedulable, "forbidden gpu node")
+    }
+    return framework.NewStatus(framework.Success)
+}
+</code></pre>
+<div class="callout"><strong>注册要点</strong>：插件要用 <code>registry.Register(...)</code> 注册工厂函数，并在配置里通过 name 启用。<code>out-of-tree</code> 插件可编译进自定义调度器镜像，用 <code>--config</code> 指定配置；<code>schedulerName</code> 决定哪些 Pod 由它调度。</div>
+
+<!-- ============ 9 ============ -->
+<h2 id="observe">9. 可观测性与 Pending 排障</h2>
+<p>Pod 卡在 Pending 是最常见的现场问题。按以下顺序排查，基本不会漏。</p>
+<div class="flow">
+  <li><b>看事件</b><div class="fd"><code>kubectl describe pod &lt;name&gt;</code> 找 <code>FailedScheduling</code> 事件，里面写明失败插件与原因（如 Insufficient cpu、node(s) had untolerated taint）。</div></li>
+  <li><b>看资源</b><div class="fd"><code>kubectl describe node</code> 看 Allocatable 与已分配；确认 requests（不是 limits）是否还有空间——调度看的是 requests。</div></li>
+  <li><b>看约束</b><div class="fd">核对 nodeSelector / affinity / toleration / topologySpreadConstraints 是否过严，pvc 是否 Pending 或绑定失败。</div></li>
+  <li><b>看调度器</b><div class="fd">确认 Pod 的 <code>spec.schedulerName</code> 对应的调度器在运行；<code>kubectl -n kube-system logs</code> 加 <code>--v=5</code> 看决策细节。</div></li>
+  <li><b>看指标</b><div class="fd"><code>scheduler_pending_pods</code>、<code>scheduler_schedule_attempts</code>、<code>scheduler_scheduling_duration_seconds</code> 定位排队与延迟问题。</div></li>
+</div>
+<div class="callout warn"><strong>高频陷阱</strong>：① 用 limits 判断「有没有资源」——错，调度看 requests；② 忘了污点没有对应 toleration；③ PVC 所在存储类不可用导致 VolumeBinding 卡住；④ 自定义调度器没启动，Pod 永远 Pending。</div>
+
+<!-- ============ 10 ============ -->
+<h2 id="tuning">10. 大规模集群调优</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>手段</th><th>作用</th><th>注意点</th></tr></thead>
+<tbody>
+<tr><td>percentageOfNodesToScore</td><td>限制参与打分的节点数，降低延迟</td><td>过小会牺牲放置质量；默认已自适应</td></tr>
+<tr><td>多调度器分片（sharding）</td><td>不同 schedulerName 各管一类 Pod</td><td>需自行保证全局视角与公平</td></tr>
+<tr><td>QueueingHint 插件化</td><td>减少无关事件引发的重调度</td><td>自定义失败原因要注册对应 Hint</td></tr>
+<tr><td>合理设置 requests</td><td>直接决定资源能否放下</td><td>过大浪费、过小导致超卖与抖动</td></tr>
+<tr><td>PDB + 优先级分层</td><td>让抢占可控、可预期</td><td>关键负载必须配 PDB</td></tr>
+</tbody>
+</table></div>
+
+<!-- ============ 11 ============ -->
+<h2 id="qa">11. 高频面试题</h2>
+<div class="qa"><p><strong>Q1：kube-scheduler 的完整调度流程？</strong></p><p>A：监听 nodeName 为空的 Pod → 入 ActiveQ → 调度周期（PreFilter → Filter 过滤可行节点 → PostFilter 抢占兜底 → Score 打分选优 → Reserve 预留）→ 绑定周期（Permit → PreBind → Bind → PostBind），失败走 Unreserve 回滚，最后写 Binding 由 kubelet 接管。</p></div>
+<div class="qa"><p><strong>Q2：ActiveQ / BackoffQ / UnschedulableQ 的区别？</strong></p><p>A：ActiveQ 是立即待调度；BackoffQ 是失败后短期冷却、退避到期自动回 ActiveQ；UnschedulableQ 是明确不可调度，只能靠相关事件或 QueueingHint 唤醒，避免集群频繁事件造成惊群。</p></div>
+<div class="qa"><p><strong>Q3：nominatedNodeName 是不是已经绑定了？</strong></p><p>A：不是。它是抢占的「预约提示」，表示计划在该节点运行、正等牺牲者被驱逐释放资源；真正绑定仍是写 Binding/设置 spec.nodeName，且该提示不保证最终一定落在那里。</p></div>
+<div class="qa"><p><strong>Q4：Permit 扩展点有什么用？</strong></p><p>A：它是唯一能 Wait 的扩展点，位于调度周期与绑定周期之间。gang 调度可用它把一组 Pod 全部扣住，凑齐后一起 Allow 放行，超时则 Reject 并经 Unreserve 回滚——这是原生调度器实现 gang 的钩子，Kueue/Volcano 也借鉴了类似思想。</p></div>
+<div class="qa"><p><strong>Q5：原生调度器和 Kueue、Volcano 的关系？</strong></p><p>A：kube-scheduler 负责单个 Pod 的节点放置；Kueue 是它之前的准入/配额治理层（不替换调度器）；Volcano 是自带调度器的作业级批处理引擎（可替换或共存）。三者层次不同，常组合使用，详见本站对比文章。</p></div>
+
+<h2 id="meta">元信息</h2>
+<p class="note">适用版本：Kubernetes v1.28+（Scheduling Framework 稳定）。关键词：Scheduling Framework、扩展点、调度队列、QueueingHint、抢占、nominatedNodeName、PDB、插件开发、Pending 排障。本文为「调度器系列」第 6 篇，聚焦 Kubernetes 原生调度器底座。</p>
+
+
+<div class="pager">
+<a href="/scheduler/">← 返回调度器系列目录</a><a href="volcano.html">Volcano 原理详解 →</a>
+</div>
+</article>
+</div>
+
+<button id="toTop" title="回到顶部">↑</button>
+<footer>© kube-scheduler 调度框架解剖 · 基于 Kubernetes 官方文档与源码整理 · 小胖鱼@Think · 调度器系列</footer>
+<script>
+var toTop=document.getElementById('toTop');
+window.addEventListener('scroll',function(){toTop.classList.toggle('show',window.scrollY>400);});
+toTop.addEventListener('click',function(){window.scrollTo({top:0,behavior:'smooth'});});
+var links=document.querySelectorAll('.toc a');
+var sections=[];
+links.forEach(function(a){var el=document.querySelector(a.getAttribute('href')); if(el) sections.push({a:a,el:el});});
+window.addEventListener('scroll',function(){
+  var y=window.scrollY+120, cur=null;
+  sections.forEach(function(s){if(s.el.offsetTop<=y) cur=s.a;});
+  links.forEach(function(a){a.classList.remove('active');});
+  if(cur) cur.classList.add('active');
+});
+</script>
+</body>
+</html>

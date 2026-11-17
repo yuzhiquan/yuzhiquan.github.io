@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Firmus JD-A 调度器岗 · 深度融合面试手册（中英对照）</title>
+<style>
+:root{
+  --primary:#2563eb;--primary-d:#1e40af;--primary-l:#dbeafe;
+  --ink:#1e293b;--ink-soft:#475569;--muted:#94a3b8;
+  --bg:#f1f5f9;--card:#fff;--line:#e2e8f0;--shadow:0 10px 30px rgba(15,23,42,.08);
+  --en-bg:#f0f7ff;--en-line:#93c5fd;--radius:14px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);
+ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif;
+ line-height:1.8;font-size:16px;-webkit-font-smoothing:antialiased}
+.topbar{background:#0f172a;color:#e2e8f0;font-size:14px;position:sticky;top:0;z-index:30}
+.topbar-inner{max-width:1320px;margin:0 auto;padding:11px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.topbar b{color:#fff}
+.topbar .spacer{margin-left:auto}
+.btn{background:#1e40af;color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:13px;cursor:pointer;font-weight:600}
+.btn.ghost{background:transparent;border:1px solid #475569;color:#e2e8f0}
+.seg{display:inline-flex;border:1px solid #475569;border-radius:8px;overflow:hidden}
+.seg button{background:transparent;color:#cbd5e1;border:none;padding:7px 12px;font-size:13px;cursor:pointer}
+.seg button.active{background:#2563eb;color:#fff;font-weight:700}
+.hero{background:linear-gradient(135deg,#1e3a8a,#2563eb 55%,#0ea5e9);color:#fff;padding:44px 24px 92px;position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 85% 20%,rgba(255,255,255,.18),transparent 45%)}
+.hero-inner{max-width:1240px;margin:0 auto;position:relative;z-index:1}
+.hero .kicker{font-size:12px;letter-spacing:2px;font-weight:600;background:rgba(255,255,255,.16);padding:6px 13px;border-radius:999px}
+.hero h1{font-size:clamp(24px,3.6vw,40px);margin:14px 0 8px;font-weight:800;line-height:1.3}
+.hero .sub{opacity:.92;font-size:15px}
+.wrap{max-width:1320px;margin:-64px auto 60px;padding:0 24px;display:grid;grid-template-columns:250px minmax(0,1fr);gap:26px;align-items:start;position:relative;z-index:2}
+aside.toc{position:sticky;top:70px;background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 14px;max-height:calc(100vh - 90px);overflow-y:auto}
+aside.toc h3{margin:0 0 12px;font-size:14px;color:var(--primary-d)}
+aside.toc a{display:block;color:var(--ink-soft);text-decoration:none;font-size:12.5px;padding:5px 9px;border-radius:6px;line-height:1.45}
+aside.toc a:hover{background:var(--primary-l);color:var(--primary-d)}
+aside.toc a.active{background:var(--primary);color:#fff}
+main{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:36px clamp(20px,3.5vw,50px);min-width:0}
+section{scroll-margin-top:76px;margin-bottom:44px}
+section>h2:first-child{font-size:23px;margin:0 0 6px;padding-bottom:10px;border-bottom:2px solid var(--line);font-weight:800}
+section>h2.en{font-size:15px;color:var(--muted);font-weight:600;margin:0 0 18px;border:none;padding:0}
+h3{font-size:17px;margin:24px 0 10px;color:var(--primary-d);font-weight:700}
+h3.en{font-size:13px;color:var(--muted);font-weight:600;margin:0 0 12px}
+p{margin:10px 0}
+.zh{color:var(--ink)}
+.en-block{background:var(--en-bg);border-left:3px solid var(--en-line);border-radius:0 8px 8px 0;padding:10px 14px;margin:6px 0 16px;color:#1e3a5f;font-size:14.6px}
+.en-block b{color:#1e40af}
+ul{margin:10px 0;padding-left:22px}
+li{margin:8px 0}
+li .en-block{margin:4px 0 10px}
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:13.6px;border-radius:10px;overflow:hidden;box-shadow:0 0 0 1px var(--line)}
+th{background:linear-gradient(135deg,#1e40af,#2563eb);color:#fff;text-align:left;padding:10px 12px;font-weight:600}
+td{padding:9px 12px;border-top:1px solid var(--line);vertical-align:top}
+tbody tr:nth-child(even){background:#f8fafc}
+pre{background:#0f172a;color:#e2e8f0;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:12.6px;line-height:1.6;margin:14px 0}
+code{font-family:"SFMono-Regular",Consolas,"Noto Sans Mono CJK SC",monospace}
+.callout{border-radius:0 10px 10px 0;padding:12px 16px;margin:14px 0;font-size:14px;border-left:4px solid}
+.callout.warn{background:#fffbeb;border-color:#f59e0b;color:#7c4a03}
+.callout.red{background:#fff1f2;border-color:#e11d48;color:#9f1239}
+.callout.tip{background:#eef2ff;border-color:#6366f1;color:#312e81}
+.qa{border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:16px 0;background:#fcfdff}
+.qa .q-zh{font-weight:700;color:var(--primary-d);margin-bottom:2px}
+.qa .q-en{font-size:13px;color:var(--muted);font-weight:600;margin-bottom:10px}
+.qa .a-zh{margin:8px 0 4px}
+.quote{background:#f8fafc;border:1px dashed #94a3b8;border-radius:12px;padding:16px 18px;margin:14px 0;color:#1e3a5f;font-size:14.8px;white-space:pre-line}
+.tag{display:inline-block;font-size:11px;background:var(--primary-l);color:var(--primary-d);padding:2px 8px;border-radius:999px;margin-right:6px;font-weight:700}
+#toTop{position:fixed;right:24px;bottom:24px;width:44px;height:44px;border:none;border-radius:50%;background:var(--primary);color:#fff;font-size:19px;cursor:pointer;box-shadow:0 8px 20px rgba(37,99,235,.4);opacity:0;pointer-events:none;transition:.3s;z-index:20}
+#toTop.show{opacity:1;pointer-events:auto}
+@media(max-width:960px){.wrap{grid-template-columns:1fr}aside.toc{position:static;max-height:none}main{padding:24px 18px}.hero{padding-bottom:80px}}
+/* 语言切换 */
+body[data-lang="zh"] .en-block,body[data-lang="zh"] .qa .q-en,body[data-lang="zh"] section>h2.en,body[data-lang="zh"] h3.en,body[data-lang="zh"] .quote,body[data-lang="zh"] .callout .en-line{display:none}
+body[data-lang="en"] .zh,body[data-lang="en"] .qa .q-zh,body[data-lang="en"] .callout .zh-line{display:none}
+/* 打印 */
+@media print{
+  @page{size:A4;margin:14mm}
+  body{background:#fff;font-size:10.5pt;line-height:1.55}
+  .topbar,aside.toc,#toTop,.no-print{display:none!important}
+  .hero{background:#1e3a8a!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;padding:18px 0 40px}
+  .wrap{display:block;margin:0;max-width:none;padding:0}
+  main{box-shadow:none;padding:0;border-radius:0}
+  section{page-break-inside:auto;margin-bottom:22px}
+  section>h2:first-child{font-size:15pt}
+  h3{font-size:12pt;page-break-after:avoid}
+  table,pre,.qa,.quote,.callout{page-break-inside:avoid}
+  thead{display:table-header-group}
+  .en-block{background:#f4f9ff!important;border-left:2px solid #93c5fd!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body[data-lang="zh"] .en-block,body[data-lang="en"] .zh,body[data-lang="zh"] .callout .en-line,body[data-lang="en"] .callout .zh-line{display:block!important}
+  a{color:inherit;text-decoration:none}
+}
+</style></head>
+<body data-lang="both">
+<div class="topbar no-print"><div class="topbar-inner">
+  <b>Firmus · JD-A 调度器岗</b><span>深度融合面试手册</span>
+  <div class="spacer"></div>
+  <div class="seg"><button data-lang="both" class="active">双语</button><button data-lang="zh">中文</button><button data-lang="en">English</button></div>
+  <button class="btn btn-print">🖨 打印 / 存 PDF</button>
+</div></div>
+<header class="hero"><div class="hero-inner">
+  <span class="kicker">SCHEDULER INTERVIEW · FIRMUS JD-A · BILINGUAL</span>
+  <h1>深度融合面试手册<br>Kubernetes &amp; Customised Scheduler</h1>
+  <div class="sub">面向 Senior AI Engineer (Kubernetes &amp; Customised Scheduler) · 融合 5 篇调度器深度文档 + JD-A 岗位要求 · 中文在上、英文在下</div>
+</div></header>
+<div class="wrap">
+<aside class="toc no-print"><h3>目录 CONTENTS</h3><a href="#intro">使用说明与事实红线（先看这一页）</a><a href="#map">作战地图：岗位 × 证据 × 缺口</a><a href="#company">公司与产品栈速记（只记可交叉验证的硬事实）</a><a href="#hook">开场钩子（背 1 分钟）</a><a href="#ks">Part A · kube-scheduler 内核（必考底座）</a><a href="#volcano">Part B · Volcano：作业级调度与插件体系</a><a href="#kueue">Part C · Kueue：准入、配额与治理</a><a href="#compare">Part D · Volcano vs Kueue：对比与选型</a><a href="#together">Part E · 协同：Kueue + Volcano 正交组合</a><a href="#gpu">Part F · AI/GPU 调度方案全景</a><a href="#design">Part G · Firmus 专属设计题（Giuseppe 必问）</a><a href="#evidence">Part H · 你的真实证据链（会被查）</a><a href="#projects">Part I · 简历项目五轴（HR 必深挖）</a><a href="#reverse">Part J · 反问清单 + 冲刺 + 避坑</a><a href="#glossary">附录 · 中英术语对照</a></aside>
+<main><section id="intro">
+<h2>使用说明与事实红线（先看这一页）</h2><h2 class="en">How to use this handbook &amp; fact red lines (read this first)</h2>
+<p class="zh">这份手册把调度器系列五篇深度文档（Kueue 原理、Volcano 原理、两者对比、协同架构、AI/GPU 调度方案）与 Firmus JD-A 的岗位要求融合，面向英文面试。中文供理解脉络，🇬🇧 英文是可以直接说出口的话术，建议背熟。岗位是 JD-A：Senior AI Engineer (Kubernetes &amp; Customised Scheduler)，AI &amp; Applications / Model-to-Grid，自研 K8s 原生专属调度器。若主攻切换到 JD-C（平台底座岗），Volcano/Kueue 融合、功耗/电网、FCAS/DSX、NVL72 白板约七成内容不再考，不要用错口径。</p><div class="en-block"><b>🇬🇧 English</b> This handbook fuses five deep-dive documents (Kueue, Volcano, the comparison, the composition architecture, and the AI/GPU scheduling landscape) with the requirements of Firmus JD-A, for an English-language interview. Chinese is for understanding; the 🇬🇧 English is verbatim interview-ready phrasing — memorize it. The target role is JD-A: Senior AI Engineer (Kubernetes &amp; Customised Scheduler), AI &amp; Applications / Model-to-Grid, building a proprietary Kubernetes-native scheduler. If the focus shifts to JD-C (platform-foundation role), roughly 70% of this — Volcano/Kueue fusion, power/grid, FCAS/DSX, NVL72 whiteboard — is not examined; don't mix the two.</div>
+<div class="callout warn"><span class="zh-line"><b>中文</b> 本手册是 JD-A 的“技术深度增强版”，与 JD-C 主攻手册并行使用；面试只看当前主攻口径，两条材料线不得混用。</span><br><span class="en-line"><b>🇬🇧</b> This is the 'technical-depth enhanced edition' for JD-A, used alongside the JD-C primary handbook. In an interview, use only the current primary track — never mix the two material lines.</span></div>
+<h3 class="zh">1.1 六条事实红线（会被圈内人当场核查）</h3><h3 class="en">1.1 Six fact red lines (a practitioner will check these live)</h3>
+<table><thead><tr><th>绝对不要说 NEVER SAY</th><th>正确口径 CORRECT LINE</th></tr></thead><tbody>
+<tr><td>NVL72 机内有“多个 NVSwitch 域” / TP 锁同一 NVSwitch 域、PP/DP 跨域走 NVLink 主干</td><td>一个 NVL72 rack = 单一 72-GPU NVLink 域（all-to-all，~130 TB/s）；机内无多域。集群里是“多个 rack 级域”。≤72 卡作业整体落在单 rack，scale-up 走 NVLink，跨 rack 才走 IB/Spectrum-X。</td></tr>
+<tr><td>“没人有多年 NVL72 生产经验” / “GB300 太新”</td><td>墨尔本站点已在生产跑 GB300 NVL72（2026-09-28 Meta 新闻稿）。准确说法：舰队仍在 build phase，缺经验的是“我”，不是市场。</td></tr>
+<tr><td>#140097 / #140306 / #140143 说成 merged；#101822 说成 203 条评论</td><td>只有 #140308（v1.38）/ #101822 / #100853 / #101859 / drain 系列讲 shipped；#140097 是 open WIP 复现器；#140306/#140143 closed 未合入；#101822 是 165 条 review。</td></tr>
+<tr><td>“K8s 调度器参与秒级 FCAS / 频率事件”</td><td>秒级 FCAS 归 UPS、电力电子、硬件联锁；K8s 调度器只做分钟级及以上的软塑形，且只作用于尚未启动的作业。</td></tr>
+<tr><td>“Kueue 不支持 Gang Scheduling”</td><td>Kueue 通过准入层 all-or-nothing + PodsReady 超时驱逐提供“作业级 gang 语义”；Volcano 提供“调度级 gang”（PodGroup 占坑后原子绑定）。层级不同，不是有无。</td></tr>
+<tr><td>Volcano 有 6 个 Action（含 recycle）；Scheduling Framework 12 个扩展点；DRA 资源可被抢占</td><td>Volcano 官方 5 个 Action：enqueue/allocate/preempt/reclaim/backfill；Scheduling Framework 13 个扩展点（含 PreEnqueue）；DRA 不支持 Pod 抢占。</td></tr>
+</tbody></table>
+<h3 class="zh">1.2 三条表述纪律</h3><h3 class="en">1.2 Three phrasing disciplines</h3>
+<ul>
+<li><span class="zh">数字必须带口径：凡“降本 30%”“成功率提升”，都要能答“分母、基期、窗口、采集来源”。手册中以【】标注的占位符必须换成真实数字。</span><div class="en-block"><b>🇬🇧</b> Every number needs a basis: for '30% cost-down' or 'success-rate up' you must answer 'denominator, baseline, window, source'. Replace every 【】 placeholder with a real, traceable number.</div></li>
+<li><span class="zh">官网动态计数器数值（0.6 PUE / 19 NVL / ~9%）一律不引用；只用可交叉验证的硬数字：32 NVL72 racks、2 Scale Units、288 MW Bell Bay、900+ MW、7 站 4 国 / 2 在运 + 5 在建。</span><div class="en-block"><b>🇬🇧</b> Never quote the site's animated counters (0.6 PUE / 19 NVL / ~9%). Only cross-checkable hard numbers: 32 NVL72 racks, 2 Scale Units, 288 MW Bell Bay, 900+ MW, 7 sites/4 countries (2 live + 5 in build).</div></li>
+<li><span class="zh">“No colocation, no containers”里的 containers 指预制集装箱式数据中心模块，不是 Docker/K8s 容器——别读成“这家公司不用 K8s”。</span><div class="en-block"><b>🇬🇧</b> In 'No colocation, no containers', containers means prefabricated containerised data-centre modules, not Docker/K8s containers — don't read it as 'they don't use Kubernetes'.</div></li>
+</ul>
+</section><section id="map">
+<h2>作战地图：岗位 × 证据 × 缺口</h2><h2 class="en">Battle map: role × evidence × gap</h2>
+<p class="zh">核心矛盾来自 Giuseppe（用人经理）的质疑：这岗要“own a production, topology- and power-aware scheduler on NVL72-class hardware”，而你没有 NVL72 生产实操。整份手册的策略，就是把这条质疑从“你没做过 NVL72”改写为“你已掌握调度器控制面全栈、且能把它接到 AI Factory 的功耗/热/电网遥测上——这是 NVL72 调度器 80% 的工程难点，剩下 20% 硬件规格上手即会”。</p><div class="en-block"><b>🇬🇧 English</b> The core tension is Giuseppe's (hiring manager) challenge: this role must 'own a production, topology- and power-aware scheduler on NVL72-class hardware', and you lack NVL72 production hands-on. The whole handbook reframes this from 'you haven't done NVL72' to 'you already own the full scheduler control-plane stack and can wire it to AI Factory's power/thermal/grid telemetry — that's 80% of the NVL72 scheduler engineering; the remaining 20% is hardware specs I'll absorb on the job'.</div>
+<h3 class="zh">2.1 JD-A 核心职责逐条映射</h3><h3 class="en">2.1 JD-A core responsibilities, mapped one by one</h3>
+<table><thead><tr><th>JD 要求（英文原词）</th><th>你的证据 / 本手册对应章节</th></tr></thead><tbody>
+<tr><td>Build proprietary K8s-native job scheduling platform; CRDs, controllers, admission webhooks, scheduling plugins, APIs, CLI</td><td>自研 Permit 阶段 gang（§9.2）+ kube-scheduler 插件工程（§3）+ 上游 #101822/#100853（§9.1）</td></tr>
+<tr><td>Topology-aware placement: GPU locality, NVLink/NVSwitch, NUMA, NIC, RDMA, fabric, storage locality, fault-domain</td><td>拓扑感知全章（§7）+ TAS 精确机制（§5.4）+ NVL72 口径（§1.1）+ #140308（§9.1）</td></tr>
+<tr><td>AI-factory-resource-aware: capacity, health, storage, power limits, thermal, maintenance, reservations</td><td>功耗/热/电网感知（§8.2）+ Model-to-Grid 减震器（§8.3）+ AdmissionCheck 设计（§8.1）</td></tr>
+<tr><td>Workload control: admission, queueing, priorities, quotas, fair sharing, reservations, preemption, gang, co-scheduling, backfill, aging, retry, checkpoint-aware, deferred, failure recovery</td><td>Kueue 治理（§5）+ Volcano 机制（§4）+ 对比与选型（§6）+ 弹性容错（§7.4）</td></tr>
+<tr><td>Integrate with Slurm, Slinky, vCluster, Kueue, KAI, Volcano, YuniKorn — 'rather than replace'</td><td>协同架构（§7）+ 正交组合融合设计（§7.2）+ 调度器横评（§8.5）</td></tr>
+<tr><td>Observability, scheduler explanations, operator views</td><td>可观测与调度解释（§8.4）+ Kueue 可见性（§5.5）</td></tr>
+<tr><td>Go + Python; production controllers/operators/plugins/webhooks/REST/gRPC/CLI</td><td>Go 后端（Megvii §10.4）+ 上游 Go 代码（§9.1）+ 平台服务</td></tr>
+</tbody></table>
+<h3 class="zh">2.2 四档自评与诚实边界</h3><h3 class="en">2.2 Four-tier self-rating and honest boundaries</h3>
+<ul>
+<li><span class="zh">深度 K8s 多租户 = advanced；作业调度器 = good（自研 Permit gang + Volcano 生产级；Kueue/KAI/Slurm 选型+集成级）；IaC/CI-CD + 可观测 = very good；裸金属/GPU 开通 = 4 年前小米做过、形态与今日 LLM 不同（诚实口径，不升级成“做过”）。</span><div class="en-block"><b>🇬🇧</b> Multi-tenant K8s = advanced; job schedulers = good (custom Permit gang + production Volcano; Kueue/KAI/Slurm at selection+integration level); IaC/CI-CD + observability = very good; bare-metal/GPU provisioning = did it at Xiaomi 4 years ago, different from today's LLM form (honest — don't upgrade it to 'done').</div></li>
+<li><span class="zh">sig-instrumentation 与 scheduler 的统一口径：早期在 sig-instrumentation 做指标/日志（KLog），后因平台工作延伸到 sig-scheduler 的调度框架与节点生命周期；两者都属实，是时间线。</span><div class="en-block"><b>🇬🇧</b> Unifying sig-instrumentation and scheduler: early on in sig-instrumentation on metrics/logging (KLog), later extended through platform work into sig-scheduler's framework and node lifecycle. Both are true — it's a timeline.</div></li>
+</ul>
+</section><section id="company">
+<h2>公司与产品栈速记（只记可交叉验证的硬事实）</h2><h2 class="en">Company &amp; product stack (cross-checkable hard facts only)</h2>
+<p class="zh">Firmus 2019 年创立于澳洲，AI Factory 是垂直整合的新一代数字基础设施：设计、建造、运营全栈自研，可再生供能，把 AI Factory 当作电网资产（“make every watt count”“every watt into tokens”）。是 NVIDIA Cloud &amp; Engineering partner。面试中多用 “your site says / your release states” 引出公司事实，不要说成已独立验证的事实。</p><div class="en-block"><b>🇬🇧 English</b> Firmus was founded in Australia in 2019; the AI Factory is a vertically integrated new class of digital infrastructure — design, build and operate full-stack in-house, renewably powered, treating AI Factories as assets to the grid ('make every watt count', 'every watt into tokens'). An NVIDIA Cloud &amp; Engineering partner. In interviews introduce company facts with 'your site says / your release states', not as independently verified facts.</div>
+<h3 class="zh">3.1 三层产品栈</h3><h3 class="en">3.1 Three-layer product stack</h3>
+<ul>
+<li><span class="zh">HyperCube™ = 物理模块（液冷 + 供电 + 机械），官网称每模块 32 个 NVL72 rack / 2 个 NVIDIA Scale Unit，NSW 预制。</span><div class="en-block"><b>🇬🇧</b> HyperCube™ = the physical module (liquid cooling, power, mechanical); the site says each holds 32 NVL72 racks / 2 NVIDIA Scale Units, prefabricated in NSW.</div></li>
+<li><span class="zh">AI FactoryOS™ = 软件定义控制面（编排、GPU/热/功耗遥测、电网交互）；客户侧另有 Managed Slurm 作作业调度器。</span><div class="en-block"><b>🇬🇧</b> AI FactoryOS™ = the software-defined control plane (orchestration, GPU/thermal/power telemetry, grid interaction); customers also get Managed Slurm as their job scheduler.</div></li>
+<li><span class="zh">AI FactoryX = 数字孪生，runbook 先在孪生里验证再上真设备。JD-A 要做的 Model-to-Grid 是这三层之上的作业级决策层。</span><div class="en-block"><b>🇬🇧</b> AI FactoryX = the digital twin where runbooks are validated before touching real equipment. JD-A's Model-to-Grid is the job-level decision layer above these three.</div></li>
+</ul>
+<h3 class="zh">3.2 规模、客户与电网（公司自述）</h3><h3 class="en">3.2 Scale, customers and grid (company-stated)</h3>
+<ul>
+<li><span class="zh">900+ MW 已签约；7 座 AI Factory / 4 国（澳、新、印尼、马来西亚），2 在运 + 5 在建（24 个月内 RFS）；anchor 客户 OpenAI / Meta / Thinking Machines Lab；墨尔本已在生产跑 GB300 NVL72，后续站点用 Vera Rubin NVL72（VR200）+ Spectrum-X。</span><div class="en-block"><b>🇬🇧</b> 900+ MW contracted; 7 factories / 4 countries (AU, SG, ID, MY), 2 live + 5 in build (RFS within 24 months); anchor customers OpenAI / Meta / Thinking Machines Lab; Melbourne runs GB300 NVL72 in production, later sites use Vera Rubin NVL72 (VR200) + Spectrum-X.</div></li>
+<li><span class="zh">塔州 Bell Bay（Southgate）288 MW、3×220 kV、官方定义 dispatchable；UPS 提供 FCAS / load modulation / firming。电网互动不是比喻，但有时间尺度边界（§8.2）。</span><div class="en-block"><b>🇬🇧</b> Bell Bay, Tasmania (Southgate): 288 MW, 3×220 kV, officially 'dispatchable'; UPS delivers FCAS / load modulation / firming. Grid interaction is not a metaphor, but has time-scale boundaries (§8.2).</div></li>
+</ul>
+<h3 class="zh">3.3 最小电网词汇集（必背）</h3><h3 class="en">3.3 Minimum grid vocabulary (memorize)</h3>
+<ul>
+<li><span class="zh">NEM = National Electricity Market；AEMO = 市场运营方；FCAS = Frequency Control Ancillary Services（10 个市场：Regulation raise/lower + Contingency 1s/6s/60s/5min 各 raise/lower）。</span><div class="en-block"><b>🇬🇧</b> NEM = National Electricity Market; AEMO = the market operator; FCAS = Frequency Control Ancillary Services (10 markets: Regulation raise/lower plus Contingency raise/lower at 1s/6s/60s/5min).</div></li>
+<li><span class="zh">对数据中心这种“负载”：raise = 减少用电（降载、推迟作业）；lower = 增加用电（把可延迟作业提前，吸收弃风弃光 / stranded power）。只说“电网紧张就降载”是半吊子。</span><div class="en-block"><b>🇬🇧</b> For a data centre, a load: raise = consume less (curtail, defer); lower = consume more (pull deferrable jobs forward to absorb surplus renewables / stranded power). 'We throttle down when the grid is tight' is only half the story.</div></li>
+<li><span class="zh">NVIDIA DSX：DSX OS（多租户/编排）/ DSX Sim（仿真）/ DSX MaxLPS（固定功率包络内动态功率分配）/ DSX Flex（电网信号编排）/ DSX Exchange（IT-OT 信号）。被问“DSX 已有调度为何自研”：DSX 提供信号与厂级编排，自研层负责作业级决策与产品化。</span><div class="en-block"><b>🇬🇧</b> NVIDIA DSX: DSX OS (multi-tenancy/orchestration) / DSX Sim (simulation) / DSX MaxLPS (dynamic power allocation in a fixed envelope) / DSX Flex (grid-signal orchestration) / DSX Exchange (IT-OT signals). Asked 'DSX already schedules — why build your own?': DSX supplies signals and factory-level orchestration; our layer owns job-level decisions and productisation.</div></li>
+</ul>
+</section><section id="hook">
+<h2>开场钩子（背 1 分钟）</h2><h2 class="en">Opening hook (memorize a 1-minute version)</h2>
+<div class="quote"><span class="tag">🇬🇧 逐字稿 VERBATIM</span>
+“Thanks, Giuseppe. To be direct: I've spent the last 12 years in cloud-native SRE and platform engineering, and my recent focus has been turning 'keep the service stable' into 'keep the GPUs busy' — that's the AI-infra capability. I'm an upstream contributor to kubernetes/kubernetes since 2020 under @yuzhiquan, with merged code in the scheduling framework, topology-aware scheduling and node lifecycle. Before native gang scheduling was GA, I built my own gang scheduler in the Permit phase of the kube-scheduler plugin chain.
+
+I have not operated an NVL72 cluster in production — I'll be honest about that. But the hard parts of NVL72 scheduling — rack-scale NVLink topology, fault-domain isolation, and dynamic power/thermal constraints — are fundamentally scheduler control-plane engineering, and that's exactly what I've done repeatedly. Firmus's AI FactoryOS fuses GPU telemetry, cooling, power and grid into one layer; a scheduler just needs to consume that telemetry and make admission, placement and demand-shaping decisions. That's the control-plane pattern I'm strongest at. I'd work with your team to map that logic onto the NVL72 hardware spec in my first weeks.”</div>
+<p class="zh">中文对照（供理解，据此组织英文）：谢谢 Giuseppe。直说：我过去 12 年都在做云原生 SRE 与平台工程，近期重心是把“让服务稳定”转成“让 GPU 不闲着”。我从 2020 起是 kubernetes/kubernetes 上游贡献者（@yuzhiquan），在调度框架、拓扑感知调度、节点生命周期都有合入代码；原生 gang GA 前就在 Permit 阶段自研过 gang 调度器。我确实没在生产管过 NVL72——如实说。但 NVL72 调度最难的部分（rack 级 NVLink 拓扑、故障域隔离、动态功耗/热约束）本质是调度器控制面工程，正是我反复做过的事。AI FactoryOS 把遥测融合成一层，调度器消费它做准入、放置、需求塑形——这是我最强的控制面模式。硬件规格入职后与团队对齐。</p><div class="en-block"><b>🇬🇧 English</b> Chinese gloss (for understanding, build the English from it): 12 years in cloud-native SRE/platform engineering; recent focus from 'keep service stable' to 'keep GPUs busy'; upstream contributor since 2020 (@yuzhiquan) with merged code in scheduling framework, topology-aware scheduling, node lifecycle; built a custom Permit-phase gang scheduler before native gang GA. Honest about no NVL72 production. The hard parts are scheduler control-plane engineering — rack NVLink topology, fault-domain isolation, dynamic power/thermal. AI FactoryOS fuses telemetry; the scheduler consumes it for admission, placement and demand-shaping. Map onto hardware with the team in the first weeks.</div>
+<div class="callout tip"><span class="zh-line"><b>中文</b> 收口加分：2026 年仍在 sig/scheduling 活跃——#140308（TAS 拓扑域修复，已合入 v1.38）、#140097（gang+DRA 冲突复现器，open WIP）。这恰是 NVL72 最难的三类问题：拓扑域边界、gang+GPU 设备死锁、缓存健壮性。“我在上游写的就是同一类问题代码”。</span><br><span class="en-line"><b>🇬🇧</b> Closer that scores: still active in sig/scheduling in 2026 — #140308 (TAS topology-domain fix, merged into v1.38), #140097 (gang+DRA conflict reproducer, open WIP). These are exactly NVL72's hardest problems: topology-domain boundaries, gang+GPU-device deadlock, cache robustness. 'The code I write upstream is the same class of problem.'</span></div>
+</section><section id="ks">
+<h2>Part A · kube-scheduler 内核（必考底座）</h2><h2 class="en">Part A · kube-scheduler internals (the foundation they will test)</h2>
+<p class="zh">先立职责边界：kube-scheduler 只做一件事——为 .spec.nodeName 为空的 Pod 选一个 Node 并写回绑定，不运行容器、不保证 Pod 真能起来。ResourceQuota 是 admission 的事，LimitRange 默认值是 admission 的事，Node 故障驱逐是 node-lifecycle controller + kubelet 的事。记住这张边界表，能避开一半送命题。</p><div class="en-block"><b>🇬🇧 English</b> Start with the boundary: kube-scheduler does one thing — pick a Node for a Pod with empty .spec.nodeName and write the binding back. It doesn't run containers or guarantee the Pod starts. ResourceQuota and LimitRange defaults are admission's job; node-failure eviction belongs to the node-lifecycle controller + kubelet. Memorize this boundary table — it defuses half the trap questions.</div>
+<div class="qa">
+<div class="q-zh">Q · 一次完整调度循环（scheduleOne）的数据流是什么？</div><div class="q-en">Q (EN) · Walk me through one full scheduling cycle (scheduleOne).</div>
+<div class="a-zh zh">NextPod() 从队列 pop → 获取 Node 快照 → PreFilter（任一失败即整体失败）→ findNodesThatFitPod（并发跑 Filter，percentageOfNodesToScore 提前停止）→ 若候选为空跑 PostFilter（DefaultPreemption 抢占）→ 单候选走快路径 → PreScore → Score（并发）→ NormalizeScore → 加权求和 → assume(Reserve) → Permit → 异步 Bind。一个 profile = 一个 goroutine 串行跑。</div>
+<div class="en-block"><b>🇬🇧</b> NextPod() pops → Node snapshot → PreFilter (any failure fails the cycle) → findNodesThatFitPod (Filter in parallel, early stop at percentageOfNodesToScore) → if no candidates, PostFilter (DefaultPreemption) → single-candidate fast path → PreScore → Score (parallel) → NormalizeScore → weighted sum → assume(Reserve) → Permit → async Bind. One profile = one goroutine running serially.</div></div>
+<div class="qa">
+<div class="q-zh">Q · Scheduling Framework 有哪些扩展点？（必考，13 个）</div><div class="q-en">Q (EN) · What extension points does the Scheduling Framework have? (13 — must know)</div>
+<div class="a-zh zh">队列阶段 PreEnqueue / QueueSort；调度周期 PreFilter / Filter / PostFilter / PreScore / Score / NormalizeScore / Reserve；绑定周期 Permit / PreBind / Bind / PostBind；另有 Unreserve 回滚。注意：v1.19 经典列表是 12 个，新增 PreEnqueue 后为 13 个；EnqueueExtension / QueueingHint 是接口/回调，不是扩展点；multiPoint 只是配置简写，不算扩展点。</div>
+<div class="en-block"><b>🇬🇧</b> Queue phase: PreEnqueue / QueueSort; scheduling cycle: PreFilter / Filter / PostFilter / PreScore / Score / NormalizeScore / Reserve; binding cycle: Permit / PreBind / Bind / PostBind; plus Unreserve rollback. Note: the v1.19 classic list was 12; with PreEnqueue it's 13; EnqueueExtension / QueueingHint are interfaces/callbacks, not extension points; multiPoint is only a config shorthand.</div></div>
+<div class="qa">
+<div class="q-zh">Q · 三级队列与抢占的关键事实？</div><div class="q-en">Q (EN) · Key facts about the three queues and preemption?</div>
+<div class="a-zh zh">ActiveQ / BackoffQ / UnschedulableQ；UnschedulableQ 靠集群事件 + podMaxInUnschedulablePodsDuration 兜底重排（QueueingHint 决定事件是否重新入队）。抢占只对“Filter 全失败”生效；nominatedNodeName 是预约不是绑定；PDB 会压制抢占；默认优先级应设 preemptionPolicy: Never 防抢占风暴。调度只看 requests，不看 limits。</div>
+<div class="en-block"><b>🇬🇧</b> ActiveQ / BackoffQ / UnschedulableQ; UnschedulableQ is retried by cluster events plus the podMaxInUnschedulablePodsDuration backstop (QueueingHint decides whether an event re-enqueues). Preemption only runs when Filter fails for all nodes; nominatedNodeName is a reservation, not a binding; PDBs suppress preemption; the default PriorityClass should set preemptionPolicy: Never to avoid storms. Scheduling looks at requests, not limits.</div></div>
+<div class="qa">
+<div class="q-zh">Q · 大规模下怎么定位瓶颈？怎么优化？</div><div class="q-en">Q (EN) · How do you localise a bottleneck at scale, and optimise?</div>
+<div class="a-zh zh">三步定位法：① scheduler 插件耗时 scheduler_framework_plugin_duration_seconds；② 到 apiserver 的 apiserver_request_duration_seconds；③ etcd 的 etcd_request_duration_seconds / wal_fsync。若①高②③正常 → scheduler 算法/规模问题。优化第一银弹是节点池化（taint+label 缩小候选集 N），第二才是 percentageOfNodesToScore（牺牲最优性）；再叠加多 profile 拆分、APF 给 scheduler 专用 FlowSchema。</div>
+<div class="en-block"><b>🇬🇧</b> Three-step localisation: (1) scheduler plugin duration scheduler_framework_plugin_duration_seconds; (2) apiserver_request_duration_seconds; (3) etcd_request_duration_seconds / wal_fsync. If (1) is high and (2)(3) normal → scheduler algorithm/scale problem. First optimisation silver bullet is node pooling (taint+label to shrink candidate set N), second is percentageOfNodesToScore (sacrifices optimality); then multi-profile splitting and an APF FlowSchema reserved for the scheduler.</div></div>
+<div class="callout warn"><span class="zh-line"><b>中文</b> 面试口径：所有性能数字必须自己测（Kubemark/KWOK + scheduler-perf），不要报未实测的吞吐/耗时；能给测量方法就是加分。</span><br><span class="en-line"><b>🇬🇧</b> Interview line: all performance numbers must be measured by you (Kubemark/KWOK + scheduler-perf); never quote unmeasured throughput/latency. Giving the measurement method is itself a plus.</span></div>
+</section><section id="volcano">
+<h2>Part B · Volcano：作业级调度与插件体系</h2><h2 class="en">Part B · Volcano: job-level scheduling and plugin system</h2>
+<p class="zh">Volcano 是 CNCF 旗下首个也是唯一的官方容器批处理调度项目。本质：k8s 调度的是“一个个 Pod”，Volcano 调度的是“一组组作业 + 一层层队列”。它把批处理领域完整语义（作业、队列、公平、抢占回收、拓扑）搬进调度器。核心是 Session + Action + Plugin 三层架构。</p><div class="en-block"><b>🇬🇧 English</b> Volcano is CNCF's first and only official container batch-scheduling project. Essence: Kubernetes schedules Pods one by one; Volcano schedules groups of jobs and layers of queues. It moves the full batch semantics (job, queue, fairness, preemption/reclaim, topology) into the scheduler. The core is a three-layer Session + Action + Plugin architecture.</div>
+<div class="qa">
+<div class="q-zh">Q · Volcano 与 kube-scheduler 最大的架构区别？</div><div class="q-en">Q (EN) · Biggest architectural difference from kube-scheduler?</div>
+<div class="a-zh zh">原生是按 Pod 逐个决策，每个 Pod 独立走 Filter/Score/Bind，不知道兄弟在哪。Volcano 是作业级：自己的 volcano-scheduler 维护 cache + Session，OpenSession 把 pending Pod 按 PodGroup 聚成 Job 快照，按顺序跑 Actions（enqueue→allocate→preempt→reclaim→backfill），CloseSession 才绑定。关键是全局视角——提交前先判断“整组能不能满足”，这是 gang、公平、拓扑的前提。</div>
+<div class="en-block"><b>🇬🇧</b> Native makes per-Pod decisions — each Pod runs Filter/Score/Bind independently with no awareness of siblings. Volcano is job-level: its own volcano-scheduler maintains a cache + Session; OpenSession snapshots pending Pods into Jobs by PodGroup, runs Actions in order (enqueue → allocate → preempt → reclaim → backfill), and only CloseSession binds. The key is a global view — decide 'can the whole group be satisfied' before committing. That's the prerequisite for gang, fairness and topology.</div></div>
+<div class="qa">
+<div class="q-zh">Q · Session / Action / Plugin 三层各自负责什么？</div><div class="q-en">Q (EN) · What do the three layers Session / Action / Plugin own?</div>
+<div class="a-zh zh">Session 承载一个调度周期：周期驱动而非事件驱动，每个周期从 Cache 拉一致性快照，基于同一份“事实”决策，结束统一提交——这是 Gang 原子性的前提。Action 定义“做什么”（5 个：enqueue/allocate/preempt/reclaim/backfill；recycle 已不是标准 Action）。Plugin 定义“怎么做”：实现 Name()/OnSessionOpen(ssn)/OnSessionClose(ssn)，在 OnSessionOpen 把算法函数注册到 Session 的扩展点（Fn map），Action 执行时回调。默认 actions 常为 enqueue, allocate, backfill，enqueue 与 preempt/reclaim 通常不同时启用。</div>
+<div class="en-block"><b>🇬🇧</b> Session owns one scheduling cycle: period-driven, not event-driven — each cycle pulls a consistent snapshot from Cache, decides on one 'fact', and commits at the end; that's the prerequisite for gang atomicity. Action defines 'what' (five: enqueue/allocate/preempt/reclaim/backfill; recycle is no longer standard). Plugin defines 'how': implement Name()/OnSessionOpen(ssn)/OnSessionClose(ssn), register algorithm functions onto Session extension points (Fn maps) in OnSessionOpen, called back during Actions. Default actions are usually enqueue, allocate, backfill; enqueue and preempt/reclaim are normally not enabled together.</div></div>
+<h3 class="zh">B.1 扩展点四大类（20+ 个 Fn）与 gang 实现</h3><h3 class="en">B.1 Four categories of extension points (20+ Fns) and gang implementation</h3>
+<ul>
+<li><span class="zh">四大类：① 排序 Ordering（jobOrderFn/queueOrderFn/taskOrderFn/nodeOrderFn/batchNodeOrderFn…）；② 过滤与准入 Validation（predicateFn/jobValidFn/jobReadyFn/jobStarvingFn…）；③ 抢占与回收（preemptableFn/reclaimableFn/victimTasksFn/overusedFn…）；④ 状态与预留（reservedNodesFn/targetJobFn/jobPipelineFn）。同一 Fn 可被多插件注册，靠 tier 顺序组合。</span><div class="en-block"><b>🇬🇧</b> Four categories: (1) Ordering (jobOrderFn/queueOrderFn/taskOrderFn/nodeOrderFn/batchNodeOrderFn…); (2) Validation (predicateFn/jobValidFn/jobReadyFn/jobStarvingFn…); (3) Preempt/Reclaim (preemptableFn/reclaimableFn/victimTasksFn/overusedFn…); (4) State/Reserve (reservedNodesFn/targetJobFn/jobPipelineFn). The same Fn can be registered by several plugins, composed by tier order.</div></li>
+<li><span class="zh">gang 实现：PodGroup 的 minMember + gang 插件的 JobReady = (allocated + pipelined) ≥ minMember。allocate 阶段未达 minMember 就不绑定——等待；suicide 插件超时释放整组避免死锁。占坑（jobPipelineFn）是原子性的关键。</span><div class="en-block"><b>🇬🇧</b> Gang: PodGroup minMember + gang plugin's JobReady = (allocated + pipelined) ≥ minMember. In allocate, if minMember isn't met the job isn't bound — it waits; the suicide plugin releases the whole job on timeout to avoid deadlock. Pipelining (jobPipelineFn) is the key to atomicity.</div></li>
+<li><span class="zh">preempt vs reclaim：preempt 同队列内按优先级抢占；reclaim 跨队列按权重把借出的应得份额收回——两个独立 Action，各管一层。conformance 插件保护 kube-system 关键 Pod。</span><div class="en-block"><b>🇬🇧</b> preempt vs reclaim: preempt takes from lower priority within a queue; reclaim recovers lent-out entitled share across queues by weight — two independent Actions, each one layer. The conformance plugin protects kube-system Pods.</div></li>
+<li><span class="zh">拓扑与设备：task-topology 按通信关系把频繁通信的 Task 共置同一 NVLink 域/leaf switch；numaaware 对齐 CPU/内存到 GPU 的 NUMA；deviceshare 支持 GPU 共享/MIG/vCUDA。到 NVL72：层级换成 rack（单一 NVLink 域）→ 液冷回路/PDU → node。</span><div class="en-block"><b>🇬🇧</b> Topology &amp; devices: task-topology co-locates chatty Tasks in the same NVLink domain / leaf switch; numaaware aligns CPU/memory to the GPU's NUMA node; deviceshare supports GPU sharing / MIG / vCUDA. On NVL72 the levels become rack (single NVLink domain) → cooling loop / PDU → node.</div></li>
+</ul>
+<h3 class="zh">B.2 三种扩展方式（从易到难）</h3><h3 class="en">B.2 Three ways to extend (easy to hard)</h3>
+<ul>
+<li><span class="zh">A 配置内置插件：ConfigMap 的 tiers 增减/排序插件，零代码改行为（首选）；B Extender：HTTP 回调外部服务，钩子最全、可跨语言，无需重编译，但每次调度 HTTP 串行阻塞、挂了会卡调度，需超时+降级；C 自定义 Plugin：实现接口 + RegisterPluginBuilder，编译进调度器。</span><div class="en-block"><b>🇬🇧</b> A configure built-in plugins: add/reorder plugins in the ConfigMap's tiers, zero code (first choice); B Extender: HTTP callback to an external service, most hooks, cross-language, no recompile — but every scheduling cycle blocks on HTTP and a down extender stalls scheduling, so add timeout + degradation; C custom Plugin: implement the interface + RegisterPluginBuilder, compile into the scheduler.</div></li>
+</ul>
+<div class="callout warn"><span class="zh-line"><b>中文</b> 口径红线：Kueue 不是“不支持 gang”，而是作业级 vs 调度级。常见三方对比表写 “Kueue gang = ❌” 在 2024 年前大致成立，现已过时——准确说法见 §6。</span><br><span class="en-line"><b>🇬🇧</b> Red-line phrasing: Kueue does not 'lack gang' — it's job-level vs scheduling-level. Third-party comparison tables saying 'Kueue gang = ❌' were roughly true before 2024 and are now outdated — see §6 for the accurate statement.</span></div>
+</section><section id="kueue">
+<h2>Part C · Kueue：准入、配额与治理</h2><h2 class="en">Part C · Kueue: admission, quota and governance</h2>
+<p class="zh">Kueue 不是 Pod 调度器，而是准入 + 配额 + 公平 + 抢占系统，不替换 kube-scheduler。流程：提交 Job → Kueue 创建 Workload（Pending）→ 准入阶段决定“准不准/给多少/哪个 flavor” → Admitted=true 后把资源请求 patch 回 Pod → kube-scheduler 负责放置。一句话：Kueue 决定“能不能”，kube-scheduler 决定“放哪儿”。价值是把“调度之前的治理”产品化。</p><div class="en-block"><b>🇬🇧 English</b> Kueue is not a Pod scheduler but an admission + quota + fairness + preemption system that doesn't replace kube-scheduler. Flow: submit Job → Kueue creates a Workload (Pending) → admission decides 'admit or not / how much / which flavor' → once Admitted=true it patches resource requests back onto Pods → kube-scheduler does placement. One-liner: Kueue decides 'whether', kube-scheduler decides 'where'. Its value is productising 'governance before scheduling'.</div>
+<h3 class="zh">C.1 核心对象与配额模型</h3><h3 class="en">C.1 Core objects and quota model</h3>
+<ul>
+<li><span class="zh">六类核心对象：ResourceFlavor（资源“口味”，如 gpu-h100-nvl72，带 selector/taint 与 topologyName）；ClusterQueue CQ（配额主体：resourceGroups、cohort 借用、抢占、admissionChecks、namespaceSelector）；LocalQueue LQ（namespace 级，指向 CQ，Job 打 queue-name 标签进入）；Workload（由 Job 生成，记录 podSets 与 status.admission）；AdmissionCheck（准入闸门）；Topology/TAS（拓扑感知）。</span><div class="en-block"><b>🇬🇧</b> Six core objects: ResourceFlavor (resource 'flavour', e.g. gpu-h100-nvl72, with selector/taint and topologyName); ClusterQueue CQ (quota subject: resourceGroups, cohort borrowing, preemption, admissionChecks, namespaceSelector); LocalQueue LQ (namespace-scoped, points to a CQ, Jobs label queue-name to enter); Workload (generated from the Job, records podSets and status.admission); AdmissionCheck (admission gate); Topology/TAS (topology-aware scheduling).</div></li>
+<li><span class="zh">配额与借用：CQ 有 nominalQuota；cohort 内互相借用（borrowingLimit 上限，lendingLimit 控制借出）；借出方来高优先级作业时 reclaim/preempt 收回。公平用 cohort 内 DRS（Dominant Resource Share）。抢占三个开关默认都是 Never：withinClusterQueue / reclaimWithinCohort / borrowWithinCohort。FlavorFungibility 让首选 flavor 满时回退到可互换的。</span><div class="en-block"><b>🇬🇧</b> Quota &amp; borrowing: a CQ has nominalQuota; CQs in a cohort borrow from each other (borrowingLimit cap, lendingLimit controls lending); when the lender gets a high-priority job, reclaim/preempt recovers it. Fairness uses DRS (Dominant Resource Share) inside the cohort. Three preemption knobs all default Never: withinClusterQueue / reclaimWithinCohort / borrowWithinCohort. FlavorFungibility lets a full preferred flavour fall back to an interchangeable one.</div></li>
+<li><span class="zh">Job → Workload 生成靠 PodSets 抽象：把不同框架（Job/JobSet/PyTorchJob/RayJob）的差异用 PodSets() 抹平，调度只认统一结构。配额用量 = Σ(podSet 请求 × count)。新增框架只需实现 manager 接口。</span><div class="en-block"><b>🇬🇧</b> Job → Workload uses the PodSets abstraction: differences across frameworks (Job/JobSet/PyTorchJob/RayJob) are flattened by PodSets(); scheduling only sees a uniform structure. Quota usage = Σ(podSet requests × count). Adding a framework only needs a manager implementation.</div></li>
+</ul>
+<h3 class="zh">C.2 gangs、TAS 与 AdmissionCheck（Firmus 杀手锏）</h3><h3 class="en">C.2 Gangs, TAS and AdmissionCheck (the Firmus killer feature)</h3>
+<ul>
+<li><span class="zh">Kueue 的 gang = 准入层 all-or-nothing：每个 podSet 必须在 Admitted 前同时满足配额 + TAS 域；All-or-nothing with PodsReady 在 podsReadyTimeout 内未全部 Ready 就驱逐 + 指数退避重排；podSets[].minCount 允许部分；另有 Partial Admission 与 Dynamic Reclaim。它比 Volcano 运行时拼装失败得更早、释放得更快。</span><div class="en-block"><b>🇬🇧</b> Kueue's gang = admission-level all-or-nothing: every podSet must fit quota + TAS domain before Admitted; All-or-nothing with PodsReady evicts and requeues with exponential backoff if not all Ready within podsReadyTimeout; podSets[].minCount allows partial; plus Partial Admission and Dynamic Reclaim. It fails earlier and releases faster than Volcano's runtime assembly.</div></li>
+<li><span class="zh">TAS 精确机制（口语“整域预留”的准确版本）：定义 Topology CRD（层级如 rack→block→node，每层按域打标签），ResourceFlavor 引用它；在 PodTemplate 上用 podset-required-topology / preferred / unconstrained 等注解逐层评估；准入时只选能完整填满的域、域间互斥避免碎片，然后 kube-scheduler 在域内放置。NVL72 的 rack（单一 NVLink 域）天然是 TAS 顶层，液冷回路/PDU 为附加层。</span><div class="en-block"><b>🇬🇧</b> TAS precise mechanism (the accurate version of the colloquial 'whole-domain reservation'): define a Topology CRD (levels like rack→block→node, each labelled by domain), referenced by a ResourceFlavor; use podset-required-topology / preferred / unconstrained annotations on the PodTemplate evaluated level by level; at admission only pick a domain that can be completely filled, domains are mutually exclusive to avoid fragmentation, then kube-scheduler places inside the domain. The NVL72 rack (single NVLink domain) is naturally the top TAS level, with cooling loop / PDU as extra levels.</div></li>
+<li><span class="zh">AdmissionCheck = 可插拔准入闸门：所有 check state=Ready 前 Workload 不被 Admitted。写自定义 controller 设状态。AI FactoryOS 的功耗/热/电网/维护信号恰好就是一个 AIFactoryAdmissionCheck：电价高峰、热降额、维护窗口 → Pending → 不准入。这是接外部遥测最干净的扩展点，比改调度器内核优雅十倍。</span><div class="en-block"><b>🇬🇧</b> AdmissionCheck = a pluggable admission gate: a Workload isn't Admitted until all checks report state=Ready; you write a custom controller to set the state. AI FactoryOS's power/thermal/grid/maintenance signals are exactly an AIFactoryAdmissionCheck: peak price, thermal derate, maintenance window → Pending → not admitted. It's the cleanest extension point for external telemetry — ten times more elegant than hacking the scheduler core.</div></li>
+<li><span class="zh">可见性 = Workload 的 status.conditions（Admitted/Pending/Preempted/Finished）+ events + Prometheus 指标（队列深度/准入等待/抢占数）——这就是 JD 里的“可执行的调度解释”。MultiKueue 做多集群；TAS/DRA/Topology Spreading 等新特性以较新版本为准，面试统一说“我讲机制，具体状态以部署版本为准”。</span><div class="en-block"><b>🇬🇧</b> Visibility = Workload status.conditions (Admitted/Pending/Preempted/Finished) + events + Prometheus metrics (queue depth / admission wait / preemptions) — that's the JD's 'actionable scheduler explanations'. MultiKueue handles multi-cluster. For TAS/DRA/Topology Spreading say 'I explain the mechanism; status depends on the deployed version'.</div></li>
+</ul>
+<div class="callout tip"><span class="zh-line"><b>中文</b> DRA 注意：device plugin 只报“本地几张卡”，对 NVLink 拓扑/整机架一无所知；DRA（DeviceClass + 结构化参数）让调度器看到“哪个 NVLink 域、与哪些卡互联”，是 NVL72 拓扑感知的前提。DRA 不支持 Pod 抢占。</span><br><span class="en-line"><b>🇬🇧</b> DRA note: the device plugin only reports 'how many cards locally', blind to NVLink topology / whole-rack; DRA (DeviceClass + structured params) lets the scheduler see 'which NVLink domain, interconnected with which cards' — the prerequisite for NVL72 topology awareness. DRA does not support Pod preemption.</span></div>
+</section><section id="compare">
+<h2>Part D · Volcano vs Kueue：对比与选型</h2><h2 class="en">Part D · Volcano vs Kueue: comparison and selection</h2>
+<p class="zh">一句话：Kueue 是“门禁与秩序”（谁能进场、占多少、何时放行），Volcano 是“座位调度引擎”（一组作业怎么排、放在哪）。作用于作业生命周期不同阶段，正交可组合，也可二选一。判断关键不是功能清单长短，而是痛点在“调度之前”还是“调度之中”。</p><div class="en-block"><b>🇬🇧 English</b> One-liner: Kueue is 'the gate and the order' (who enters, how much, when released); Volcano is 'the seating engine' (how a group of jobs is ordered and placed). They act at different lifecycle stages — orthogonal and composable, or pick one. The deciding factor isn't the length of the feature list but whether the pain is 'before scheduling' or 'during scheduling'.</div>
+<table><thead><tr><th>维度 Dimension</th><th>Kueue</th><th>Volcano</th></tr></thead><tbody>
+<tr><td>本质 Essence</td><td>准入控制（admission），不替换 kube-scheduler</td><td>批处理调度引擎，自带 volcano-scheduler</td></tr>
+<tr><td>调度单元 Unit</td><td>Workload（可含多个 podSet）</td><td>Job/Task（Queue→Job→Task→Node 四层）</td></tr>
+<tr><td>决策模型 Model</td><td>模拟调度后决定是否 admit</td><td>周期驱动 Session 快照 + Action 流水线</td></tr>
+<tr><td>Gang</td><td>准入层 all-or-nothing（作业级）</td><td>调度层 PodGroup 占坑原子绑定（严格）</td></tr>
+<tr><td>队列/公平</td><td>CQ + Cohort 借用，DRS</td><td>Queue 层级，DRF / Proportion</td></tr>
+<tr><td>抢占</td><td>三开关，默认 Never</td><td>preempt / reclaim 两个 Action</td></tr>
+<tr><td>扩展</td><td>Webhook + Controller + Job integration + AdmissionCheck</td><td>20+ 扩展点 Fn + Extender + 自定义 Plugin</td></tr>
+<tr><td>原生 K8s API</td><td>直接用 Job/JobSet/CronJob</td><td>多用自定义 VCJob CRD</td></tr>
+<tr><td>接入成本</td><td>较低（原生、增量）</td><td>较高（自定义 API + 调度概念）</td></tr>
+<tr><td>归属</td><td>K8s SIG Scheduling 子项目</td><td>CNCF 项目</td></tr>
+</tbody></table>
+<h3 class="zh">D.1 Gang 三层级（高频追问）</h3><h3 class="en">D.1 Three levels of gang (frequent follow-up)</h3>
+<ul>
+<li><span class="zh">K8s 原生 Coscheduling：kube-scheduler 插件，2024 起 beta 演进，纯原生、能力基础。</span><div class="en-block"><b>🇬🇧</b> K8s-native Coscheduling: a kube-scheduler plugin, beta since 2024, pure native and fairly basic.</div></li>
+<li><span class="zh">Kueue 准入层：Workload 整体准入 + All-or-nothing with PodsReady；不保证所有 Pod 同一时刻被原子绑定，但保证配额与作业整体放行。</span><div class="en-block"><b>🇬🇧</b> Kueue admission-level: Workload admitted as a whole + All-or-nothing with PodsReady; doesn't guarantee all Pods are atomically bound at the same instant, but guarantees quota and whole-job release.</div></li>
+<li><span class="zh">Volcano 调度层：PodGroup + minMember + jobPipelineFn 占坑，凑齐后统一绑定——严格调度级 gang。追求严格 gang 时 Volcano 更强，重视原生集成与配额治理时 Kueue 更省心。</span><div class="en-block"><b>🇬🇧</b> Volcano scheduling-level: PodGroup + minMember + jobPipelineFn pipelining, bind together once assembled — strict scheduling-level gang. Volcano is stronger for strict gang; Kueue is easier when you value native integration and quota governance.</div></li>
+</ul>
+<h3 class="zh">D.2 选型决策树与常见误区</h3><h3 class="en">D.2 Selection decision tree and common misconceptions</h3>
+<ul>
+<li><span class="zh">小团队先跑稳 → 原生 kube-scheduler + namespace；多团队要配额公平 → Kueue；分布式训练要严格 Gang/Backfill → Volcano；两者都要 → Kueue 准入 + Volcano 调度组合。</span><div class="en-block"><b>🇬🇧</b> Small team, get stable first → native kube-scheduler + namespace; multi-team needing quota/fairness → Kueue; distributed training needing strict gang/backfill → Volcano; both → Kueue admission + Volcano scheduling composition.</div></li>
+<li><span class="zh">经验法则（Jimmy Song《AI 基础设施手册》）：Kueue 更像资源治理框架（准入+配额+承诺+统计），是平台底座；Volcano 更像批处理调度引擎，是训练负载加速器。</span><div class="en-block"><b>🇬🇧</b> Rule of thumb (Jimmy Song, AI Infrastructure Handbook): Kueue is more a resource-governance framework (admission+quota+commitment+accounting), the platform base; Volcano is more a batch scheduling engine, the training-workload accelerator.</div></li>
+<li><span class="zh">误区纠正：①“Kueue 不支持 Gang”已过时；②“Kueue 替代 kube-scheduler”错；③“用了 Volcano 就不需要配额治理”不一定；④“两者只能二选一”错，正交可组合。</span><div class="en-block"><b>🇬🇧</b> Misconceptions corrected: (1) 'Kueue has no gang' is outdated; (2) 'Kueue replaces kube-scheduler' is wrong; (3) 'Volcano means no quota governance needed' — not necessarily; (4) 'pick only one' is wrong — they compose orthogonally.</div></li>
+</ul>
+</section><section id="together">
+<h2>Part E · 协同：Kueue + Volcano 正交组合</h2><h2 class="en">Part E · Composition: Kueue + Volcano, orthogonal by design</h2>
+<p class="zh">两者能配合的根本原因：作用在作业生命周期不同阶段，职责不重叠。Kueue 决定“谁能进场、能占多少、何时放行”（准入、配额、承诺、统计），Volcano 决定“怎么排座位、放在哪”（作业级调度、Gang、抢占回收）。形成“先治理、再调度”的闭环。这正是 JD 的 “integrate … rather than replace”。</p><div class="en-block"><b>🇬🇧 English</b> They compose because they act at different lifecycle stages with non-overlapping duties. Kueue decides 'who enters, how much, when released' (admission, quota, commitment, accounting); Volcano decides 'how to seat and where to place' (job-level scheduling, gang, preemption/reclaim). Together they close the loop 'govern first, schedule second' — exactly the JD's 'integrate … rather than replace'.</div>
+<h3 class="zh">E.1 组合架构：数据平面 + 控制面</h3><h3 class="en">E.1 Composition architecture: data plane + control plane</h3>
+<ul>
+<li><span class="zh">数据平面（资源单位与隔离）：整卡 nvidia.com/gpu / MIG 硬切分 / 共享虚拟化（HAMi 等）。控制面（秩序与策略）：Kueue（治理/准入/配额/承诺/统计）+ Volcano（批处理语义/调度策略）。平台层：门户、训练生命周期、SLO、计量。</span><div class="en-block"><b>🇬🇧</b> Data plane (resource unit &amp; isolation): whole GPU nvidia.com/gpu / MIG hard partition / shared virtualisation (HAMi). Control plane (order &amp; policy): Kueue (governance/admission/quota/commitment/accounting) + Volcano (batch semantics/scheduling policy). Platform layer: portal, training lifecycle, SLO, metering.</div></li>
+<li><span class="zh">分工边界表：配额准入与统计以 Kueue 为单一事实源；调度策略与 gang 以 Volcano 为准。两者都有队列与抢占——这是最大重叠风险，须避免策略重复/互相打架。</span><div class="en-block"><b>🇬🇧</b> Division of labour: quota admission and accounting take Kueue as the single source of truth; scheduling policy and gang take Volcano as authoritative. Both have queues and preemption — the biggest overlap risk; avoid duplicated or conflicting policy.</div></li>
+<li><span class="zh">协同生命周期：提交挂起(suspend:true) → Kueue 配额准入 → 解除挂起 → Pod 由 schedulerName=volcano 接管做 gang + 放置 → 运行/抢占 → 完成归还配额。交接靠 suspend 状态 + schedulerName 衔接。</span><div class="en-block"><b>🇬🇧</b> Lifecycle: submit + suspend:true → Kueue quota admission → unsuspend → Pods taken over by schedulerName=volcano for gang + placement → run/preempt → finish and return quota. The handoff is via suspend state + schedulerName.</div></li>
+</ul>
+<pre><code># 对接骨架（理念示意，生产以版本文档 + 测试验证为准）
+apiVersion: batch.volcano.sh/v1alpha1
+kind: Job
+metadata:/n  name: ddp-train
+  labels:/n    kueue.x-k8s.io/queue-name: team-a-queue   # Kueue 准入入口
+spec:/n  schedulerName: volcano                      # 交给 Volcano 调度
+  minAvailable: 8                             # Volcano gang
+  tasks:/n  - name: worker
+    replicas: 8
+    template:/n      spec:/n        containers:/n        - name: train
+          resources:/n            limits: {nvidia.com/gpu: 1}</code></pre>
+<div class="callout warn"><span class="zh-line"><b>中文</b> 版本集成纪律：Kueue 与 Volcano 对彼此 Workload/Job 的映射支持随版本变化。上面是理念骨架——生产落地前核对 Kueue 的 Job Integration 列表与 Volcano Job 的 Workload 映射，在测试集群验证 suspend ↔ gang 衔接。</span><br><span class="en-line"><b>🇬🇧</b> Version-integration discipline: Kueue/Volcano support for each other's Workload/Job mapping changes by version. The above is a conceptual skeleton — before production, check Kueue's Job Integration list and Volcano Job's Workload mapping, and validate the suspend↔gang handoff in a test cluster.</span></div>
+<h3 class="zh">E.2 六套参考架构（按组织成熟度选）</h3><h3 class="en">E.2 Six reference architectures (choose by maturity)</h3>
+<ul>
+<li><span class="zh">A 单队列整卡（小团队跑稳）→ B 多队列整卡 + Kueue（治理先行）→ C MIG 池化 + Kueue（强隔离）→ D HAMi 共享 + Kueue（高利用率）= 架构 E Kueue + Volcano（训练增强）→ F 双池分治（在线/离线，稳定优先）。演进路线：A → B → C/D → E/F。</span><div class="en-block"><b>🇬🇧</b> A single-queue whole GPU (small team) → B multi-queue whole GPU + Kueue (governance first) → C MIG pool + Kueue (strong isolation) → D HAMi sharing + Kueue (high utilisation) → E Kueue + Volcano (training enhancement) → F dual-pool split (online/offline, stability first). Path: A → B → C/D → E/F.</div></li>
+<li><span class="zh">拼装原则：A 最小可用闭环优先；B 资源单位越细验收越严格；C 重配置是“变更”必须流程化（尤其 MIG）；D 把平台责任写进架构。验收三层指标：调度层（排队时间/成功率/抢占回收）、性能层（吞吐/延迟 P50/95/99、抖动）、运营层（用量归因/兑现率/超卖违约率/成本）。</span><div class="en-block"><b>🇬🇧</b> Composition principles: (A) minimal viable loop first; (B) finer resource units require stricter acceptance; (C) reconfiguration is a 'change' and must be process-controlled (especially MIG); (D) write platform responsibilities into the architecture. Three acceptance layers: scheduling (queue time/success/preempt-reclaim), performance (throughput/latency P50/95/99, jitter), operations (attainment/fulfilment/oversubscription breach/cost).</div></li>
+</ul>
+</section><section id="gpu">
+<h2>Part F · AI/GPU 调度方案全景</h2><h2 class="en">Part F · The AI/GPU scheduling landscape</h2>
+<p class="zh">当 GPU 成为最贵资源，调度目标从“能不能跑”升级为“有秩序、高效率、可审计地跑”。技术栈三层：框架/作业层（PyTorchJob/JobSet/RayJob/VolcanoJob）、控制面（Kueue 治理 + Volcano/kube-scheduler/YuniKorn/Koordinator 调度）、数据平面（整卡/MIG/vGPU/MPS/时间片/HAMi/DRA）。选型先定资源单位，再定秩序与调度策略，最后定作业表达。</p><div class="en-block"><b>🇬🇧 English</b> When GPUs are the costliest resource, the goal shifts from 'can it run' to 'run with order, efficiency and auditability'. Three layers: framework/job layer (PyTorchJob/JobSet/RayJob/VolcanoJob), control plane (Kueue governance + Volcano/kube-scheduler/YuniKorn/Koordinator scheduling), data plane (whole GPU/MIG/vGPU/MPS/time-slicing/HAMi/DRA). Decide the resource unit first, then order and scheduling policy, then job expression.</div>
+<h3 class="zh">F.1 拓扑感知：聚拢 vs 打散（易错）</h3><h3 class="en">F.1 Topology awareness: pack vs spread (easy to get wrong)</h3>
+<ul>
+<li><span class="zh">K8s 原生 topologySpreadConstraints 是打散（高可用，跨 zone 均匀分布）；Kueue TAS 是聚拢（把同一 Workload 的 Pod 锁在同一拓扑域，低通信延迟）。目标相反，不要混用：训练要聚拢，服务要打散。</span><div class="en-block"><b>🇬🇧</b> K8s-native topologySpreadConstraints is spread (high availability, even across zones); Kueue TAS is pack (lock a Workload's Pods in one topology domain, low communication latency). Opposite goals — don't mix: training wants pack, services want spread.</div></li>
+<li><span class="zh">RDMA/网络：RoCEv2 依赖 PFC/ECN，NIC 与 GPU/NUMA 的亲和（NIC affinity）决定跨节点通信效率；NVL72 内 scale-up 走 NVLink，跨 rack scale-out 走 IB/Spectrum-X。拓扑感知就是让 TP/EP 的 all-to-all 永远留在 NVLink 域内。</span><div class="en-block"><b>🇬🇧</b> RDMA/network: RoCEv2 relies on PFC/ECN; NIC-to-GPU/NUMA affinity decides cross-node communication efficiency; inside NVL72 scale-up is NVLink, cross-rack scale-out is IB/Spectrum-X. Topology awareness keeps TP/EP all-to-all inside the NVLink domain.</div></li>
+</ul>
+<h3 class="zh">F.2 GPU 共享与虚拟化（隔离 vs 灵活）</h3><h3 class="en">F.2 GPU sharing and virtualisation (isolation vs flexibility)</h3>
+<ul>
+<li><span class="zh">隔离强度 MIG &gt; vGPU &gt; MPS &gt; 时间片；灵活性反之。整卡最稳、隔离强但细粒度利用率低；MIG 硬切分强隔离、单位离散、重配置有成本；时间片无内存/故障隔离、延迟不可预测；HAMi 可声明共享、细粒度弹性，但隔离/干扰取决于实现，需更强治理与验收。</span><div class="en-block"><b>🇬🇧</b> Isolation MIG &gt; vGPU &gt; MPS &gt; time-slicing; flexibility is the reverse. Whole GPU is simplest and strongly isolated but coarse; MIG is hard partition, strong isolation, discrete units, reconfiguration cost; time-slicing has no memory/fault isolation and unpredictable latency; HAMi offers declarative sharing, fine-grained elasticity, but isolation/interference depend on the implementation and need stronger governance and acceptance.</div></li>
+<li><span class="zh">生产推理 SLA 用 MIG；开发/轻推理用时间片；追求密度用 HAMi 但必须配套治理。Kueue 配额要绑明确资源单位（nvidia.com/gpu / MIG profile / 共享份额），并用 ResourceFlavor 让 H100/A10 等异构显式化，避免“10 张卡”对不同团队价值不同的隐性不公平。</span><div class="en-block"><b>🇬🇧</b> Use MIG for production-inference SLAs; time-slicing for dev/light inference; HAMi for density but with governance. Kueue quota must bind a clear resource unit (nvidia.com/gpu / MIG profile / share) and use ResourceFlavor to make H100/A10 heterogeneity explicit, avoiding the hidden unfairness where '10 GPUs' means different things to different teams.</div></li>
+</ul>
+<h3 class="zh">F.3 弹性容错与主流调度器横评</h3><h3 class="en">F.3 Elasticity/fault-tolerance and scheduler landscape</h3>
+<ul>
+<li><span class="zh">弹性容错：Kueue 协作式抢占（默认 Never，给训练留 checkpoint 时间）+ Dynamic Reclaim（reclaimablePods 释放多余配额）+ Partial Admission；框架层 VolcanoJob 的 PodEvicted→RestartJob 从 checkpoint 恢复。调度层与框架层配合，才能“抢占不丢训练”。</span><div class="en-block"><b>🇬🇧</b> Elasticity: Kueue cooperative preemption (default Never, leaves time for checkpoint) + Dynamic Reclaim (reclaimablePods releases surplus quota) + Partial Admission; framework layer VolcanoJob's PodEvicted→RestartJob resumes from checkpoint. Scheduler + framework together are what make 'preemption without losing training' possible.</div></li>
+<li><span class="zh">横评：kube-scheduler（原生，单 Pod，适合推理服务）；Kueue（准入层 gang，多团队严格配额）；Volcano（严格 PodGroup gang，分布式训练/HPC）；YuniKorn（替换型，层级队列 + DRF，K8s/Hadoop 混合）；Koordinator（阿里开源、CNCF 沙箱，侧重在线离线混部与超卖 CPU burst）。常见组合：Kueue 治理 + Volcano/Koordinator 调度 + HAMi/MIG 数据平面。</span><div class="en-block"><b>🇬🇧</b> Landscape: kube-scheduler (native, per-Pod, inference serving); Kueue (admission-level gang, multi-team strict quota); Volcano (strict PodGroup gang, distributed training/HPC); YuniKorn (replacement, hierarchical queues + DRF, K8s/Hadoop hybrid); Koordinator (Alibaba-open-sourced, CNCF sandbox, online/offline colocation and CPU-burst overcommit). Common composition: Kueue governance + Volcano/Koordinator scheduling + HAMi/MIG data plane.</div></li>
+</ul>
+</section><section id="design">
+<h2>Part G · Firmus 专属设计题（Giuseppe 必问）</h2><h2 class="en">Part G · Firmus-specific design questions (Giuseppe will ask)</h2>
+<p class="zh">把前面所有能力收敛到一张白板：作业级决策层坐在 AI FactoryOS 之上，消费遥测，做准入/放置/需求塑形，并给出调度解释。下面 ASCII 图直接在白板复刻，图内英文标签即讲解用词。</p><div class="en-block"><b>🇬🇧 English</b> Converge everything onto one whiteboard: a job-level decision layer sits above AI FactoryOS, consumes telemetry, makes admission/placement/demand-shaping decisions, and emits scheduling explanations. Replicate the ASCII diagram below verbatim; the English labels are your spoken vocabulary.</div>
+<pre><code>  用户/ML平台 --API/CLI--&gt; [ Workload CRD ]  submit(train/ft/infer/batch/agentic)
+                              |  parallelism TP/PP/DP/EP, topology constraints,
+                              |  priority/quota/checkpoint period/power budget
+                    [ Admission &amp; Queue Layer (Kueue/ctrl) ]
+                    quota·priority·fair(DRF)·reserve·preempt·backfill·aging
+                       | admission webhook        | demand-shaping
+              [ Scheduling Framework ]    [ Factory Resource Controller ]
+                plugin Filter/Score/      &lt;-- telemetry -- grid/power/derate:/n                Reserve/Permit                         defer/pace/right-size/resched
+                       | topology+factory             |
+              [ ClusterTopology CRD ]       [ AI FactoryOS telemetry ]
+               NVLink单域·NUMA·PCIe          (GPU/cooling/power/grid/maintenance)
+               NIC/RDMA·fault domain(rack/PDU)
+   Bind -&gt; GPU UUID annotation -&gt; events: why queued/admitted/placed/preempted/deferred
+   metrics -&gt; Prometheus/OTel -&gt; Grafana(queue depth/latency/frag/topology/power-thermal)</code></pre>
+<div class="qa">
+<div class="q-zh">Q · 怎么保证一个 72 卡作业留在单个 NVL72 rack？</div><div class="q-en">Q (EN) · How do you guarantee a 72-GPU job stays in one NVL72 rack?</div>
+<div class="a-zh zh">两条路。Kueue TAS：把 rack（单一 NVLink 域）注册为 Topology 顶层，准入时整域预留，kube-scheduler 在域内放置。Volcano：task-topology 按 NVLink 距离打分、把频繁通信的 Task 共置同域。关键不变量：TP/EP 的 all-to-all 一旦被拆到跨 rack，就被迫走 scale-out fabric，带宽掉一个数量级、集合通信延迟暴涨。</div>
+<div class="en-block"><b>🇬🇧</b> Two routes. Kueue TAS: register the rack (single NVLink domain) as the top Topology level, whole-domain reservation at admission, kube-scheduler places inside. Volcano: task-topology scores by NVLink distance and co-locates chatty Tasks in one domain. Key invariant: once TP/EP all-to-all is split across racks it's forced onto the scale-out fabric — an order of magnitude less bandwidth and exploding collective latency.</div></div>
+<div class="qa">
+<div class="q-zh">Q · 怎么把功耗/热/电网变成调度约束？（Giuseppe 的头号优先级）</div><div class="q-en">Q (EN) · How do you make power/thermal/grid first-class scheduling constraints? (Giuseppe's top priority)</div>
+<div class="a-zh zh">两层解耦：准入层用一个 AIFactoryAdmissionCheck watch AI FactoryOS 遥测——电价高峰、热降额、维护窗口 → Pending → 整个作业推迟；放置层用 kube-scheduler 插件的 NodeOrder 惩罚热/高功耗节点，Filter 估算任务功耗（单卡 NVML 功耗上限 × 卡数 + CPU/DRAM）超预算就拒绝。再加 Factory Resource Controller 做需求塑形（delay/pace/right-size/reschedule/re-place）。诚实边界：我没在液冷 NVL72 上跑过，但“消费遥测→决策→controller 执行”的控制面模式是我 12 年 SRE 老本行；NVL72 只是把约束维度从 CPU/内存换成每机柜功耗包络 + 液冷热余量。</div>
+<div class="en-block"><b>🇬🇧</b> Two decoupled layers: admission via an AIFactoryAdmissionCheck watching AI FactoryOS telemetry — peak price, thermal derate, maintenance window → Pending → defer the whole job; placement via a kube-scheduler NodeOrder plugin penalising hot/high-power nodes, with Filter estimating a task's power (per-card NVML limit × card count + CPU/DRAM) and rejecting over budget. A Factory Resource Controller does demand-shaping (delay/pace/right-size/reschedule/re-place). Honest boundary: I haven't run on liquid-cooled NVL72, but the 'consume telemetry → decide → act via controller' pattern is my 12-year SRE bread and butter; NVL72 just swaps CPU/memory constraints for per-rack power envelope + liquid-cooling thermal headroom.</div></div>
+<div class="callout red"><span class="zh-line"><b>中文</b> 时间尺度红线：秒级 FCAS 归 UPS / 电力电子 / 硬件联锁；K8s 调度器只做分钟级及以上软塑形，且只作用于尚未启动的作业；只允许软件决策改变 placement，不得改写安全策略或绕过设备保护（CTO 的 agentic 权限边界）。</span><br><span class="en-line"><b>🇬🇧</b> Time-scale red line: second-level FCAS belongs to UPS / power electronics / hardware interlocks; the K8s scheduler only does minute-scale-and-slower soft shaping, only on jobs not yet started; software decisions may change placement but must never rewrite security policy or bypass device protection (the CTO's agentic-permission boundary).</span></div>
+<div class="qa">
+<div class="q-zh">Q · Model-to-Grid 的“技术减震器”怎么实现？</div><div class="q-en">Q (EN) · How do you implement the Model-to-Grid 'technical shock absorber'?</div>
+<div class="a-zh zh">让 AI 需求变得 observable / controllable / schedulable，并对基础设施可用性、健康、功耗、热、容量做出响应。机制：Factory Resource Controller watch 电网/功率信号，指挥 AdmissionCheck 做 delay/pace/right-size/reschedule/re-place；把可延迟批作业在 lower 信号/弃风弃光时提前拉起吸收过剩电力，在 raise 信号时降载。控制面承诺（Kueue 的 admit/配额/等待）要与数据面实际（DCGM GPU 利用率、显存、真实 GPU-hours）对齐，形成可审计闭环。</div>
+<div class="en-block"><b>🇬🇧</b> Make AI demand observable / controllable / schedulable and responsive to availability, health, power, thermal and capacity. Mechanism: a Factory Resource Controller watches grid/power signals and commands AdmissionChecks to delay/pace/right-size/reschedule/re-place; pull deferrable batch jobs forward on lower signals / stranded renewables, curtail on raise signals. Control-plane commitments (Kueue admit/quota/wait) must reconcile with data-plane reality (DCGM utilisation, memory, real GPU-hours) for an auditable loop.</div></div>
+<div class="qa">
+<div class="q-zh">Q · 怎么做“可执行的调度解释”？</div><div class="q-en">Q (EN) · How do you build 'actionable scheduler explanations'?</div>
+<div class="a-zh zh">每个 Workload 发出事件：为什么 queued / admitted / placed / deferred / preempted / rescheduled，以及“改什么能更快”（换个 flavor、缩小 gang、移到低热节点）。指标覆盖 queue depth / scheduling latency / admission outcome / placement decision / fragmentation / topology quality / GPU utilisation / power-thermal。operator view 把这些做成可回放的视图——这正是 JD 里的 explainability 与 operator views。</div>
+<div class="en-block"><b>🇬🇧</b> Every Workload emits events: why queued / admitted / placed / deferred / preempted / rescheduled, and 'what change makes it faster' (switch flavour, shrink the gang, move to a cooler node). Metrics cover queue depth / scheduling latency / admission outcome / placement decision / fragmentation / topology quality / GPU utilisation / power-thermal. The operator view makes these replayable — exactly the JD's explainability and operator views.</div></div>
+</section><section id="evidence">
+<h2>Part H · 你的真实证据链（会被查）</h2><h2 class="en">Part H · Your real evidence chain (it will be checked)</h2>
+<h3 class="zh">H.1 上游 PR 清单与口径</h3><h3 class="en">H.1 Upstream PR list and the exact wording</h3>
+<table><thead><tr><th>PR/Commit</th><th>状态 Status</th><th>与 Firmus 的关系</th></tr></thead><tbody>
+<tr><td>#140308 TAS 空 topology label → invalid domain</td><td>✅ merged 2026-10 (v1.38)</td><td>直击：TAS 域 = NVL72 rack（单一 NVLink 域）/ PDU；错误域会让 72 卡作业溢到 scale-out fabric</td></tr>
+<tr><td>#140097 gang+DRA 分配冲突复现器</td><td>🟡 open WIP 2026-06</td><td>直击：NVL72 用 DRA 分配整机架 GPU；gang+DRA+高密度是死锁三元组</td></tr>
+<tr><td>#140306 PodGroup 缓存 / #140143 cache-miss 指标</td><td>🟡 closed 未合入</td><td>缓存一致性；NVL72 节点故障/热事件频繁，决定会不会把作业丢到刚死的节点</td></tr>
+<tr><td>#101822 NodeResourcesFit score func</td><td>✅ merged 2021-06 (v1.22, 165 review)</td><td>放置打分核心；pack vs spread 直接影响功耗/热，且是我亲自贡献的代码</td></tr>
+<tr><td>#100853 EnqueueExtensions / #101859 panic 修复 / drain 系列</td><td>✅ merged 2021</td><td>事件驱动重新入队 / 插件健壮性 / 节点驱逐自动化</td></tr>
+</tbody></table>
+<div class="callout warn"><span class="zh-line"><b>中文</b> 纪律：merged 的讲 shipped；#140097 讲 “an open reproducer I'm iterating on”；#140306/#140143 讲 “PRs I submitted that were closed without merge — still useful as problem statements”。被问 “Were those merged?” 如实答，再补 “#140308 is the one that actually landed”。诚实反而加分。#101822 是 165 条 review，不是 203。</span><br><span class="en-line"><b>🇬🇧</b> Discipline: merged PRs → 'shipped'; #140097 → 'an open reproducer I'm iterating on'; #140306/#140143 → 'PRs I submitted that were closed without merge — still useful as problem statements'. If asked 'were those merged?', answer honestly and add '#140308 is the one that actually landed'. Honesty scores. #101822 had 165 review comments, not 203.</span></div>
+<div class="qa">
+<div class="q-zh">Q · 讲一个 2026 年你修的最微妙的调度器正确性 bug（#140308）</div><div class="q-en">Q (EN) · Tell me about the subtlest scheduler correctness bug you fixed in 2026 (#140308)</div>
+<div class="a-zh zh">在 getScheduledPodsTopologyDomain 里，代码用空字符串 "" 当“还没见过这个域”的哨兵——但 "" 也是合法 label 值。一个在空值节点上的 Pod 被当成“还没域”，让后面真正不同域的 Pod 绕过“多于一个域”的检查；整域悄悄解析成 ""，本该共置的作业被放到跨域。修复：空 label 值不再是域，而是无域的标注错误；GeneratePlacements 忽略这类节点，getScheduledPodsTopologyDomain 对已运行其上的 Pod 显式返回错误；TopologyConstraint.Key 文档说明缺失/空属于无域；PodTopologySpread/InterPodAffinity 仍接受空值（行为不变）。本质难点是域标识符的可信度——必须区分“无信息”和“真空域”，对坏节点 fail-fast。我的 PR 刻意保留 PTS 空值行为、只改 TAS 域逻辑，说明我分得清两层抽象。</div>
+<div class="en-block"><b>🇬🇧</b> In getScheduledPodsTopologyDomain, the code used the empty string "" as a sentinel for 'domain not seen yet' — but "" is also a legal label value. A Pod on an empty-valued node was treated as 'no domain yet', letting later Pods in a genuinely different domain bypass the 'more than one domain' check; the whole required domain silently resolved to "", so a job that should be co-located was placed across domains. Fix: an empty label value is no longer a domain but a labelling error belonging to no domain; GeneratePlacements ignores such nodes; getScheduledPodsTopologyDomain returns an explicit error for Pods already running there; TopologyConstraint.Key docs now state missing/empty belongs to no domain; PodTopologySpread/InterPodAffinity keep accepting empty (unchanged). The essence is trustworthiness of the domain identifier — distinguish 'no info' from 'truly empty domain' and fail-fast on bad nodes. My PR deliberately preserved PTS empty-value behaviour and only changed TAS domain logic, showing I distinguish the two abstraction layers.</div></div>
+<h3 class="zh">H.2 自研 Permit 阶段 gang 调度器（不在简历，当独立项目讲）</h3><h3 class="en">H.2 Custom Permit-phase gang scheduler (not on the résumé — present it as its own project)</h3>
+<ul>
+<li><span class="zh">问题：训练/批作业要全有或全无，原生调度器先放部分 Pod 卡住、资源长期占却不出活；当时 coscheduling/PodGroup 未 GA。</span><div class="en-block"><b>🇬🇧</b> Problem: training/batch jobs need all-or-nothing; native scheduling placed some Pods and stalled, holding resources without progress; coscheduling/PodGroup wasn't GA yet.</div></li>
+<li><span class="zh">我负责：在 kube-scheduler 插件链 Permit 扩展点实现——组内 Pod 全进 Permit 才原子放行，超时整体回滚释放。</span><div class="en-block"><b>🇬🇧</b> What I owned: implemented at the Permit extension point — a group's Pods are released atomically only when all reach Permit; on timeout the whole group rolls back and releases.</div></li>
+<li><span class="zh">困难：① 多 PodGroup 互等死锁 → 超时回滚 + 准入控制（资源不足撑最大 gang 不接纳）+ 严格优先级；② 并发 Assume/Bind 的 GPU 争抢 → 对 GPU UUID 做 CAS。</span><div class="en-block"><b>🇬🇧</b> Difficulty: (1) cross-group wait deadlock → timeout rollback + admission control (don't admit a gang the cluster can't resource) + strict priority; (2) concurrent Assume/Bind GPU contention → a compare-and-swap on the GPU UUID.</div></li>
+<li><span class="zh">决定：放 Permit 而非 Reserve/PostFilter，因为 Permit 是周期最后闸门、最适合“等全组”原子放行；不等社区 GA 因为业务窗口。结果：gang 成功率【补数字】，僵死事件【降 X%】；复盘：社区 coscheduling 成熟后应更早评估迁移而非长期自研（诚实加分）。</span><div class="en-block"><b>🇬🇧</b> Decision: chose Permit over Reserve/PostFilter because it's the last gate in the cycle, ideal for 'wait for the whole group' atomic release; didn't wait for upstream GA because the business window demanded it. Result: gang success rate 【fill】, deadlock incidents 【down X%】; retrospective: once community coscheduling matured, should have evaluated migration earlier (honest retrospective scores).</div></li>
+</ul>
+</section><section id="projects">
+<h2>Part I · 简历项目五轴（HR 必深挖）</h2><h2 class="en">Part I · Résumé projects — five-axis drill (HR will dig in)</h2>
+<p class="zh">五轴 = 问题 / 你负责 / 困难 / 决定 / 结果。每条都要能讲“问题→证据→定位→止血→根治→防复发”，所有【】换成真实可追溯数字，否则被判“背团队项目”。以下给出英文骨架，中文人心照组织。</p><div class="en-block"><b>🇬🇧 English</b> Five axes = Problem / What I owned / Difficulty / Decision / Result. Each must be told as 'symptom → evidence → localisation → mitigation → root fix → prevention'; replace every 【】 with a real traceable number or you'll be judged as 'reciting the team's project'. English skeletons below; organise the Chinese mentally.</div>
+<div class="qa">
+<div class="q-zh">Q · Xiaomi · 弹性调度平台（kube-on-kube 元集群 + autoscaler + spot 降本 30%）</div><div class="q-en">Q (EN) · Xiaomi · Elastic scheduling platform (kube-on-kube meta-cluster + autoscaler + 30% spot cost-down)</div>
+<div class="a-zh zh">问题：多集群手动开通慢、状态散落在不审计脚本；上 spot 前怕影响在线。负责：元集群 + 集群即 CRD + 生命周期闭环；cluster-autoscaler 集成；spot 评估→灰度→全量 + 成本核算。困难：CRD 状态漂移 → reconcile + 最终一致；spot 回收 → PDB + 优雅驱逐 + 关键负载走 on-demand。决定：用 kube-on-kube 因为已有 K8s 控制面能力、不引外部依赖；spot 先吃非关键可中断负载。结果：人工干预降【X%】，成本降 30%（核算口径【】），稳定性【SLO 未降级】。</div>
+<div class="en-block"><b>🇬🇧</b> Problem: manual multi-cluster provisioning slow, state in unauditable scripts; fear of disrupting online before spot. Owned: meta-cluster + cluster-as-CRD + lifecycle loop; cluster-autoscaler integration; spot eval→canary→full + cost accounting. Difficulty: CRD state drift → reconcile + eventual consistency; spot reclamation → PDB + graceful eviction + critical on on-demand. Decision: kube-on-kube because we already had K8s control-plane capability and no external deps; interruptible non-critical loads ate spot first. Result: manual intervention down 【X%】, cost down 30% (basis 【】), stability 【SLO not degraded】.</div></div>
+<div class="qa">
+<div class="q-zh">Q · Sogou · 容器云从 0 到 1（千节点 / 百万 QPS / SR-IOV underlay / 自研 IPAM）</div><div class="q-en">Q (EN) · Sogou · Container cloud 0→1 (1k nodes / 1M QPS / SR-IOV underlay / custom IPAM)</div>
+<div class="a-zh zh">问题：Overlay 在百万 QPS 下性能与可观测不达标；业务要容器 IP 直接在 IDC 网络里。负责：underlay + SR-IOV 选型；自研 IPAM 分配回收 + 物理网络对账；ARP 修复（分配后广播未触发 → IPAM 推送 + ARP 刷新）。困难：SR-IOV VF 与 kube-proxy/Service VIP 冲突 → 调数据面；千节点 etcd 心跳分片 + 缓存。决定：与物理网络强耦合因为要 L2 可达 + 复用安全策略；LB/监控/日志 CRD 化成平台托管声明式接口。结果：迁移中断【X】，最终约千节点/数万 Pod/百万+ QPS，年度团队奖。主动挂钩：SR-IOV underlay + 自研 IPAM 是 DPU/SmartNIC CNI 的前身思路（数据面下沉、控制面声明化）。</div>
+<div class="en-block"><b>🇬🇧</b> Problem: overlay under 1M QPS failed performance/observability; business wanted container IPs in the IDC network. Owned: underlay + SR-IOV selection; custom IPAM allocation/reclaim + physical-network reconciliation; ARP fix (post-allocation broadcast not triggered → IPAM push + ARP refresh). Difficulty: SR-IOV VF vs kube-proxy/Service VIP conflict → tuned data plane; 1k-node etcd heartbeat sharding + cache. Decision: tight coupling to physical network for L2 reachability + reuse of security policy; CRD-ified LB/monitoring/logging as platform-managed declarative interfaces. Result: migration disruption 【X】, final ~1k nodes / tens of thousands of Pods / 1M+ QPS, annual team award. Hook: SR-IOV underlay + custom IPAM is the precursor to DPU/SmartNIC CNI — data-plane offload, control-plane declarative.</div></div>
+<ul>
+<li><span class="zh">Tubi：Istio 全舰队（南北向 ingress gateway 先行，再按 namespace 分批注入 sidecar，mTLS + 黄金信号，零应用改造）+ AWS/GCP 多集群 locality-first + Terraform 集群外 IaC / 集群内 GitOps + on-call AI agent。on-call agent 命中 Firmus“受控自动化 / remediation 即软件定义能力”，主动展开。</span><div class="en-block"><b>🇬🇧</b> Tubi: Istio fleet-wide (north-south ingress gateway first, then per-namespace phased sidecar injection, mTLS + golden signals, zero app changes) + AWS/GCP multi-cluster locality-first + Terraform IaC outside / GitOps inside + on-call AI agent. The on-call agent hits Firmus's 'guarded automation / remediation as software-defined capability' — expand proactively.</div></li>
+<li><span class="zh">Megvii：阿里云 HA + Enigma 发布系统（独立写 Go 后端：快照/回滚/业务 API + Bootstrap 前端）；回滚一致性靠配置+镜像版本化+状态快照。</span><div class="en-block"><b>🇬🇧</b> Megvii: K8s on Aliyun HA + Enigma release system (solo Go backend: snapshot/rollback/business APIs + Bootstrap frontend); rollback consistency via config+image versioning+state snapshot.</div></li>
+</ul>
+</section><section id="reverse">
+<h2>Part J · 反问清单 + 冲刺 + 避坑</h2><h2 class="en">Part J · Reverse-questions + sprint + pitfalls</h2>
+<h3 class="zh">J.1 Senior 反问（定档用）</h3><h3 class="en">J.1 Senior reverse questions (they set your tier)</h3>
+<ul>
+<li><span class="zh">“Bell Bay 被定义为 dispatchable、UPS 提供 FCAS——秒级响应与调度器分钟级塑形的边界由谁定？哪些 workload 允许被 lower 信号提前拉起？”</span><div class="en-block"><b>🇬🇧</b> 'Bell Bay is described as dispatchable with UPS-delivered FCAS — who owns the boundary between second-level response and the scheduler's minute-level shaping, and which workloads are eligible to be pulled forward on a lower signal?'</div></li>
+<li><span class="zh">“官网说每 HyperCube 32 NVL72 racks / 2 Scale Units——一个 Scale Unit 对应几个 rack？这个映射会怎样进入 ClusterTopology CRD 的层级？”（高质量反问，不要自己推断数字）</span><div class="en-block"><b>🇬🇧</b> 'The site says 32 NVL72 racks / 2 Scale Units per HyperCube — how many racks per Scale Unit, and how does that mapping feed the ClusterTopology CRD levels?' (high-quality question — don't infer the number yourself)</div></li>
+<li><span class="zh">“既然已有 Managed Slurm 和 DSX Flex/MaxLPS，自研调度器与它们的职责边界画在哪？哪些决策绝不下放到软件层？”</span><div class="en-block"><b>🇬🇧</b> 'Given Managed Slurm and DSX Flex/MaxLPS already exist, where exactly is the responsibility boundary of the in-house scheduler, and which decisions are never delegated to the software layer?'</div></li>
+<li><span class="zh">“NVL72 舰队仍在 build phase——现在最痛的是调度算法，还是遥测/信号契约（freshness、stale 时的降级）？”</span><div class="en-block"><b>🇬🇧</b> 'The NVL72 fleet is still in build phase — is the current pain in scheduling algorithms, or in the telemetry/signal contract (freshness, what to do when stale)?'</div></li>
+<li><span class="zh">“这个岗位的 success metric 更看重 end-user outcome（排队时间、time-to-result），还是 factory efficiency（GPU 利用率、碎片率）？两者冲突时怎么排序？”</span><div class="en-block"><b>🇬🇧</b> 'Does this role's success metric weigh end-user outcomes (queue time, time-to-result) or factory efficiency (GPU utilisation, fragmentation) more — and how do you rank them when they conflict?'</div></li>
+</ul>
+<h3 class="zh">J.2 上场前 10 分钟速查</h3><h3 class="en">J.2 Ten-minute pre-interview check</h3>
+<ul>
+<li><span class="zh">开场钩子 1 分钟 + §9.2 自研 gang 五轴脱稿；开场不要主动提没跑过 NVL72，被直接问 GPU 才用诚实边界。</span><div class="en-block"><b>🇬🇧</b> 1-minute opening hook + §9.2 custom-gang five-axis, off-script; don't volunteer 'no NVL72' in the opening — use the honest boundary only if directly asked about GPU.</div></li>
+<li><span class="zh">事实红线 6 条（§1.1）+ 时间尺度红线（§8.2）扫一遍；PR 状态照念，不升级成 merged。</span><div class="en-block"><b>🇬🇧</b> Scan the six fact red lines (§1.1) and the time-scale red line (§8.2); recite PR statuses as-is, never upgrade to merged.</div></li>
+<li><span class="zh">所有【】换成真实数字，每个数字能答“怎么来的”；尤其成本降 30% 的核算口径。</span><div class="en-block"><b>🇬🇧</b> Replace every 【】 with a real number, each with a 'how did you get that' answer — especially the 30% cost-down basis.</div></li>
+</ul>
+<h3 class="zh">J.3 避坑</h3><h3 class="en">J.3 Pitfalls</h3>
+<ul>
+<li><span class="zh">不要纠正 JD 的 “Syndey” 拼写，也不要把 PDF 里 €sustainable（$ 字体错误）当事实。</span><div class="en-block"><b>🇬🇧</b> Don't correct the JD's 'Syndey' typo, and don't treat '€sustainable' (a $-sign font error in the PDF) as a fact.</div></li>
+<li><span class="zh">不要说“没人跑过 NVL72”——墨尔本站点已在生产跑 GB300 NVL72；把边界说成“我的”，不是“市场的”。</span><div class="en-block"><b>🇬🇧</b> Don't say 'nobody has run NVL72' — Melbourne already runs GB300 NVL72 in production; frame the boundary as 'mine', not 'the market's'.</div></li>
+<li><span class="zh">不要把 Kueue 说成替换 kube-scheduler，也不要说 Kueue 不支持 gang；不要说 Volcano 有 6 个 Action。</span><div class="en-block"><b>🇬🇧</b> Don't say Kueue replaces kube-scheduler, or that Kueue has no gang; don't say Volcano has six Actions.</div></li>
+</ul>
+</section><section id="glossary">
+<h2>附录 · 中英术语对照</h2><h2 class="en">Appendix · Bilingual glossary</h2>
+<table><thead><tr><th>中文</th><th>English</th></tr></thead><tbody>
+<tr><td>准入控制 / 配额治理</td><td>Admission control / quota governance</td></tr>
+<tr><td>作业级调度 / 批处理调度</td><td>Job-level scheduling / batch scheduling</td></tr>
+<tr><td>全有或全无 / 协同调度</td><td>All-or-nothing / gang (co-)scheduling</td></tr>
+<tr><td>拓扑感知调度</td><td>Topology-aware scheduling (TAS)</td></tr>
+<tr><td>整域预留</td><td>Whole-domain reservation</td></tr>
+<tr><td>主导资源公平 / 主导资源份额</td><td>DRF / Dominant Resource Share (DRS)</td></tr>
+<tr><td>抢占 / 回收 / 回填</td><td>Preemption / reclaim / backfill</td></tr>
+<tr><td>动态资源分配</td><td>Dynamic Resource Allocation (DRA)</td></tr>
+<tr><td>多实例 GPU / 多集群</td><td>MIG / MultiKueue</td></tr>
+<tr><td>需求塑形 / 电网感知</td><td>Demand-shaping / grid-aware</td></tr>
+<tr><td>频率控制辅助服务</td><td>FCAS (Frequency Control Ancillary Services)</td></tr>
+<tr><td>可调度的用电负荷</td><td>Dispatchable (demand)</td></tr>
+<tr><td>可执行的调度解释</td><td>Actionable scheduler explanations</td></tr>
+<tr><td>技术减震器</td><td>Technical shock absorber</td></tr>
+</tbody></table>
+<p class="zh">参考来源：Firmus 官网 firmus.co（2026-11-09 核验）与 JD-A `5417753008`；companies/firmus/ 现有手册与策略卡；调度器系列 5 篇深度文档（Kueue / Volcano / 对比 / 协同 / AI-GPU 方案）；Jimmy Song《AI 基础设施手册》；Kueue / Volcano / Kubernetes 官方文档。</p><div class="en-block"><b>🇬🇧 English</b> Sources: firmus.co (verified 2026-11-09) and JD-A `5417753008`; existing companies/firmus handbook and strategy card; five deep-dive scheduler documents (Kueue / Volcano / comparison / composition / AI-GPU); Jimmy Song's AI Infrastructure Handbook; Kueue / Volcano / Kubernetes official docs.</div>
+</section></main>
+</div>
+<button id="toTop" class="no-print" title="回到顶部">↑</button>
+<script>
+var body=document.body;
+document.querySelectorAll('.seg button').forEach(function(b){
+  b.addEventListener('click',function(){
+    document.querySelectorAll('.seg button').forEach(function(x){x.classList.remove('active');});
+    b.classList.add('active');body.setAttribute('data-lang',b.dataset.lang);
+  });
+});
+document.querySelector('.btn-print').addEventListener('click',function(){window.print();});
+var links=[].slice.call(document.querySelectorAll('aside.toc a'));
+var secs=links.map(function(a){return {a:a,el:document.querySelector(a.getAttribute('href'))};}).filter(function(s){return s.el;});
+window.addEventListener('scroll',function(){
+  var y=window.scrollY+140,cur=null;
+  secs.forEach(function(s){if(s.el.offsetTop<=y)cur=s.a;});
+  links.forEach(function(a){a.classList.remove('active');});
+  if(cur)cur.classList.add('active');
+});
+var tt=document.getElementById('toTop');
+window.addEventListener('scroll',function(){tt.classList.toggle('show',window.scrollY>500);});
+tt.addEventListener('click',function(){window.scrollTo({top:0,behavior:'smooth'});});
+</script>
+</body></html>
