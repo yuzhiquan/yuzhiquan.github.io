@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Kueue 深度指南：从调度全流程出发，系统拆解准入模型、核心对象、配额与抢占机制，补齐动手实战、进阶特性与生产排障，并汇总经典面试题。">
+<title>Kueue 深度指南：从调度流程到核心机制｜小胖鱼@Think</title>
+<style>
+:root{
+  --primary:#2563eb; --primary-d:#1e40af; --primary-l:#dbeafe;
+  --ink:#1e293b; --ink-soft:#475569; --muted:#94a3b8;
+  --bg:#f1f5f9; --card:#ffffff; --line:#e2e8f0;
+  --accent:#0ea5e9; --shadow:0 10px 30px rgba(15,23,42,.08);
+  --code-bg:#0f172a; --radius:14px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif;
+  line-height:1.85;font-size:16px;-webkit-font-smoothing:antialiased}
+
+/* ===== Top bar ===== */
+.topbar{background:#0f172a;color:#e2e8f0;font-size:14px}
+.topbar-inner{max-width:1240px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.topbar a{color:#93c5fd;text-decoration:none}
+.topbar a:hover{color:#fff;text-decoration:underline}
+.topbar .brand{font-weight:700;color:#fff}
+
+/* ===== Hero ===== */
+.hero{background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 55%,#0ea5e9 100%);
+  color:#fff;padding:64px 24px 120px;position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;inset:0;
+  background:radial-gradient(circle at 85% 20%,rgba(255,255,255,.18),transparent 45%),
+             radial-gradient(circle at 15% 80%,rgba(255,255,255,.12),transparent 40%)}
+.hero-inner{max-width:960px;margin:0 auto;position:relative;z-index:1}
+.hero .kicker{display:inline-block;font-size:13px;letter-spacing:2px;font-weight:600;
+  background:rgba(255,255,255,.16);padding:6px 14px;border-radius:999px;margin-bottom:20px}
+.hero h1{font-size:clamp(28px,4.5vw,46px);line-height:1.25;margin:0 0 18px;font-weight:800;letter-spacing:.5px}
+.hero p{font-size:clamp(15px,2vw,18px);opacity:.92;max-width:760px;margin:0 0 26px}
+.badges{display:flex;flex-wrap:wrap;gap:10px}
+.badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);
+  padding:6px 13px;border-radius:8px;font-size:13px;backdrop-filter:blur(4px)}
+
+/* ===== Layout ===== */
+.wrap{max-width:1240px;margin:-70px auto 60px;padding:0 24px;position:relative;z-index:2;
+  display:grid;grid-template-columns:270px minmax(0,1fr);gap:28px;align-items:start}
+
+/* ===== TOC ===== */
+aside.toc{position:sticky;top:24px;background:var(--card);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:22px 18px;max-height:calc(100vh - 48px);overflow-y:auto}
+.toc h3{margin:0 0 14px;font-size:15px;color:var(--primary-d);display:flex;align-items:center;gap:8px}
+.toc h3::before{content:"";width:4px;height:16px;background:var(--primary);border-radius:2px}
+.toc-list,.toc-sub{list-style:none;margin:0;padding:0}
+.toc-sub{padding-left:12px;border-left:1px solid var(--line);margin:2px 0 6px 8px}
+.toc a{display:block;color:var(--ink-soft);text-decoration:none;font-size:13.5px;
+  padding:6px 10px;border-radius:7px;line-height:1.5;transition:.18s}
+.toc a:hover{background:var(--primary-l);color:var(--primary-d)}
+.toc .toc-l2>a{font-weight:600;color:var(--ink)}
+.toc a.active{background:var(--primary);color:#fff}
+.toc-list::-webkit-scrollbar{width:5px}
+.toc-list::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:5px}
+
+/* ===== Article ===== */
+article{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);
+  padding:42px clamp(22px,4vw,56px);min-width:0}
+article h1,article h2,article h3,article h4{color:var(--ink);scroll-margin-top:24px;line-height:1.35}
+article h2{font-size:24px;margin:44px 0 16px;padding:0 0 12px;border-bottom:2px solid var(--line);font-weight:800}
+article h2::before{content:"";display:inline-block;width:8px;height:8px;background:var(--primary);
+  border-radius:2px;margin-right:11px;vertical-align:middle}
+article h3{font-size:19px;margin:28px 0 12px;font-weight:700;color:var(--primary-d)}
+article p{margin:14px 0}
+article strong{color:var(--primary-d);font-weight:700}
+article a{color:var(--primary);text-decoration:none;border-bottom:1px dashed var(--primary)}
+blockquote{margin:18px 0;padding:14px 20px;background:var(--primary-l);
+  border-left:4px solid var(--primary);border-radius:0 10px 10px 0;color:var(--ink-soft)}
+blockquote p{margin:0}
+.callout{margin:20px 0;padding:16px 20px;background:#f0fdf4;border-left:4px solid #16a34a;
+  border-radius:0 10px 10px 0;color:#14532d;font-size:14.5px}
+.callout.warn{background:#fffbeb;border-left-color:#f59e0b;color:#78350f}
+.callout.tip{background:#eef2ff;border-left-color:#6366f1;color:#312e81}
+
+/* 表格 */
+table{width:100%;border-collapse:collapse;margin:20px 0;font-size:14.5px;
+  border-radius:10px;overflow:hidden;box-shadow:0 0 0 1px var(--line)}
+thead th{background:linear-gradient(135deg,#1e40af,#2563eb);color:#fff;
+  text-align:left;padding:12px 14px;font-weight:600;white-space:nowrap}
+tbody td{padding:11px 14px;border-top:1px solid var(--line);vertical-align:top}
+tbody tr:nth-child(even){background:#f8fafc}
+tbody tr:hover{background:var(--primary-l)}
+
+/* 代码块 */
+pre{background:var(--code-bg);color:#e2e8f0;padding:18px 20px;border-radius:12px;
+  overflow-x:auto;font-size:13.5px;line-height:1.7;margin:18px 0;position:relative}
+pre code{font-family:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,"Noto Sans Mono CJK SC",monospace}
+code{background:#f1f5f9;color:#db2777;padding:2px 6px;border-radius:5px;font-size:.9em;
+  font-family:"SFMono-Regular",Consolas,monospace}
+pre code{background:none;color:inherit;padding:0}
+
+/* 有序/无序列表 */
+article ol,article ul{padding-left:24px;margin:14px 0}
+article li{margin:7px 0}
+
+/* 图片 */
+figure.fig{margin:26px 0;text-align:center}
+figure.fig img{max-width:100%;height:auto;border:1px solid var(--line);border-radius:12px;
+  box-shadow:var(--shadow);cursor:zoom-in;transition:transform .2s}
+figure.fig img:hover{transform:translateY(-3px)}
+figure.fig figcaption{font-size:13px;color:var(--muted);margin-top:10px}
+
+/* 回到顶部 */
+#toTop{position:fixed;right:26px;bottom:26px;width:46px;height:46px;border:none;
+  border-radius:50%;background:var(--primary);color:#fff;font-size:20px;cursor:pointer;
+  box-shadow:0 8px 20px rgba(37,99,235,.4);opacity:0;pointer-events:none;transition:.3s;z-index:50}
+#toTop.show{opacity:1;pointer-events:auto}
+#toTop:hover{background:var(--primary-d);transform:translateY(-3px)}
+
+/* Lightbox */
+#lightbox{position:fixed;inset:0;background:rgba(15,23,42,.9);display:none;
+  align-items:center;justify-content:center;z-index:100;padding:30px;cursor:zoom-out}
+#lightbox.show{display:flex}
+#lightbox img{max-width:96vw;max-height:92vh;border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+
+footer{text-align:center;color:var(--muted);font-size:13px;padding:30px 20px 50px}
+.pager{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:36px;padding-top:22px;border-top:1px solid var(--line)}
+.pager a{color:var(--primary);text-decoration:none;font-size:14px}
+
+@media(max-width:960px){
+  .wrap{grid-template-columns:1fr;margin-top:-50px}
+  aside.toc{position:static;max-height:none}
+  .toc-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:2px}
+  article{padding:28px 20px}
+  .hero{padding-bottom:90px}
+}
+</style>
+</head>
+<body>
+<div class="topbar"><div class="topbar-inner">
+  <a class="brand" href="/">小胖鱼@Think</a><span>·</span>
+  <a href="/scheduler/">调度器系列</a>
+  <span style="margin-left:auto"><a href="/">博客首页</a></span>
+</div></div>
+
+<header class="hero"><div class="hero-inner">
+  <span class="kicker">KUBERNETES · JOB QUEUING · DEEP DIVE</span>
+  <h1>Kueue 深度指南<br>从调度流程到核心机制</h1>
+  <p>从调度全流程出发，系统拆解 Kueue 的准入模型、核心对象、配额与抢占机制；补齐动手实战、进阶特性（TAS / MultiKueue / Fair Sharing / DRA）与生产排障，并汇总基于公开资料整理的经典面试题——一份可随时回顾的全景指南。</p>
+  <div class="badges">
+    <span class="badge">📘 12 章正文</span>
+    <span class="badge">🖼️ 6 张示意图</span>
+    <span class="badge">⏱️ 约 40 分钟</span>
+    <span class="badge">🎯 Kueue v1beta1 / v1beta2</span>
+  </div>
+</div></header>
+
+<div class="wrap">
+<aside class="toc">
+  <h3>目录导航</h3>
+  <ul class="toc-list">
+    <li><a href="#abstract">摘要</a></li>
+    <li class="toc-l2"><a href="#c1">1. 整体架构与调度流程</a></li>
+    <li class="toc-l2"><a href="#c2">2. Webhook 与 suspend 机制</a></li>
+    <li class="toc-l2"><a href="#c3">3. 对象归属：K8s 原生 vs Kueue 扩展</a></li>
+    <li class="toc-l2"><a href="#c4">4. ResourceFlavor 与队列结合</a></li>
+    <li class="toc-l2"><a href="#c5">5. 调度逻辑全景</a></li>
+    <li class="toc-l2"><a href="#c6">6. Job 到 Workload 的生成规则</a></li>
+    <li class="toc-l2"><a href="#c7">7. 配额判定与抢占决策</a></li>
+    <li class="toc-l2"><a href="#c8">8. 动手实战：跑通第一个队列</a></li>
+    <li class="toc-l2"><a href="#c9">9. 进阶特性全景</a></li>
+    <li class="toc-l2"><a href="#c10">10. 生产实践：可观测与排障</a></li>
+    <li class="toc-l2"><a href="#c11">11. 经典面试题</a></li>
+    <li class="toc-l2"><a href="#c12">12. 学习地图与总结</a></li>
+    <li><a href="#meta">元信息</a></li>
+  </ul>
+</aside>
+
+<article>
+<h2 id="abstract">摘要</h2>
+<p>Kueue 是 Kubernetes 原生的作业队列管理系统，通过“先排队、后放行”的配额准入机制，让批处理、HPC、AI/ML 作业在多租户集群中公平、高效地共享资源。本指南系统梳理 Kueue 的调度全流程、核心对象、配额模型、调度逻辑、Workload 生成规则、抢占判定机制，补充动手实战、进阶特性与生产排障，并汇总基于公开资料整理的经典面试题目，帮助读者建立从概念到实践的完整认知框架。</p>
+<p>本指南基于 Kueue v1beta1 / v1beta2 API 整理；TAS、DRA、Topology Spreading 等新特性以较新版本（v0.14+ 起）为准，文中已标注各特性的成熟度。</p>
+
+<div class="callout tip"><strong>阅读约定</strong>：Kueue 的成熟度按特性标注——Stable（稳定）、Beta（默认开启）、Alpha（默认关闭，需 feature gate）。生产采用前请核对目标版本文档的 Feature Gates。</div>
+
+<!-- ============ 1 ============ -->
+<h2 id="c1">1. 整体架构与调度流程</h2>
+<h3>1.1 一句话理解 Kueue</h3>
+<p>Kueue 的本质是<strong>准入控制（Admission Control）</strong>：Job 提交时先被“冻住”，只有当调度器确认有配额（自身的或从 Cohort 借来的）后才放行运行，用完即归还。这样既提高集群利用率，又保证多团队之间的公平性与资源隔离。</p>
+<p>它不替代 kube-scheduler、Cluster Autoscaler 或 Job Controller——Kueue 决定“何时允许创建 Pod”，kube-scheduler 仍负责“把 Pod 放到哪个节点”。官方明确的设计原则是：<strong>避免重复 Kubernetes 已有组件的成熟功能</strong>——弹性伸缩交给 cluster-autoscaler，Pod 到节点的调度交给 kube-scheduler，作业生命周期交给 controller manager，高级准入策略（如 OPA/Gatekeeper）可外部委托。</p>
+
+<h3>1.2 调度全流程（7 步）</h3>
+<ol>
+  <li><strong>用户提交 Job</strong>：通过 kubectl 创建 Job / JobSet / PyTorchJob 等作业，作业带着 spec 进入 API Server，但尚未真正运行。</li>
+  <li><strong>Webhook 自动挂起</strong>：Mutating Webhook 注入 <code>suspend: true</code>，阻止 Pod 创建。关键是“先排队、拿到配额后才放行”，避免资源超卖。</li>
+  <li><strong>创建 Workload 并入队</strong>：Controller 生成 Workload，绑定命名空间下的 LocalQueue；Workload 按优先级（PriorityClass）在 LocalQueue 中排序。</li>
+  <li><strong>调度器挑选 Workload</strong>：Scheduler 取高优先级 Workload，匹配上层 ClusterQueue；一个 ClusterQueue 聚合多个 LocalQueue 的配额需求。</li>
+  <li><strong>配额与准入检查</strong>：校验 ClusterQueue 的 nominal/borrowing 配额与 ResourceFlavor 用量，必要时执行 AdmissionCheck（对接外部配额或 provisioning 系统）。</li>
+  <li><strong>准入成功，解除挂起</strong>：Workload 标记为 Admitted，配额被占用；Controller 将 suspend 置为 false，Pod 开始创建运行。</li>
+  <li><strong>运行完成，释放配额</strong>：Job 完成，Workload 被删除，占用的配额归还 ClusterQueue；调度器继续处理下一个 Workload（可抢占低优先级任务）。</li>
+</ol>
+<figure class="fig"><img src="assets/fig1.png" alt="Kueue 调度过程全流程"><figcaption>图 1 · Kueue 调度过程全流程：主流程、队列层级、关键对象与配额决策</figcaption></figure>
+
+<h3>1.3 三大组件分工</h3>
+<table>
+<thead><tr><th>组件</th><th>职责</th></tr></thead>
+<tbody>
+<tr><td>Webhook</td><td>挂起 Job（注入 suspend）</td></tr>
+<tr><td>Reconciler / Controller</td><td>生成 Workload、解除挂起</td></tr>
+<tr><td>Scheduler</td><td>配额判定 + 抢占决策</td></tr>
+</tbody>
+</table>
+<p>整个链路中，Kueue 始终只操作 Workload 层，不直接碰 Pod。</p>
+
+<!-- ============ 2 ============ -->
+<h2 id="c2">2. Webhook 与 suspend 机制</h2>
+<h3>2.1 suspend 的对象是谁</h3>
+<p>一个常见的问题是：Webhook 的 suspend 到底作用在谁身上？答案是<strong>用户提交的工作负载对象本身</strong>——最典型的是 Kubernetes 原生的 <code>batch/v1.Job</code>，Webhook 在创建时把它的 <code>.spec.suspend</code> 字段设为 true。</p>
+<table>
+<thead><tr><th>对象</th><th>是否被 suspend</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>Job / JobSet / PyTorchJob（用户提交的 CR）</td><td>是</td><td>Webhook 直接修改它的 suspend 字段</td></tr>
+<tr><td>Pod</td><td>否</td><td>Job Controller 看到 suspend: true 后自然不会创建 Pod</td></tr>
+<tr><td>Workload（Kueue 内部 CRD）</td><td>否</td><td>调度第 3 步才创建的排队抽象，本身没有 suspend 概念</td></tr>
+</tbody>
+</table>
+<p>也就是说，Webhook 挂起的是“上层作业对象”，靠作业控制器自己去停止 Pod 创建，Kueue 并没有直接操作 Pod。</p>
+
+<h3>2.2 不同框架的 suspend 字段</h3>
+<p>这个机制依赖作业对象本身支持 suspend 字段。不同集成框架的字段位置略有差异：</p>
+<ul>
+  <li>Job（batch/v1）：<code>.spec.suspend</code></li>
+  <li>JobSet：<code>.spec.suspend</code></li>
+  <li>Kubeflow 训练类（PyTorchJob / TFJob 等）：<code>.spec.runPolicy.suspend</code></li>
+  <li>RayJob：<code>.spec.suspend</code></li>
+</ul>
+<p>正是利用 Kubernetes Job 原生的 suspend 能力，Kueue 才能做到“先冻住、拿到配额再放行”，而不必自己管理 Pod 生命周期。</p>
+<div class="callout warn"><strong>版本提示（官方）</strong>：Kubeflow Trainer v1 的 PyTorchJob / TFJob / PaddleJob / XGBoostJob / JAXJob 系列集成已标记为 Deprecated，官方建议迁移到 TrainJob（Kubeflow Trainer v2）或 JobSet。新建 AI 训练平台选型时应优先看 v2 集成。</div>
+
+<!-- ============ 3 ============ -->
+<h2 id="c3">3. 对象归属：K8s 原生 vs Kueue 扩展</h2>
+<p>这些作业对象和 suspend 字段，究竟是 Kubernetes 自带还是 Kueue 扩展的？严格说分三类。关键要先明确一点：Kueue 并不拥有这些作业对象，也不定义它们的 suspend 字段——它只是“借用”了这些对象已有的暂停能力。</p>
+<table>
+<thead><tr><th>类别</th><th>具体对象</th><th>suspend 字段</th><th>提供者</th></tr></thead>
+<tbody>
+<tr><td>K8s 核心自带</td><td>batch/v1 Job</td><td>.spec.suspend（K8s 1.22 GA）</td><td>Kubernetes 原生</td></tr>
+<tr><td>第三方框架 CRD</td><td>JobSet、PyTorchJob、TFJob、RayJob 等</td><td>各自定义，如 .spec.runPolicy.suspend</td><td>微软 JobSet / Kubeflow / KubeRay 等社区</td></tr>
+<tr><td>Kueue 自定义 CRD</td><td>Workload、ClusterQueue、LocalQueue、ResourceFlavor、Cohort、AdmissionCheck</td><td>队列对象本身无 suspend 概念</td><td>Kueue 项目</td></tr>
+</tbody>
+</table>
+<h3>3.1 三类对象的关系</h3>
+<ul>
+  <li><strong>K8s 原生的 suspend</strong>：Job 对象天生就有 <code>.spec.suspend</code> 字段，在 Kueue 出现前就存在，本来是给用户手动暂停批量任务用的。</li>
+  <li><strong>第三方框架的 suspend</strong>：JobSet、PyTorchJob 这些是独立 CRD，既不属于 K8s 核心，也不是 Kueue 的。它们各自模仿 Job 设计了类似的暂停字段。Kueue 通过 integration（集成适配）为每种框架写对接代码，才能识别并 patch 它们各自的 suspend 字段。</li>
+  <li><strong>Kueue 真正自己扩展的</strong>：是整套队列与配额体系——Workload、ClusterQueue、LocalQueue 这些 CRD，以及注入 suspend 的 webhook 和调度器逻辑。</li>
+</ul>
+<p>一句话概括：作业对象和 suspend 能力是“别人给的”，Kueue 贡献的是上面那层编排控制——决定谁先排队、谁有配额、何时放行。它像一个交通指挥，车（Job）和红绿灯（suspend）都不是它造的，但它决定什么时候亮绿灯。这也解释了为什么 Kueue 要为每个框架单独做集成适配——因为它不能假设所有作业对象都长一个样，只能逐个对接它们的暂停机制。</p>
+<p>官方 in-tree 集成清单（部分）：AppWrapper、Batch Job、Deployment、JobSet、LeaderWorkerSet、MPIJob、Pod/Pod groups、RayCluster、RayJob、RayService、StatefulSet 均为 Stable；SparkApplication、TrainJob 为 Alpha；更多框架可查官方文档。此外 Kueue 也支持普通 Deployment / StatefulSet，实现训练与推理混合管理。</p>
+
+<!-- ============ 4 ============ -->
+<h2 id="c4">4. ResourceFlavor 与队列结合</h2>
+<h3>4.1 ResourceFlavor 的定义</h3>
+<p>ResourceFlavor 描述“一类具有相同特征的节点”（如 GPU 型号、竞价/按需、CPU 架构），它本身不定义数量，只定义“风味/特征”。真正的配额数量写在 ClusterQueue 里。</p>
+<pre><code>apiVersion: kueue.x-k8s.io/v1beta1
+kind: ResourceFlavor
+metadata:
+  name: spot-gpu
+spec:
+  nodeLabels:              # 核心：用标签圈定哪类节点属于这个 flavor
+    cloud.google.com/gke-spot: "true"
+    node.kubernetes.io/instance-type: "n1-standard-8"
+  nodeTaints:              # 可选：这些节点带的污点
+  - key: spot
+    value: "true"
+    effect: NoSchedule
+  tolerations:             # 可选：允许 Pod 容忍上面的污点
+  - key: spot
+    operator: Equal
+    value: "true"
+    effect: NoSchedule
+  topologyName: default    # 可选：拓扑感知调度（见第 9 章 TAS）</code></pre>
+<table>
+<thead><tr><th>字段</th><th>作用</th></tr></thead>
+<tbody>
+<tr><td>nodeLabels</td><td>最关键，定义 flavor 对应哪些节点；准入时会被注入成 Pod 的 nodeSelector</td></tr>
+<tr><td>nodeTaints / tolerations</td><td>处理专用节点池的污点，保证 Pod 能调度上去</td></tr>
+<tr><td>topologyName</td><td>用于拓扑感知调度（把 Pod 尽量放在同一机架/区域）</td></tr>
+</tbody>
+</table>
+
+<h3>4.2 如何与 Queue 结合</h3>
+<p>结合点发生在 ClusterQueue——它通过 <code>resourceGroups</code> 引用 flavor，并为每个（资源, flavor）组合分配配额：</p>
+<pre><code>apiVersion: kueue.x-k8s.io/v1beta1
+kind: ClusterQueue
+metadata:
+  name: team-a-cq
+spec:
+  namespaceSelector: {}
+  resourceGroups:
+  - coveredResources: ["cpu", "memory", "nvidia.com/gpu"]
+    flavors:
+    - name: spot-gpu          # 引用 ResourceFlavor 的名字
+      resources:
+      - name: cpu
+        nominalQuota: 80   # spot 池的 CPU 配额
+      - name: nvidia.com/gpu
+        nominalQuota: 4
+    - name: on-demand         # 第二个 flavor
+      resources:
+      - name: cpu
+        nominalQuota: 20
+        borrowingLimit: 10 # 可向 Cohort 额外借用</code></pre>
+<p>LocalQueue 则通过 <code>spec.clusterQueue: team-a-cq</code> 指向它——用户提交 Workload 时只认 LocalQueue，配额和 flavor 全由上层 ClusterQueue 决定。</p>
+<p><strong>resourceGroups 的隐藏语义</strong>：同一 resourceGroup 内的资源（如 cpu / memory / gpu）会被绑定到同一组 flavor，准入时一起考虑；不同 resourceGroup 则各自独立选 flavor（如把不绑定节点的 <code>foo.com/license</code> 单独成组）。约束是：<strong>同一个 flavor 最多只能出现在一个 resourceGroup 中</strong>。</p>
+<figure class="fig"><img src="assets/fig2.png" alt="ResourceFlavor 与队列的结合"><figcaption>图 2 · ResourceFlavor 与 ClusterQueue / LocalQueue 如何串联</figcaption></figure>
+
+<h3>4.3 核心理解</h3>
+<ul>
+  <li><strong>Flavor 是“分类维度”，不是“数量”</strong>：ResourceFlavor 只回答“有哪些类型的资源”，ClusterQueue 回答“每类资源有多少配额”。</li>
+  <li><strong>配额是二维的：（资源名, flavor）</strong>：同一个 cpu，在 spot-gpu 池是 80 核，在 on-demand 池是 20 核，分别扣减、互不相干。</li>
+  <li><strong>准入时会“落地”到物理节点</strong>：调度器选中某个 flavor 后，会把该 flavor 的 nodeLabels 注入成 Pod 的 nodeSelector，把“Kueue 的逻辑配额”和“K8s 的真实调度”缝合起来。</li>
+  <li><strong>多 flavor 的分层策略</strong>：一个 ClusterQueue 配多个 flavor，配合 flavorFungibility，可实现“优先用便宜的 spot，不够再回退到按需”的成本优化。</li>
+</ul>
+
+<!-- ============ 5 ============ -->
+<h2 id="c5">5. 调度逻辑全景</h2>
+<p>Kueue 的调度逻辑集中在一套“配额约束下的准入决策流水线”里，可以拆成六个模块。</p>
+<figure class="fig"><img src="assets/fig3.png" alt="Kueue 调度逻辑全景"><figcaption>图 3 · Kueue 调度逻辑全景：六大模块及处理顺序</figcaption></figure>
+<h3>5.1 六个调度模块</h3>
+<table>
+<thead><tr><th>模块</th><th>解决什么问题</th><th>核心机制</th></tr></thead>
+<tbody>
+<tr><td>主循环</td><td>何时触发、按什么节奏调度</td><td>每周期遍历所有 ClusterQueue，先直接准入一轮，无进展再尝试抢占一轮</td></tr>
+<tr><td>Flavor 分配</td><td>作业该用哪类资源</td><td>为每个 podSet 选 flavor，产出 Fit / Preempt / Evict 三种决策</td></tr>
+<tr><td>配额计算</td><td>还有多少资源可用</td><td>按（资源, flavor）二维算：nominal − used + borrowed，受 lendingLimit 约束</td></tr>
+<tr><td>抢占</td><td>资源不够时怎么办</td><td>同队列按优先级抢占、Cohort 内回收借出配额，有 Never / LowerPriorityFirst / Any 等策略</td></tr>
+<tr><td>队列排序</td><td>谁先谁后</td><td>StrictFIFO（队头阻塞）vs BestEffortFIFO（可跳过，保吞吐）</td></tr>
+<tr><td>驱逐 / TAS</td><td>资源变更后如何收敛</td><td>配额缩减时驱逐已准入 Workload 重排队；TAS 感知机架/区域优化放置</td></tr>
+</tbody>
+</table>
+<h3>5.2 三个设计要点</h3>
+<ul>
+  <li><strong>全程只操作 Workload，不碰 Pod</strong>：抢占 = 驱逐 Workload 让它重新排队，Pod 的生死由 Job Controller 根据 suspend 状态决定。</li>
+  <li><strong>抢占是“最后手段”</strong>：必须先经过直接准入失败、FIFO 排序判定，才进入抢占轮，并优先抢“更低优先级 + 更新创建”的任务，尽量减少对已有工作的冲击。</li>
+  <li><strong>Flavor 是调度的坐标轴</strong>：配额、借用、抢占、nodeSelector 注入全都挂在（资源, flavor）这个二维单位上，这是 Kueue 调度的核心抽象。</li>
+</ul>
+
+<!-- ============ 6 ============ -->
+<h2 id="c6">6. Job 到 Workload 的生成规则</h2>
+<h3>6.1 谁来生成</h3>
+<p>Workload 不是 webhook 生成的，而是由 <code>jobframework reconciler</code> 生成：它持续监听受管 Job 的创建/更新，发现一个被 Kueue 接管（有 queue-name）但还没有对应 Workload 的 Job 时，调用 <code>EnsureWorkload()</code> 创建同名同 namespace 的 Workload。<strong>webhook 只负责“挂起”，reconciler 负责“投影”。</strong></p>
+<h3>6.2 三类规则</h3>
+<ul>
+  <li><strong>字段映射</strong>：身份类 name / namespace 直接继承；归属类 Job 的 label <code>kueue.x-k8s.io/queue-name</code> → <code>spec.queueName</code>；资源类 <code>spec.template</code> → <code>spec.podSets[].template</code>，parallelism / replicas → <code>podSets[].count</code>，priorityClassName 解析成数值 → <code>spec.priority</code>；Kueue 自建 ownerReferences 指向 Job、<code>spec.active=true</code>。</li>
+  <li><strong>podSets 提取——最核心的一步</strong>：由每个框架各自实现 <code>PodSets()</code> 方法。原生 Job 只有一个 podSet（叫 main），count = parallelism；JobSet / PyTorchJob 这类多角色框架，每个角色各产出一个 podSet。所有 podSet 被当作一个原子单元准入，这正是 Gang Scheduling（全有或全无）的实现基础。</li>
+  <li><strong>队列归属的优先级</strong>：Job 上显式打 label → namespace 级别配置的默认 LocalQueue → 两者都没有就不接管。</li>
+</ul>
+<figure class="fig"><img src="assets/fig4.png" alt="Job 到 Workload 的生成规则"><figcaption>图 4 · Job 到 Workload 的字段映射与 podSets 提取</figcaption></figure>
+<h3>6.3 为什么这么设计</h3>
+<p>Workload 本质是 Job 的<strong>调度投影</strong>：只保留调度器真正需要的东西——资源诉求（podSets）+ 队列归属（queueName）+ 优先级，剥掉执行细节。这样调度器可以对着一个轻量、统一的结构做决策，而不必理解每种 Job 框架的差异——差异被 <code>PodSets()</code> 接口在入口处就抹平了。</p>
+
+<!-- ============ 7 ============ -->
+<h2 id="c7">7. 配额判定与抢占决策</h2>
+<h3>7.1 判定的本质</h3>
+<p>一句话：把 Workload 的“需求向量”和每个（资源, flavor）的“可用额度”做比较，根据差值大小决定是直接进、抢别人、还是等。整条链路分五步：</p>
+<ol>
+  <li><strong>算需求</strong>：累加每个 podSet 里所有容器的 requests（含 init container 峰值、pod overhead）。</li>
+  <li><strong>算可用</strong>：nominal − used + borrowed，再看有没有超过 lendingLimit。</li>
+  <li><strong>四态判定</strong>：对每个 flavor 候选给出 Fit（够）/ Preempt（本队列有更低优先级可抢）/ Evict（配额被同 Cohort 其他队列借走）/ Never（谁都让不出）。</li>
+  <li><strong>选受害者</strong>：若需抢占，按“优先级低 → 创建时间新”排序，逐个累加凑够缺口即停，只抢刚好够的最小集合。</li>
+  <li><strong>合并决策</strong>：因为 Gang 语义，所有 podSet 一起判定——全 Fit 才进；部分要抢且能凑够就抢后准入；任一 Never 就整体 Pending。</li>
+</ol>
+<figure class="fig"><img src="assets/fig5.png" alt="配额判定与抢占决策"><figcaption>图 5 · 配额判定与抢占决策链路</figcaption></figure>
+
+<h3>7.2 三个容易误解的点</h3>
+<table>
+<thead><tr><th>误解</th><th>实际</th></tr></thead>
+<tbody>
+<tr><td>抢占 = 杀 Pod</td><td>抢占是驱逐 Workload（撤销 Admitted、suspend 回 true），Pod 由控制器回收；受害者还能重新入队</td></tr>
+<tr><td>有低优先级就一定能抢</td><td>还要看策略边界：Never 不跨队列抢，LowerPriority 只抢更低的，且受害者必须优先级严格小于自己</td></tr>
+<tr><td>抢了就立刻运行</td><td>抢占后要重新走一遍准入校验，确认额度真的腾出来了才放行</td></tr>
+</tbody>
+</table>
+
+<h3>7.3 抢占算法与策略（官方文档细化）</h3>
+<p>源指南到这里就收尾了，但抢占其实是 Kueue 最容易被误用的部分。结合官方文档，需要补齐三块：</p>
+<p><strong>（1）三个开关字段与默认值</strong>——均定义在 ClusterQueue 的 <code>spec.preemption</code> 下，默认全部 <code>Never</code>（即默认不抢占）：</p>
+<table>
+<thead><tr><th>字段</th><th>默认值</th><th>可选值</th><th>作用域</th></tr></thead>
+<tbody>
+<tr><td>withinClusterQueue</td><td>Never</td><td>Never / LowerPriority / LowerOrNewerEqualPriority</td><td>同队列内抢占</td></tr>
+<tr><td>reclaimWithinCohort</td><td>Never</td><td>Never / LowerPriority / Any</td><td>回收 Cohort 内其他队列“超借”的资源</td></tr>
+<tr><td>borrowWithinCohort.policy</td><td>Never</td><td>Never / LowerPriority</td><td>需要 borrowing 时抢占（仅 Classic）</td></tr>
+</tbody>
+</table>
+<pre><code>spec:
+  preemption:
+    reclaimWithinCohort: Any
+    borrowWithinCohort:
+      policy: LowerPriority
+      maxPriorityThreshold: 100
+    withinClusterQueue: LowerPriority</code></pre>
+<p><strong>（2）两套抢占算法</strong>：</p>
+<ul>
+  <li><strong>Classic Preemption</strong>（最轻量）：Cohort 内抢占仅在“抢占后本队列用量低于 nominal”“启用了 borrowWithinCohort”或“候选都属于同队列”时才允许；Cohort 按先到先得借用。受害者排序：借用队列的 → 优先级最低的 → 最近准入的；最后反向遍历目标集合做最小化。</li>
+  <li><strong>Fair Sharing</strong>（v0.7 起 Stable）：给每个 ClusterQueue 算 <code>weightedShare</code> 值，准入偏向 share 低的队列，抢占偏向 share 高的队列。通过 Configuration 的 <code>fairSharing.preemptionStrategies</code> 配置，只支持三种组合：<code>[LessThanOrEqualToFinalShare]</code>、<code>[LessThanInitialShare]</code>、<code>[LessThanOrEqualToFinalShare, LessThanInitialShare]</code>；其他顺序会被校验拒绝、Kueue 无法启动。</li>
+  <li><strong>Configurable Preemptions</strong>（v0.20 Alpha）：通过 <code>PreemptionConfig</code> CRD 声明自定义触发条件与候选选择器，Alpha 阶段与 Classic / Fair Sharing 的候选合并。</li>
+</ul>
+<pre><code>apiVersion: config.kueue.x-k8s.io/v1beta2
+kind: Configuration
+fairSharing:
+  preemptionStrategies: [LessThanOrEqualToFinalShare, LessThanInitialShare]</code></pre>
+<div class="callout warn"><strong>关键限制</strong>：<code>borrowWithinCohort</code> 只能用于 Classic Preemption，<strong>不能与 Fair Sharing 同用</strong>。设计多租户公平策略时这是最容易踩的坑。</div>
+
+<h3>7.4 队列排序与 Flavor 可替代性</h3>
+<p><strong>queueingStrategy</strong>：<code>StrictFIFO</code> 先按 priority、再按创建时间排序，队头卡住会阻塞后面所有作业；<code>BestEffortFIFO</code>（默认）排序相同但允许跳过卡住的旧作业、放行能装下的新作业，保吞吐。</p>
+<p><strong>flavorFungibility</strong>：当一个 flavor 需要 borrowing 或 preemption 才够时，是就此停下还是继续试下一个 flavor：</p>
+<table>
+<thead><tr><th>字段</th><th>默认</th><th>可选值</th></tr></thead>
+<tbody>
+<tr><td>whenCanBorrow</td><td>MayStopSearch</td><td>MayStopSearch / TryNextFlavor（Borrow 已废弃）</td></tr>
+<tr><td>whenCanPreempt</td><td>TryNextFlavor</td><td>MayStopSearch / TryNextFlavor（Preempt 已废弃）</td></tr>
+<tr><td>preference</td><td>BorrowingOverPreemption</td><td>BorrowingOverPreemption / PreemptionOverBorrowing</td></tr>
+</tbody>
+</table>
+<p>无论怎么配，只要某个 flavor 能在<strong>不借不抢</strong>的情况下装下，就会被立即选中——这是最高优先级。配额维度上还要区分 <code>borrowingLimit</code>（我能借别人多少）、<code>lendingLimit</code>（别人能借我多少，v0.17 起 Stable）与 <code>cohortName</code>（共享范围）。</p>
+
+<h3>7.5 与前面的串联</h3>
+<p>整体链路至此闭环：webhook 挂起 Job → Workload 生成（投影出需求）→ 调度器拿需求做判定 → Decision 落地为“改 Workload 的 Admitted + 改 Job 的 suspend”。抢占和驱逐始终作用在 Workload 层，从不直接操作 Pod——这是 Kueue 整套设计的统一原则。</p>
+
+<!-- ============ 8 ============ -->
+<h2 id="c8">8. 动手实战：跑通第一个队列</h2>
+<p>机制讲得再多，不如亲手跑一遍。下面是一套最小可复现流程：在一个已有 Kubernetes 集群（可用 kind 快速搭一个）上，安装 Kueue、建立配额体系、提交一个 GPU 作业并观察它被“挂起 → 放行”的全过程。纯 CPU 集群也能验证——准入逻辑与资源类型无关，用假的 <code>nvidia.com/gpu</code> 配额即可。</p>
+
+<h3>8.1 安装与开启集成</h3>
+<pre><code># 安装最新稳定版（会创建 CRD、controller、webhook 与默认配置）
+kubectl apply -f https://github.com/kubernetes-sigs/kueue/releases/latest/download/manifests.yaml
+
+# 确认控制器就绪
+kubectl get pods -n kueue-system
+
+# 默认只启用 batch/v1 Job 集成；其他框架通过 Configuration 的 integrations 开启
+# 查看当前配置
+kubectl get configmap -n kueue-system kueue-manager-config -o yaml</code></pre>
+
+<h3>8.2 建立配额体系（四件套）</h3>
+<pre><code># 1) ResourceFlavor：定义一类节点的“风味”
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: ResourceFlavor
+metadata:
+  name: default-flavor
+spec: {}    # 空 flavor 表示匹配所有节点
+
+---
+# 2) ClusterQueue：集群级配额池
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: ClusterQueue
+metadata:
+  name: team-a-cq
+spec:
+  namespaceSelector: {}          # 匹配所有 namespace（生产中常按 team label 限定）
+  resourceGroups:
+  - coveredResources: ["cpu", "memory", "nvidia.com/gpu"]
+    flavors:
+    - name: default-flavor
+      resources:
+      - { name: "cpu", nominalQuota: 4 }
+      - { name: "memory", nominalQuota: 8Gi }
+      - { name: "nvidia.com/gpu", nominalQuota: 1 }
+
+---
+# 3) LocalQueue：namespace 内的用户入口
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: LocalQueue
+metadata:
+  namespace: default
+  name: team-a-lq
+spec:
+  clusterQueue: team-a-cq</code></pre>
+
+<h3>8.3 提交 Job 并观察准入</h3>
+<pre><code>apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: sample-job-
+  namespace: default
+  labels:
+    kueue.x-k8s.io/queue-name: team-a-lq   # 关键：指定 LocalQueue
+spec:
+  parallelism: 1
+  completions: 1
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: sleep
+        image: busybox
+        args: ["sleep", "30"]
+        resources:
+          requests:
+            cpu: "1"
+            memory: "1Gi"
+          limits:
+            cpu: "1"
+            memory: "1Gi"</code></pre>
+<pre><code># 提交后立刻看：Job 被 suspend，Pod 尚未创建
+kubectl create -f job.yaml
+kubectl get jobs
+kubectl get pods        # 此时为空
+
+# 看 Workload 的状态条件
+kubectl get workload -n default -o yaml | grep -A6 conditions
+# QuotaReserved=True / Admitted=True 表示已准入；Inadmissible 表示排队中
+
+# 配额耗尽时再提交一个，观察第二个 Workload 停在 Pending
+kubectl describe workload &lt;第二个-workload&gt; -n default</code></pre>
+
+<h3>8.4 观测与验证技巧</h3>
+<ul>
+  <li>看 Workload conditions：<code>Evicted=True</code> 表示被抢占，<code>QuotaReserved</code>、<code>Admitted</code>、<code>Inadmissible</code> 各代表不同状态。</li>
+  <li>找抢占者：<code>kubectl get workloads.kueue.x-k8s.io --selector=kueue.x-k8s.io/job-uid=&lt;JobUID&gt; --all-namespaces</code>。</li>
+  <li>纯 CPU 集群也能测 90% 以上的准入逻辑——用假的 GPU 配额验证排队/抢占/回收，无需真实 GPU。</li>
+</ul>
+<div class="callout tip">工作坊建议：把上面四件套 + Job 保存成一个 <code>.yaml</code>，配合 <code>watch -n1 kubectl get workload,cq,lq</code> 开一个终端实时观察状态跃迁，对理解“挂起 → 排队 → 准入 → 释放”极其直观。</div>
+
+<!-- ============ 9 ============ -->
+<h2 id="c9">9. 进阶特性全景</h2>
+<p>Kueue 近两年演进很快，下面这些特性决定了它在 AI/ML 与多集群场景下的上限。按成熟度从高到低梳理，生产选型时请对照目标版本。</p>
+
+<h3>9.1 拓扑感知调度 TAS（Beta，v0.14 起默认开启）</h3>
+<p><strong>解决什么</strong>：AI/ML 训练中 Pod 间通信量巨大，同机架/同 block 的节点带宽远高于跨机架。TAS 让 Kueue 感知数据中心的层级拓扑（region → zone → rack → host），把一个 PodSet 尽量装进单一拓扑域，保障 all-reduce 效率。这与 Kubernetes 原生的 topology spread（尽量打散）语义相反——TAS 是<strong>聚拢</strong>。</p>
+<pre><code># 管理员：创建 Topology 对象描述层级
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: Topology
+metadata:
+  name: default
+spec:
+  levels:
+  - nodeLabel: "topology.kubernetes.io/zone"
+  - nodeLabel: "topology.kubernetes.io/rack"
+  - nodeLabel: "kubernetes.io/hostname"
+---
+# ResourceFlavor 引用它
+apiVersion: kueue.x-k8s.io/v1beta2
+kind: ResourceFlavor
+metadata:
+  name: tas-flavor
+spec:
+  nodeLabels:
+    cloud.provider.com/node-group: "tas-group"
+  topologyName: "default"</code></pre>
+<pre><code># 用户：在 PodTemplate 层面加注解（注意是 template.metadata.annotations）
+spec:
+  template:
+    metadata:
+      annotations:
+        kueue.x-k8s.io/podset-required-topology: "topology.kubernetes.io/rack"</code></pre>
+<p>注解分三档：<code>podset-required-topology</code>（必须同域，装不下就 Pending）、<code>podset-preferred-topology</code>（优先同域，逐级向上回退，最高层还装不下就分散准入）、<code>podset-unconstrained-topology</code>（要求 TAS 但不考虑拓扑，用于填缝减少碎片）。还有 <code>podset-group-name</code>（多个 PodSet 同域）、slice 切片注解（v0.19 多层拓扑 Beta）、<code>podset-topology-spreading</code>（v0.20 Alpha，跨 Workload 打散，面向推理服务）。</p>
+<div class="callout warn"><strong>隐式 TAS 陷阱</strong>：若 ClusterQueue 里所有 flavor 都设了 topologyName（TAS-only CQ），未注解的 PodSet 会隐式走 TAS；但只要混入了任何一个非 TAS flavor（哪怕配额为 0），隐式 TAS 就禁用——需要 TAS 的作业必须显式加注解，否则报 “Flavor supports only TopologyAwareScheduling”。</div>
+
+<h3>9.2 MultiKueue：多集群任务分发</h3>
+<p>把主集群作为“控制面”，Kueue 在多个 worker 集群寻找容量并卸载作业，适合跨集群削峰填谷与故障切换。通过在 ClusterQueue 上配置 <code>multiKueue</code> 与 <code>MultiKueueConfiguration</code>（worker 集群连接）启用；作业在管理集群只保留元数据，实际 Pod 运行在被选中的 worker 集群。多数主流集成（Job、JobSet、RayJob、Training 等）都支持 MultiKueue。</p>
+
+<h3>9.3 Fair Sharing（Stable since v0.7）</h3>
+<p>见 7.3 节。要点：给 ClusterQueue 算 share 值（受 <code>.spec.fairSharing.weight</code> 加权），准入偏向 share 低者、抢占偏向 share 高者；值可在 <code>.status.fairSharing.weightedShare</code> 或 <code>kueue_cluster_queue_weighted_share</code> 指标查看。它用抢占来让 Cohort 内租户获得相等或按权重的共享份额。</p>
+
+<h3>9.4 弹性与混合负载</h3>
+<ul>
+  <li><strong>Partial Admission</strong>：按可用配额以降低的 parallelism 运行作业（目前主要 Batch Job 支持）。</li>
+  <li><strong>Dynamic Reclaim</strong>：作业中已完成的 Pod 释放的配额可被动态回收给排队作业。</li>
+  <li><strong>All-or-nothing with ready Pods</strong>（<code>waitForPodsReady</code>）：给 Gang 语义加超时，Pod 迟迟不齐就驱逐重排，避免部分 worker 启动导致的死锁。</li>
+  <li><strong>训练 + 推理混合</strong>：通过 Deployment / StatefulSet 集成，让批处理与在线服务在同一配额体系下共存。</li>
+  <li><strong>DRA 设备配额（Alpha，v0.20）</strong>：对通过 Dynamic Resource Allocation / ResourceClaimTemplate 申请的 GPU 等设备做配额管理，含可切分设备；TAS 侧需要 <code>KueueDRADeviceFeasibility</code> gate。</li>
+</ul>
+
+<h3>9.5 AdmissionCheck 与自动扩容联动</h3>
+<p>AdmissionCheck 允许内部或外部组件影响一个 Workload 能否准入。典型用法是通过 <code>ProvisioningRequest</code> 对接 cluster-autoscaler：流程为“预留配额 → 等待包括 Provisioning 在内的所有 AdmissionCheck 就绪 → 再做 TAS 拓扑分配”，从而实现“先扩容节点、再放行业务”，TAS 会考虑新置备的节点做拓扑分配。Kueue 也内置 pending workload 的 on-demand 可见性端点，便于监控排队作业。</p>
+
+<!-- ============ 10 ============ -->
+<h2 id="c10">10. 生产实践：可观测与排障</h2>
+
+<h3>10.1 核心可观测信号</h3>
+<ul>
+  <li><strong>Prometheus 指标</strong>：Kueue 内置指标，重点关注 <code>kueue_cluster_queue_weighted_share</code>（Fair Sharing）、队列深度、准入/抢占次数等；可对接 Grafana 看板。</li>
+  <li><strong>Workload 状态</strong>：这是排障第一入口。<code>Admitted=True</code> 已放行；<code>QuotaReserved</code> 已预留；<code>Inadmissible</code> 排队中；<code>Evicted=True</code> + <code>Preempted</code> 条件说明被抢占，并附带抢占者 UID / JobUID。</li>
+  <li><strong>ClusterQueue status</strong>：查看 <code>status.usedQuotas</code>、<code>status.fairSharing.weightedShare</code> 判断配额占用与公平状态。</li>
+</ul>
+
+<h3>10.2 高频问题排查清单</h3>
+<table>
+<thead><tr><th>现象</th><th>排查方向</th></tr></thead>
+<tbody>
+<tr><td>Job 一直是 Suspend，Pod 不创建</td><td>是否打了 queue-name label；LocalQueue 是否存在且 clusterQueue 引用正确；Namespace 是否被 ClusterQueue 的 namespaceSelector 匹配；看 Workload conditions 的 Inadmissible 原因</td></tr>
+<tr><td>Workload 显示 Inadmissible</td><td>配额是否耗尽；flavor 是否匹配节点标签；是否需要 TAS 注解；AdmissionCheck 是否 Ready</td></tr>
+<tr><td>作业莫名被驱逐重排</td><td>是否被抢占（Evicted/Preempted 条件）；waitForPodsReady 超时；Cohort 内 reclaim；Fair Sharing 收敛</td></tr>
+<tr><td>多 flavor 没有按预期回退</td><td>检查 whenCanBorrow / whenCanPreempt 与 flavor 顺序；是否有 flavor 触发隐式 TAS 限制</td></tr>
+<tr><td>启用 Fair Sharing 后 Kueue 起不来</td><td>preemptionStrategies 组合非法（只允许文档中三种）；borrowWithinCohort 与 Fair Sharing 冲突</td></tr>
+</tbody>
+</table>
+
+<h3>10.3 生产落地建议</h3>
+<ul>
+  <li><strong>默认不抢占是好事</strong>：先观察排队与配额是否够用，再按需逐项打开 withinClusterQueue / reclaimWithinCohort，避免一开始就激进抢占。</li>
+  <li><strong>Gang 作业务必配 waitForPodsReady</strong>：否则部分 worker 启动、部分 Pending 会互占资源导致死锁。</li>
+  <li><strong>被抢占的训练要频繁 checkpoint</strong>：抢占是正常态，作业需能快速恢复，检查点间隔直接决定有效训练时长。</li>
+  <li><strong>按团队划分 LocalQueue，用 Cohort + Fair Sharing 做公平</strong>：每团队一个 namespace + LocalQueue，映射到 ClusterQueue，配合 borrowing 提升利用率。</li>
+  <li><strong>特性分级上线</strong>：Stable 特性可直接用；Beta（TAS 等）需确认默认 gate；Alpha（DRA、Topology Spreading、Configurable Preemption）仅评估环境使用。</li>
+</ul>
+
+<!-- ============ 11 ============ -->
+<h2 id="c11">11. 经典面试题</h2>
+<div class="callout">说明：Kueue 是较新项目，目前几乎没有“纯 Kueue 的专门面试题库”，其题目基本嵌在 Kubernetes、AI 平台、MLOps 等综合面试题库中；另有大量高频考点直接来自官方文档。以下按这两类整理，均标注来源。</div>
+
+<h3>11.1 面试题库中真实出现的题目</h3>
+<table>
+<thead><tr><th>题目</th><th>考察要点</th><th>来源</th></tr></thead>
+<tbody>
+<tr><td>What is Kueue, and why do GPU clusters need it?</td><td>默认调度器的部分启动死锁与队间不公平；ClusterQueue/ResourceFlavor/LocalQueue/cohort 借用/抢占；AdmissionCheck、TAS、MultiKueue</td><td>kubernetesinterviewquestions.com；cloudsoftsol.com</td></tr>
+<tr><td>How is Kueue different from in-tree gang scheduling?</td><td>Kueue 是准入+配额控制器，kube-scheduler 仍负责绑定；二者可叠加</td><td>kubernetesinterviewquestions.com</td></tr>
+<tr><td>Kueue vs Volcano vs Slurm — which one?</td><td>Kueue 停留在 kube-scheduler 之上做配额；Volcano 是独立 scheduler + 自己的 CRD；Slurm 是 K8s 之外的 HPC 系统</td><td>kubernetesinterviewquestions.com；kubernetes.ae</td></tr>
+<tr><td>What is Topology-Aware Scheduling (TAS) in Kueue?</td><td>把 PodSet 装进单一拓扑域保障 all-reduce；Topology 对象 + TAS ResourceFlavor + 注解；v0.14 起 beta 默认开启</td><td>kubernetesinterviewquestions.com</td></tr>
+<tr><td>Is Kubernetes gang scheduling GA, and what is the feature gate?</td><td>KEP-4671：1.35 alpha、1.37 beta（默认关），门是 GenericWorkload；1.38 才标 stable</td><td>kubernetesinterviewquestions.com</td></tr>
+<tr><td>How do PriorityClasses and preemption apply to GPU workloads?</td><td>分布式作业应做作业级（Kueue）抢占而非逐 Pod；被抢的训练要频繁 checkpoint</td><td>cloudsoftsol.com</td></tr>
+<tr><td>A distributed training job keeps getting some workers scheduled while others stay Pending, and the cluster deadlocks. Why?</td><td>无 gang 调度时各自为政导致互占 GPU 死锁；用 Kueue 整作业准入 + waitForPodsReady 超时驱逐重排，或 Volcano</td><td>cloudsoftsol.com</td></tr>
+<tr><td>How do you stop one team from consuming all the GPUs in a shared cluster?</td><td>ResourceQuota 硬隔离 vs Kueue 排队/公平共享/借用</td><td>cloudsoftsol.com</td></tr>
+<tr><td>How do you design multi-tenancy for an internal AI platform?</td><td>每团队一个 namespace + LocalQueue，映射到 ClusterQueue，配合 fair sharing 与 borrowing</td><td>cloudsoftsol.com</td></tr>
+</tbody>
+</table>
+
+<h3>11.2 官方文档高频考点</h3>
+<table>
+<thead><tr><th>考点</th><th>关键答案</th><th>来源</th></tr></thead>
+<tbody>
+<tr><td>Kueue 的核心对象</td><td>ResourceFlavor、ClusterQueue、LocalQueue、Workload、Cohort（另有 AdmissionCheck / Topology 等）</td><td>Nutanix NKP；Jimmy Song AI Infra 书</td></tr>
+<tr><td>排队策略 queueingStrategy</td><td>StrictFIFO（队头卡住阻塞后面）vs BestEffortFIFO（可放行适配的新作业）；默认 BestEffortFIFO</td><td>Kueue 官方文档·集群队列</td></tr>
+<tr><td>抢占三开关</td><td>reclaimWithinCohort、borrowWithinCohort、withinClusterQueue；默认均 Never</td><td>Kueue 官方文档·Preemption</td></tr>
+<tr><td>抢占如何选受害者</td><td>候选排序：借用的队列 → 最低优先级 → 最近准入；贪心选到能装下，最后反向最小化目标集合</td><td>Kueue 官方文档·Preemption</td></tr>
+<tr><td>FlavorFungibility</td><td>whenCanBorrow / whenCanPreempt 控制是借当前 flavor 还是试下一个；能不抢占就不抢占</td><td>Kueue 官方文档·集群队列</td></tr>
+<tr><td>公平共享 Fair Sharing</td><td>给每个 ClusterQueue 算 share 值，准入偏向 share 低的、抢占偏向 share 高的；v0.7 起 stable</td><td>Kueue 官方文档·Preemption</td></tr>
+<tr><td>如何判断 Job 被抢占/卡住</td><td>看 Workload conditions：Evicted=True 表示被抢占，QuotaReserved、Admitted、Inadmissible 各代表不同状态</td><td>Microsoft Learn·AKS managed Kueue</td></tr>
+<tr><td>能在纯 CPU 集群测试 Kueue 吗</td><td>90% 以上可以——准入逻辑与资源无关，用假的 nvidia.com/gpu 配额即可验证</td><td>Nutanix NKP</td></tr>
+</tbody>
+</table>
+
+<h3>11.3 面试加分点：千万别这么说</h3>
+<ul>
+  <li>不要说“Gang scheduling 在 1.37 已 GA”——是 beta、默认关。</li>
+  <li>不要说“我设置 GangScheduling=true”——该门已并入 GenericWorkload 并在 1.37 移除。</li>
+  <li>不要说“Kueue 替代 kube-scheduler”——它只做配额准入。</li>
+  <li>不要说“Kueue TAS 就是 K8s 的 topology spread API”——两者是不同项目、语义相反（聚拢 vs 打散）。</li>
+  <li>不要说“Kueue 默认就会抢占”——三个抢占开关默认都是 Never。</li>
+</ul>
+
+<h3>11.4 参考来源</h3>
+<ul>
+  <li>Kueue 官方文档：Overview / ClusterQueue / Preemption / Topology-Aware Scheduling</li>
+  <li>kubernetesinterviewquestions.com，《Gang Scheduling: PodGroup, Workload API and Kueue》</li>
+  <li>cloudsoftsol.com，《Kubernetes for AI Interview Questions and Answers 2026》</li>
+  <li>kubernetes.ae，《30 Kubernetes Interview Questions (2026 Edition)》</li>
+  <li>Nutanix NKP，《Kueue》；Jimmy Song，《Kueue：配额、准入与资源治理的控制面》</li>
+  <li>Microsoft Learn，《Schedule and deploy batch jobs with managed Kueue extension on AKS》</li>
+</ul>
+
+<!-- ============ 12 ============ -->
+<h2 id="c12">12. 学习地图与总结</h2>
+<h3>12.1 七大模块脉络</h3>
+<p>前面各章的问题与答案，可归纳为七大模块。这张学习地图整合了整体架构与七大模块，是一份可随时回顾的全景速查：</p>
+<figure class="fig"><img src="assets/fig6.png" alt="Kueue 学习地图"><figcaption>图 6 · Kueue 学习地图：七大模块全景速查</figcaption></figure>
+
+<h3>12.2 贯穿全程的三条主线</h3>
+<ul>
+  <li><strong>分层</strong>：LocalQueue → ClusterQueue → Cohort，配额自下而上汇聚。</li>
+  <li><strong>抽象</strong>：Job → Workload 投影，差异由 <code>PodSets()</code> 抹平，调度只认统一结构。</li>
+  <li><strong>边界</strong>：所有操作停在 Workload / suspend 层，Pod 生命周期交给下游控制器。</li>
+</ul>
+
+<h3>12.3 结语</h3>
+<p>Kueue 的设计哲学可以浓缩为一句话：<strong>把“调度之前的治理”产品化</strong>——先完成资源的准入与承诺，再做实际调度。理解这一点，就理解了为什么它反复强调 Workload 抽象、配额分层和 suspend 边界，也就能在看各种框架集成、抢占策略、拓扑调度时抓住主线而非迷失在细节里。当把 TAS、MultiKueue、Fair Sharing、DRA 这些新特性也放回这条主线时，它们不过是同一治理层向外延伸出的能力：决定谁先排队、谁有配额、放在哪、何时放行。</p>
+
+<h2 id="meta">元信息</h2>
+<table>
+<thead><tr><th>项</th><th>内容</th></tr></thead>
+<tbody>
+<tr><td>目标读者</td><td>中高级 Kubernetes 平台工程师、AI 基础设施工程师</td></tr>
+<tr><td>前置知识</td><td>Kubernetes Job / CRD / Admission Webhook、GPU 调度基础、批处理系统概念</td></tr>
+<tr><td>技术栈版本</td><td>Kueue v1beta1 / v1beta2，Kubernetes 1.29+；TAS 基于 v0.14+，Topology Spreading / DRA 基于 v0.20（Alpha）</td></tr>
+<tr><td>预计阅读时间</td><td>约 40 分钟</td></tr>
+</tbody>
+</table>
+
+<div class="pager">
+  <a href="/scheduler/">← 返回调度器系列目录</a>
+  <a href="/">回到博客首页 →</a>
+</div>
+</article>
+</div>
+
+<button id="toTop" title="回到顶部">↑</button>
+<div id="lightbox"><img src="" alt="preview"></div>
+<footer>© Kueue 深度指南 · 基于 Kueue 官方文档与公开资料整理 · 小胖鱼@Think · 调度器系列</footer>
+<script>
+document.querySelectorAll('figure.fig img').forEach(function(img){
+  img.addEventListener('click',function(){
+    var lb=document.getElementById('lightbox');
+    lb.querySelector('img').src=this.src; lb.classList.add('show');
+  });
+});
+document.getElementById('lightbox').addEventListener('click',function(){this.classList.remove('show');});
+var toTop=document.getElementById('toTop');
+window.addEventListener('scroll',function(){toTop.classList.toggle('show',window.scrollY>400);});
+toTop.addEventListener('click',function(){window.scrollTo({top:0,behavior:'smooth'});});
+// TOC active highlighting
+var links=document.querySelectorAll('.toc a');
+var sections=[];
+links.forEach(function(a){var el=document.querySelector(a.getAttribute('href')); if(el) sections.push({a:a,el:el});});
+window.addEventListener('scroll',function(){
+  var y=window.scrollY+120, cur=null;
+  sections.forEach(function(s){if(s.el.offsetTop<=y) cur=s.a;});
+  links.forEach(function(a){a.classList.remove('active');});
+  if(cur) cur.classList.add('active');
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="调度器系列：Kubernetes 调度、批处理队列与 AI 基础设施的深度指南，含 Kueue、kube-scheduler、Volcano 等主题。">
+<title>调度器系列｜小胖鱼@Think</title>
+<style>
+:root{
+  --primary:#2563eb; --primary-d:#1e40af; --primary-l:#dbeafe;
+  --ink:#1e293b; --ink-soft:#475569; --muted:#94a3b8;
+  --bg:#f1f5f9; --card:#ffffff; --line:#e2e8f0;
+  --accent:#0ea5e9; --shadow:0 10px 30px rgba(15,23,42,.08); --radius:14px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif;
+  line-height:1.8;font-size:16px;-webkit-font-smoothing:antialiased}
+.topbar{background:#0f172a;color:#e2e8f0;font-size:14px}
+.topbar-inner{max-width:1120px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;gap:18px}
+.topbar a{color:#93c5fd;text-decoration:none}
+.topbar a:hover{color:#fff;text-decoration:underline}
+.topbar .brand{font-weight:700;color:#fff}
+.topbar span:last-child{margin-left:auto}
+.hero{background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 55%,#0ea5e9 100%);color:#fff;padding:66px 24px 78px;position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 85% 20%,rgba(255,255,255,.18),transparent 45%),radial-gradient(circle at 15% 80%,rgba(255,255,255,.12),transparent 40%)}
+.hero-inner{max-width:1120px;margin:0 auto;position:relative;z-index:1}
+.hero .kicker{display:inline-block;font-size:13px;letter-spacing:2px;font-weight:600;background:rgba(255,255,255,.16);padding:6px 14px;border-radius:999px;margin-bottom:18px}
+.hero h1{font-size:clamp(28px,4.5vw,44px);line-height:1.25;margin:0 0 16px;font-weight:800}
+.hero p{font-size:clamp(15px,2vw,18px);opacity:.92;max-width:760px;margin:0}
+main{max-width:1120px;margin:40px auto 70px;padding:0 24px}
+.sec-head{display:flex;align-items:center;gap:10px;margin:0 0 18px;font-size:20px;font-weight:800;color:var(--primary-d)}
+.sec-head::before{content:"";width:5px;height:20px;background:var(--primary);border-radius:3px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px}
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:26px;display:flex;flex-direction:column;text-decoration:none;color:inherit;transition:transform .2s,box-shadow .2s;border:1px solid transparent}
+.card:hover{transform:translateY(-4px);box-shadow:0 16px 40px rgba(15,23,42,.14);border-color:var(--primary-l)}
+.card.soon{opacity:.75;cursor:default}
+.card.soon:hover{transform:none;box-shadow:var(--shadow);border-color:transparent}
+.card .tag{align-self:flex-start;font-size:12px;font-weight:700;letter-spacing:.5px;padding:4px 11px;border-radius:999px;background:var(--primary-l);color:var(--primary-d);margin-bottom:14px}
+.card .tag.soon{background:#f1f5f9;color:var(--muted)}
+.card h3{font-size:20px;margin:0 0 10px;color:var(--ink)}
+.card p{margin:0 0 16px;font-size:14.5px;color:var(--ink-soft);flex:1}
+.card .meta{font-size:12.5px;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:12px}
+.card .cta{color:var(--primary);font-weight:700;font-size:14px}
+.intro{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px 28px;margin-bottom:32px;font-size:15px;color:var(--ink-soft)}
+.intro b{color:var(--primary-d)}
+footer{text-align:center;color:var(--muted);font-size:13px;padding:26px 20px 50px}
+</style>
+</head>
+<body>
+<div class="topbar"><div class="topbar-inner">
+  <a class="brand" href="/">小胖鱼@Think</a><span>·</span>
+  <a href="/scheduler/">调度器系列</a>
+  <span><a href="/">博客首页</a></span>
+</div></div>
+
+<header class="hero"><div class="hero-inner">
+  <span class="kicker">SCHEDULER SERIES · CLOUD NATIVE</span>
+  <h1>调度器系列</h1>
+  <p>聚焦 Kubernetes 调度与批处理资源治理：从 kube-scheduler 的决策链路，到 Kueue / Volcano 这类作业级队列与配额控制器，再到 AI 训练场景下的拓扑感知与公平共享。一份面向平台工程师的深度笔记合集。</p>
+</div></header>
+
+<main>
+  <div class="intro">本系列会持续收录调度器相关的深度文章。每篇都是自包含的富 HTML 长文，含示意图、可运行配置与排障清单。当前已发布 <b>1 篇</b>，其余主题在规划中。</div>
+
+  <h2 class="sec-head">已发布</h2>
+  <div class="grid">
+    <a class="card" href="kueue.html">
+      <span class="tag">已发布 · 深度指南</span>
+      <h3>Kueue 深度指南：从调度流程到核心机制</h3>
+      <p>系统拆解 Kueue 的准入模型、核心对象、配额与抢占机制，补齐动手实战、TAS / MultiKueue / Fair Sharing / DRA 进阶特性与生产排障，并汇总经典面试题。12 章正文 + 6 张示意图。</p>
+      <span class="cta">开始阅读 →</span>
+      <div class="meta"><span>🕒 约 40 分钟</span><span>📘 12 章</span><span>🎯 Kueue v1beta1/v1beta2</span></div>
+    </a>
+  </div>
+
+  <h2 class="sec-head" style="margin-top:38px">规划中</h2>
+  <div class="grid">
+    <div class="card soon">
+      <span class="tag soon">规划中</span>
+      <h3>kube-scheduler 调度框架解剖</h3>
+      <p>调度周期与 Binding 周期、QueueSort / Filter / Score / Permit 扩展点、调度插件开发与抢占（Preemption）源码走读。</p>
+      <div class="meta"><span>敬请期待</span></div>
+    </div>
+    <div class="card soon">
+      <span class="tag soon">规划中</span>
+      <h3>Volcano vs Kueue：批处理调度选型</h3>
+      <p>独立调度器 vs 准入控制器的路线之争；Gang Scheduling、队列公平、端到端对比与迁移考量。</p>
+      <div class="meta"><span>敬请期待</span></div>
+    </div>
+    <div class="card soon">
+      <span class="tag soon">规划中</span>
+      <h3>AI 训练调度：Gang、拓扑与弹性</h3>
+      <p>分布式训练的死锁成因、All-or-nothing 语义、拓扑感知放置、checkpoint 与容错抢占策略。</p>
+      <div class="meta"><span>敬请期待</span></div>
+    </div>
+  </div>
+</main>
+
+<footer>© 调度器系列 · 小胖鱼@Think · CloudNative / Kubernetes / Go</footer>
+</body>
+</html>
