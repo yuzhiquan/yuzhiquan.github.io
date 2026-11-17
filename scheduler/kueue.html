@@ -693,13 +693,16 @@ spec:
 </div>
 
 <button id="toTop" title="回到顶部">↑</button>
-<div id="lightbox"><img alt="preview"></div>
+<div id="lightbox"></div>
 <footer>© Kueue 深度指南 · 基于 Kueue 官方文档与公开资料整理 · 小胖鱼@Think · 调度器系列</footer>
 <script>
+var lbImg=document.createElement('img');
+lbImg.alt='preview';
+document.getElementById('lightbox').appendChild(lbImg);
 document.querySelectorAll('figure.fig img').forEach(function(img){
   img.addEventListener('click',function(){
-    var lb=document.getElementById('lightbox');
-    lb.querySelector('img').src=this.src; lb.classList.add('show');
+    lbImg.src=this.src;
+    document.getElementById('lightbox').classList.add('show');
   });
 });
 document.getElementById('lightbox').addEventListener('click',function(){this.classList.remove('show');});
