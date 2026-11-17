@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="从本质差异出发，逐项拆解 Kueue 与 Volcano 的架构、Gang 语义、队列配额、抢占公平、扩展机制与生态，给出可落地的选型决策树与常见误区。">
+<title>Kueue vs Volcano：批处理调度选型深度对比｜小胖鱼@Think</title>
+<style>
+:root{
+  --primary:#2563eb; --primary-d:#1e40af; --primary-l:#dbeafe;
+  --ink:#1e293b; --ink-soft:#475569; --muted:#94a3b8;
+  --bg:#f1f5f9; --card:#ffffff; --line:#e2e8f0;
+  --accent:#0ea5e9; --shadow:0 10px 30px rgba(15,23,42,.08);
+  --code-bg:#0f172a; --radius:14px;
+  --green:#16a34a; --green-l:#f0fdf4; --amber:#f59e0b; --amber-l:#fffbeb;
+  --violet:#6366f1; --violet-l:#eef2ff; --rose:#e11d48; --rose-l:#fff1f2;
+  --teal:#0d9488; --teal-l:#f0fdfa;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif;
+  line-height:1.85;font-size:16px;-webkit-font-smoothing:antialiased}
+
+.topbar{background:#0f172a;color:#e2e8f0;font-size:14px}
+.topbar-inner{max-width:1240px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.topbar a{color:#93c5fd;text-decoration:none}
+.topbar a:hover{color:#fff;text-decoration:underline}
+.topbar .brand{font-weight:700;color:#fff}
+
+.hero{background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 55%,#0ea5e9 100%);
+  color:#fff;padding:64px 24px 120px;position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;inset:0;
+  background:radial-gradient(circle at 85% 20%,rgba(255,255,255,.18),transparent 45%),
+             radial-gradient(circle at 15% 80%,rgba(255,255,255,.12),transparent 40%)}
+.hero-inner{max-width:960px;margin:0 auto;position:relative;z-index:1}
+.hero .kicker{display:inline-block;font-size:13px;letter-spacing:2px;font-weight:600;
+  background:rgba(255,255,255,.16);padding:6px 14px;border-radius:999px;margin-bottom:20px}
+.hero h1{font-size:clamp(28px,4.5vw,46px);line-height:1.25;margin:0 0 18px;font-weight:800;letter-spacing:.5px}
+.hero p{font-size:clamp(15px,2vw,18px);opacity:.92;max-width:780px;margin:0 0 26px}
+.badges{display:flex;flex-wrap:wrap;gap:10px}
+.badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);
+  padding:6px 13px;border-radius:8px;font-size:13px;backdrop-filter:blur(4px)}
+
+.wrap{max-width:1240px;margin:-70px auto 60px;padding:0 24px;position:relative;z-index:2;
+  display:grid;grid-template-columns:270px minmax(0,1fr);gap:28px;align-items:start}
+
+aside.toc{position:sticky;top:24px;background:var(--card);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:22px 18px;max-height:calc(100vh - 48px);overflow-y:auto}
+.toc h3{margin:0 0 14px;font-size:15px;color:var(--primary-d);display:flex;align-items:center;gap:8px}
+.toc h3::before{content:"";width:4px;height:16px;background:var(--primary);border-radius:2px}
+.toc-list,.toc-sub{list-style:none;margin:0;padding:0}
+.toc a{display:block;color:var(--ink-soft);text-decoration:none;font-size:13.5px;
+  padding:6px 10px;border-radius:7px;line-height:1.5;transition:.18s}
+.toc a:hover{background:var(--primary-l);color:var(--primary-d)}
+.toc .toc-l2>a{font-weight:600;color:var(--ink)}
+.toc a.active{background:var(--primary);color:#fff}
+.toc-list::-webkit-scrollbar{width:5px}
+.toc-list::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:5px}
+
+article{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);
+  padding:42px clamp(22px,4vw,56px);min-width:0}
+article h1,article h2,article h3,article h4{color:var(--ink);scroll-margin-top:24px;line-height:1.35}
+article h2{font-size:24px;margin:44px 0 16px;padding:0 0 12px;border-bottom:2px solid var(--line);font-weight:800}
+article h2::before{content:"";display:inline-block;width:8px;height:8px;background:var(--primary);
+  border-radius:2px;margin-right:11px;vertical-align:middle}
+article h3{font-size:19px;margin:28px 0 12px;font-weight:700;color:var(--primary-d)}
+article h4{font-size:16px;margin:20px 0 8px;font-weight:700;color:var(--teal)}
+article p{margin:14px 0}
+article strong{color:var(--primary-d);font-weight:700}
+article a{color:var(--primary);text-decoration:none;border-bottom:1px dashed var(--primary)}
+blockquote{margin:18px 0;padding:14px 20px;background:var(--primary-l);
+  border-left:4px solid var(--primary);border-radius:0 10px 10px 0;color:var(--ink-soft)}
+blockquote p{margin:0}
+.lead{font-size:17px;line-height:1.9;color:var(--ink-soft);
+  padding:2px 0 2px 18px;border-left:3px solid var(--accent);margin:20px 0}
+
+.callout{margin:20px 0;padding:16px 20px;background:var(--green-l);border-left:4px solid var(--green);
+  border-radius:0 10px 10px 0;color:#14532d;font-size:14.5px}
+.callout.warn{background:var(--amber-l);border-left-color:var(--amber);color:#78350f}
+.callout.tip{background:var(--violet-l);border-left-color:var(--violet);color:#312e81}
+.callout.rose{background:var(--rose-l);border-left-color:var(--rose);color:#9f1239}
+.callout p{margin:6px 0 0}
+
+table{width:100%;border-collapse:collapse;margin:20px 0;font-size:14.5px;
+  border-radius:10px;overflow:hidden;box-shadow:0 0 0 1px var(--line)}
+thead th{background:linear-gradient(135deg,#1e40af,#2563eb);color:#fff;
+  text-align:left;padding:12px 14px;font-weight:600;white-space:nowrap}
+tbody td{padding:11px 14px;border-top:1px solid var(--line);vertical-align:top}
+tbody tr:nth-child(even){background:#f8fafc}
+tbody tr:hover{background:var(--primary-l)}
+.table-wrap{overflow-x:auto;margin:20px 0}
+.table-wrap table{margin:0}
+caption{caption-side:bottom;text-align:center;color:var(--muted);font-size:12.5px;padding:10px}
+
+pre{background:var(--code-bg);color:#e2e8f0;padding:18px 20px;border-radius:12px;
+  overflow-x:auto;font-size:13.5px;line-height:1.7;margin:18px 0;position:relative}
+pre code{font-family:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,"Noto Sans Mono CJK SC",monospace}
+code{background:#f1f5f9;color:#db2777;padding:2px 6px;border-radius:5px;font-size:.9em;
+  font-family:"SFMono-Regular",Consolas,monospace}
+pre code{background:none;color:inherit;padding:0}
+
+article ol,article ul{padding-left:24px;margin:14px 0}
+article li{margin:7px 0}
+
+/* ---- 组件：卡片网格 ---- */
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin:22px 0}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:22px 0}
+.box{background:#f8fafc;border:1px solid var(--line);border-radius:12px;padding:18px 20px}
+.box .box-h{display:flex;align-items:center;gap:9px;font-weight:700;color:var(--primary-d);
+  font-size:15.5px;margin-bottom:8px}
+.box p{margin:6px 0;font-size:14px;color:var(--ink-soft)}
+.box.blue{background:var(--primary-l);border-color:#bfdbfe}
+.box.green{background:var(--green-l);border-color:#bbf7d0}
+.box.green .box-h{color:#15803d}
+.box.amber{background:var(--amber-l);border-color:#fde68a}
+.box.amber .box-h{color:#b45309}
+.box.violet{background:var(--violet-l);border-color:#c7d2fe}
+.box.violet .box-h{color:#4338ca}
+.box.teal{background:var(--teal-l);border-color:#99f6e4}
+.box.teal .box-h{color:#0f766e}
+.box.rose{background:var(--rose-l);border-color:#fecdd3}
+.box.rose .box-h{color:#be123c}
+.tag{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.3px;
+  padding:3px 9px;border-radius:999px;background:var(--primary-l);color:var(--primary-d);margin-right:6px}
+.tag.g{background:#dcfce7;color:#15803d}.tag.a{background:#fef3c7;color:#b45309}
+.tag.v{background:#e0e7ff;color:#4338ca}.tag.r{background:#ffe4e6;color:#be123c}
+.tag.t{background:#ccfbf1;color:#0f766e}
+
+/* ---- 组件：横向流程 pipeline ---- */
+.pipeline{display:flex;flex-wrap:wrap;align-items:stretch;gap:6px;margin:22px 0}
+.pnode{flex:1 1 130px;min-width:118px;background:var(--card);border:1.5px solid var(--primary-l);
+  border-radius:10px;padding:12px 12px;text-align:center;box-shadow:0 4px 14px rgba(15,23,42,.05)}
+.pnode .pn-t{font-weight:700;color:var(--primary-d);font-size:14px;line-height:1.4}
+.pnode .pn-d{font-size:12px;color:var(--ink-soft);margin-top:5px;line-height:1.5}
+.parrow{align-self:center;color:var(--primary);font-size:20px;font-weight:800;flex:0 0 auto}
+
+/* ---- 组件：纵向步骤 flow ---- */
+.flow{list-style:none;margin:22px 0;padding:0;counter-reset:fl}
+.flow li{position:relative;padding:14px 18px 14px 58px;margin:0 0 10px;background:#f8fafc;
+  border:1px solid var(--line);border-radius:12px}
+.flow li::before{counter-increment:fl;content:counter(fl);position:absolute;left:16px;top:14px;
+  width:28px;height:28px;border-radius:50%;background:var(--primary);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px}
+.flow li b{color:var(--primary-d)}
+.flow li .fd{color:var(--ink-soft);font-size:14px;margin-top:3px}
+.flow li::after{content:"↓";position:absolute;left:29px;bottom:-12px;color:var(--primary);font-weight:800}
+.flow li:last-child::after{display:none}
+
+/* ---- 组件：问题→对策 pq ---- */
+.pq{display:grid;grid-template-columns:1fr 34px 1fr;gap:8px;align-items:center;margin:10px 0}
+.pq .prob,.pq .sol{border-radius:12px;padding:14px 16px;height:100%}
+.pq .prob{background:var(--rose-l);border:1px solid #fecdd3}
+.pq .sol{background:var(--green-l);border:1px solid #bbf7d0}
+.pq .prob b{color:#be123c}.pq .sol b{color:#15803d}
+.pq .prob p,.pq .sol p{margin:5px 0 0;font-size:13.5px;color:var(--ink-soft)}
+.pq .arw{text-align:center;color:var(--primary);font-size:22px;font-weight:800}
+.pq .tagline{font-size:11.5px;color:var(--muted);display:block;margin-top:8px;font-family:Consolas,monospace}
+
+/* ---- 组件：VS 双栏 ---- */
+.vs{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:22px 0}
+.vs .side{border-radius:12px;padding:18px 20px}
+.vs .side.hl{background:var(--primary-l);border:1px solid #bfdbfe}
+.vs .side.alt{background:var(--violet-l);border:1px solid #c7d2fe}
+.vs .side h4{margin:0 0 10px;font-size:17px}
+.vs .side.hl h4{color:var(--primary-d)}.vs .side.alt h4{color:#4338ca}
+.vs .side ul{margin:0;padding-left:20px;font-size:14px}
+
+/* ---- 组件：矩阵圆点 ---- */
+.dot{display:inline-block;width:11px;height:11px;border-radius:50%;vertical-align:middle}
+.dot.on{background:var(--primary)}.dot.off{background:#e2e8f0;border:1px solid #cbd5e1}
+
+/* ---- 组件：分层架构 ---- */
+.layer{border-radius:12px;padding:14px 18px;margin:10px 0;border-left:5px solid}
+.layer.dp{background:#eff6ff;border-color:#3b82f6}
+.layer.cp{background:#fefce8;border-color:#eab308}
+.layer.pl{background:#f5f3ff;border-color:#8b5cf6}
+.layer .lt{font-weight:800;font-size:15px;margin-bottom:6px}
+.layer.dp .lt{color:#1d4ed8}.layer.cp .lt{color:#a16207}.layer.pl .lt{color:#6d28d9}
+.layer .lc{font-size:13.5px;color:var(--ink-soft)}
+
+/* ---- 组件：KPI ---- */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:22px 0}
+.kpi{background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;border-radius:12px;
+  padding:18px;text-align:center}
+.kpi .kv{font-size:26px;font-weight:800;line-height:1.2}
+.kpi .kl{font-size:12.5px;opacity:.9;margin-top:6px}
+
+.note{font-size:13px;color:var(--muted)}
+.divider{height:1px;background:var(--line);margin:30px 0}
+
+#toTop{position:fixed;right:26px;bottom:26px;width:46px;height:46px;border:none;
+  border-radius:50%;background:var(--primary);color:#fff;font-size:20px;cursor:pointer;
+  box-shadow:0 8px 20px rgba(37,99,235,.4);opacity:0;pointer-events:none;transition:.3s;z-index:50}
+#toTop.show{opacity:1;pointer-events:auto}
+#toTop:hover{background:var(--primary-d);transform:translateY(-3px)}
+
+footer{text-align:center;color:var(--muted);font-size:13px;padding:30px 20px 50px}
+.pager{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:36px;padding-top:22px;border-top:1px solid var(--line)}
+.pager a{color:var(--primary);text-decoration:none;font-size:14px}
+
+@media(max-width:960px){
+  .wrap{grid-template-columns:1fr;margin-top:-50px}
+  aside.toc{position:static;max-height:none}
+  .toc-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:2px}
+  article{padding:28px 20px}
+  .hero{padding-bottom:90px}
+  .vs,.pq{grid-template-columns:1fr}
+  .pq .arw{transform:rotate(90deg)}
+}
+</style>
+</head>
+<body>
+<div class="topbar"><div class="topbar-inner">
+  <a class="brand" href="/">小胖鱼@Think</a><span>·</span>
+  <a href="/scheduler/">调度器系列</a>
+  <span style="margin-left:auto"><a href="/">博客首页</a></span>
+</div></div>
+
+<header class="hero"><div class="hero-inner">
+  <span class="kicker">KUBERNETES · BATCH SCHEDULING · COMPARISON</span>
+  <h1>Kueue vs Volcano<br>批处理调度选型深度对比</h1>
+  <p>一个是 K8s 原生的配额治理控制面，一个是 CNCF 的批处理调度引擎。本文从本质差异出发，逐项拆解两者的架构、Gang 语义、队列配额、抢占公平与生态，并给出可落地的选型决策树。</p>
+  <div class="badges">
+    <span class="badge">⚖️ 12 章</span>
+    <span class="badge">🔍 11 项能力对比</span>
+    <span class="badge">🌳 选型决策树</span>
+    <span class="badge">⏱️ 约 25 分钟</span>
+  </div>
+</div></header>
+
+<div class="wrap">
+<aside class="toc">
+  <h3>目录导航</h3>
+  <ul class="toc-list">
+<li><a href="#abstract">摘要：一句话结论</a></li>
+<li class="toc-l2"><a href="#c1">1. 本质差异：治理 vs 调度</a></li>
+<li class="toc-l2"><a href="#c2">2. 架构与工作原理对比</a></li>
+<li class="toc-l2"><a href="#c3">3. 核心能力逐项对比</a></li>
+<li class="toc-l2"><a href="#c4">4. Gang Scheduling 差异</a></li>
+<li class="toc-l2"><a href="#c5">5. 队列与配额模型</a></li>
+<li class="toc-l2"><a href="#c6">6. 抢占与公平</a></li>
+<li class="toc-l2"><a href="#c7">7. 扩展机制与生态</a></li>
+<li class="toc-l2"><a href="#c8">8. 性能、规模与运维</a></li>
+<li class="toc-l2"><a href="#c9">9. 选型决策树</a></li>
+<li class="toc-l2"><a href="#c10">10. 迁移成本与常见误区</a></li>
+<li class="toc-l2"><a href="#c11">11. 总结</a></li>
+<li><a href="#meta">元信息</a></li>
+  </ul>
+</aside>
+
+<article>
+
+<h2 id="abstract">摘要：一句话结论</h2>
+<p class="lead"><strong>Kueue 是「门禁与秩序」，Volcano 是「座位调度引擎」</strong>——前者是 Kubernetes 原生的作业排队与配额治理控制面（决定谁能进场、占多少、何时放行），后者是 CNCF 的批处理调度引擎（决定一组作业怎么排、放在哪）。两者并非严格互斥：Kueue 不替代调度器，Volcano 自带完整调度语义；它们可以正交组合，也可以二选一。本文从本质差异出发，逐项拆解能力、机制与生态，并给出可落地的选型决策树。</p>
+
+<div class="callout tip"><strong>阅读前提</strong>：本文假设你已了解 Kueue 与 Volcano 的基本概念。若需补齐，建议先读 <a href="kueue.html">Kueue 深度指南</a> 与 <a href="volcano.html">Volcano 调度器原理详解</a>。组合使用的方式见姊妹篇 <a href="kueue-volcano-together.html">两者如何协同配合</a>。</div>
+
+<!-- ============ 1 ============ -->
+<h2 id="c1">1. 本质差异：治理 vs 调度</h2>
+<p>把两者的定位一句话讲清：</p>
+<div class="vs">
+  <div class="side hl"><h4>◆ Kueue · 准入控制（Admission）</h4><ul><li>定位：作业排队与配额治理的<strong>控制面</strong></li><li>核心动作：Job 提交后先 <code>suspend</code>，拿到配额才放行</li><li>不引入新调度器，Pod 到节点的调度仍交给 kube-scheduler</li><li>口号：<strong>先治理，再调度</strong>（谁先拿、拿多少）</li></ul></div>
+  <div class="side alt"><h4>▲ Volcano · 批处理调度（Scheduling）</h4><ul><li>定位：作业级调度与策略执行的<strong>调度引擎</strong></li><li>核心动作：Session + Action + Plugin，一次调一批 Job</li><li>自带调度器 <code>volcano-scheduler</code>，通过 schedulerName 接管</li><li>口号：<strong>一站式批处理调度</strong>（怎么排、放哪）</li></ul></div>
+</div>
+<div class="callout"><strong>关键区别</strong>：Kueue 停在「Pod 创建之前」的准入层，Pal 实际调度交给下游；Volcano 深入「Pod 放到哪个节点」的调度层。所以 Kueue 常被形容为「调度之前的治理产品化」，而 Volcano 是「把批处理语义搬进调度器」。</div>
+
+<h3>一次作业提交的流向对比</h3>
+<div class="grid2">
+  <div class="box blue"><div class="box-h">Kueue 路径</div><div class="pipeline" style="margin:8px 0"><div class="pnode"><div class="pn-t">提交 Job</div></div><div class="parrow">→</div><div class="pnode"><div class="pn-t">Workload 入队</div></div><div class="parrow">→</div><div class="pnode"><div class="pn-t">配额准入</div></div><div class="parrow">→</div><div class="pnode"><div class="pn-t">解除 suspend</div></div></div><p>之后由 kube-scheduler 做 Pod 放置。Kueue 的职责到此为止。</p></div>
+  <div class="box green"><div class="box-h">Volcano 路径</div><div class="pipeline" style="margin:8px 0"><div class="pnode"><div class="pn-t">提交 VCJob</div></div><div class="parrow">→</div><div class="pnode"><div class="pn-t">PodGroup</div></div><div class="parrow">→</div><div class="pnode"><div class="pn-t">Action 流水线</div></div><div class="parrow">→</div><div class="pnode"><div class="pn-t">绑定节点</div></div></div><p>Volcano 自己完成从 gang 判定到节点绑定的全流程。</p></div>
+</div>
+
+<!-- ============ 2 ============ -->
+<h2 id="c2">2. 架构与工作原理对比</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>维度</th><th>Kueue</th><th>Volcano</th></tr></thead>
+<tbody>
+<tr><td>核心对象</td><td>LocalQueue / ClusterQueue / Cohort / Workload / ResourceFlavor / AdmissionCheck</td><td>Job(VCJob) / PodGroup / Queue / Action / Plugin</td></tr>
+<tr><td>调度单元</td><td>Workload（一个作业的资源申请单，可含多个 podSet）</td><td>Job / Task（作业级，Queue→Job→Task→Node 四层）</td></tr>
+<tr><td>决策模型</td><td>准入控制：模拟调度后决定是否 admit</td><td>周期驱动：Session 快照 + Action 流水线</td></tr>
+<tr><td>扩展机制</td><td>Webhook + Controller + 可插拔集成（JobSet/PyTorchJob/RayJob…）+ AdmissionCheck</td><td>Plugin 注册扩展点（20+ Fn）+ Extender(HTTP) + 自定义 Plugin</td></tr>
+<tr><td>是否替换调度器</td><td>否，与 kube-scheduler 协同</td><td>是（自带 volcano-scheduler），也可共存</td></tr>
+<tr><td>归属</td><td>Kubernetes SIG Scheduling 官方子项目</td><td>CNCF 项目，首个官方容器批处理调度项目</td></tr>
+</tbody>
+</table></div>
+
+<!-- ============ 3 ============ -->
+<h2 id="c3">3. 核心能力逐项对比</h2>
+<div class="table-wrap"><table>
+<caption>注：Kueue 的 Gang 语义通过 All-or-nothing with PodsReady 实现（准入层），与 Volcano 调度层 gang 的实现层级不同，详见第 4 节。</caption>
+<thead><tr><th>能力</th><th>Kueue</th><th>Volcano</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>Gang Scheduling</td><td><span class="tag a">准入层</span> All-or-nothing</td><td><span class="tag g">调度层</span> PodGroup 原生</td><td>两者都能避免部分调度，但实现层级与严格度不同</td></tr>
+<tr><td>作业队列</td><td>✅ LocalQueue / ClusterQueue</td><td>✅ Queue（可分层）</td><td>都有队列，语义与层级设计不同</td></tr>
+<tr><td>配额管理</td><td>✅ 精细（nominalQuota / borrowingLimit / lendingLimit）</td><td>✅ weight / capability / guarantee</td><td>Kueue 配额语义更细，云厂商集成路线一致</td></tr>
+<tr><td>公平共享</td><td>✅ Fair Sharing / Cohort 借用</td><td>✅ DRF / Proportion</td><td>算法不同：Kueue 权重分享，Volcano DRF 主导资源公平</td></tr>
+<tr><td>抢占与回收</td><td>✅ 三类开关（默认 Never）</td><td>✅ preempt / reclaim 分离</td><td>Volcano 把队列间回收做成独立 Action</td></tr>
+<tr><td>拓扑感知</td><td>✅ TAS（Topology-Aware Scheduling）</td><td>✅ numaaware / task-topology / 网络拓扑</td><td>Kueue TAS 基于 Topology CRD，聚拢放置</td></tr>
+<tr><td>GPU / 异构</td><td>✅ 通过 ResourceFlavor + 数据平面（HAMi/MIG）</td><td>✅ deviceshare / MIG / vCUDA / 昇腾 NPU</td><td>Volcano 自带更多设备调度插件；Kueue 依赖数据平面配合</td></tr>
+<tr><td>Binpack / Backfill</td><td>⚠️ 非核心</td><td>✅ 原生插件 / Action</td><td>Volcano 在碎片优化上更完整</td></tr>
+<tr><td>多集群</td><td>✅ MultiKueue</td><td>✅ volcano-global</td><td>均为进阶特性</td></tr>
+<tr><td>原生 K8s API 集成</td><td>✅ 直接用 Job/JobSet/CronJob 等</td><td>⚠️ 多用自定义 VCJob CRD</td><td>Kueue 对原生资源更友好</td></tr>
+<tr><td>学习 / 接入成本</td><td>较低（原生、增量接入）</td><td>较高（自定义 API + 调度概念）</td><td>团队门槛差异明显</td></tr>
+</tbody>
+</table></div>
+
+<!-- ============ 4 ============ -->
+<h2 id="c4">4. Gang Scheduling 差异</h2>
+<p>这是两者最容易被混淆、也最关键的差异。核心问题都是「分布式训练要求所有 worker 同时启动」，但解决的<strong>层级</strong>不同。</p>
+<div class="grid2">
+  <div class="box blue"><div class="box-h">Kueue：准入层 all-or-nothing</div><p>Kueue 把一个 Workload（含多个 podSet，如 driver + 8 个 worker）作为整体准入。通过 <code>All-or-nothing with PodsReady</code> 机制：如果作业在 <code>podsReadyTimeout</code> 内没能全部 Ready，就驱逐并重新入队（带指数退避）。<strong>它保证的是「配额与作业整体放行」，Pod 的具体放置仍由 kube-scheduler 完成。</strong></p></div>
+  <div class="box green"><div class="box-h">Volcano：调度层 PodGroup</div><p>Volcano 在调度器内部用 PodGroup 的 <code>minMember</code> 判定作业是否 Ready；未 Ready 的作业通过 <code>jobPipelineFn</code> 占坑预留资源，凑齐后统一绑定。<strong>它把 gang 做到了「节点绑定」这一层，是严格的调度语义。</strong></p></div>
+</div>
+<div class="callout warn"><strong>严谨表述</strong>：常见的对比表会写「Kueue 不支持 Gang Scheduling」，这在 2024 年前大致成立，但已过时。准确说法是：<strong>Kueue 通过准入了整体作业（all-or-nothing），提供「作业级 gang 语义」；Volcano 提供「调度级 gang 语义」</strong>。前者不保证所有 Pod 在同一时刻被 kube-scheduler 原子绑定，后者保证。追求严格 gang 时，Volcano 更强；重视原生集成与配额治理时，Kueue 更省心。</div>
+
+<!-- ============ 5 ============ -->
+<h2 id="c5">5. 队列与配额模型</h2>
+<div class="vs">
+  <div class="side hl"><h4>◆ Kueue：两级队列 + Cohort</h4><ul><li><strong>LocalQueue</strong>：团队/命名空间入口，用户提交的作业指向它</li><li><strong>ClusterQueue</strong>：全局资源池与配额承诺，定义 nominalQuota、borrowingLimit、lendingLimit</li><li><strong>Cohort</strong>：多个 ClusterQueue 组成，闲置配额可按权重互相借用</li><li><strong>ResourceFlavor</strong>：把「A100 vs H100」「MIG profile」等资源差异显式化，配额按口味分别管理</li></ul></div>
+  <div class="side alt"><h4>▲ Volcano：Queue CRD（可分层）</h4><ul><li><strong>Queue</strong>：租户抽象，可组成层级结构并支持资源继承</li><li><strong>weight</strong>：按权重参与 proportion 分配</li><li><strong>capability / guarantee</strong>：资源上限与保底份额</li><li>借用与回收通过 reclaim / preempt Action 实现，按队列权重把借出的份额收回</li></ul></div>
+</div>
+<p><strong>谁来管异构资源？</strong> 这是两者的重要分野。当 H100 和 A10 混在同一池，「10 张 GPU 配额」对不同团队意义完全不同。Kueue 用 ResourceFlavor 把差异显式化，让配额与公平建立在正确维度上；Volcano 则更多通过设备插件与 nodegroup 亲和来区分。若集群异构严重，Kueue 的 Flavor 建模通常更清晰。</p>
+
+<!-- ============ 6 ============ -->
+<h2 id="c6">6. 抢占与公平</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>维度</th><th>Kueue</th><th>Volcano</th></tr></thead>
+<tbody>
+<tr><td>公平算法</td><td>Fair Sharing：按 share 值（用量/份额）排序，抢占 share 最小者</td><td>DRF（主导资源公平）/ Proportion（按权重）</td></tr>
+<tr><td>抢占层级</td><td>withinClusterQueue / reclaimWithinCohort / borrowWithinCohort 三个开关</td><td>preempt（队列内）/ reclaim（跨队列）两个 Action</td></tr>
+<tr><td>默认策略</td><td>三个抢占开关默认 Never（保守）</td><td>取决于配置，preempt/reclaim 按需启用</td></tr>
+<tr><td>保护机制</td><td>优先级 + WorkloadPriorityClass</td><td>conformance 插件保护 kube-system 关键 Pod</td></tr>
+</tbody>
+</table></div>
+<p>Kueue 默认不抢占（三个开关都是 Never），强调「可预测、可审计」的秩序；Volcano 把抢占与回收做成调度流水线中的独立 Action，更强调「高价值任务一定拿得到资源」。前者偏治理审慎，后者偏调度激进。</p>
+
+<!-- ============ 7 ============ -->
+<h2 id="c7">7. 扩展机制与生态</h2>
+<div class="grid2">
+  <div class="box blue"><div class="box-h">Kueue：原生集成 + AdmissionCheck</div><p>基于 K8s 原生 API（Job/JobSet/CronJob），通过 Webhook + Controller 工作。新框架接入只需实现 Workload 映射。AdmissionCheck 可对接外部配额/provisioning 系统（如 Karpenter 扩容联动），生态与云厂商（AKS/GKE 托管 Kueue）路线一致。</p></div>
+  <div class="box green"><div class="box-h">Volcano：Plugin + Extender</div><p>Plugin 注册 20+ 扩展点回调；Extender 通过 HTTP 调用外部服务，钩子最全、可跨语言；可自定义 Plugin 编译进调度器。生态覆盖 Spark/TF/PyTorch/Flink/Ray/MindSpore/PaddlePaddle 等，AI 训练场景验证充分。</p></div>
+</div>
+<p><strong>选型影响</strong>：若你的平台希望「尽量不引入自定义调度器、跟随 K8s 原生路线」，Kueue 的集成成本更低；若你需要「深度定制调度算法、覆盖多种计算框架」，Volcano 的扩展面更广。</p>
+
+<!-- ============ 8 ============ -->
+<h2 id="c8">8. 性能、规模与运维</h2>
+<div class="grid2">
+  <div class="box"><div class="box-h">Kueue</div><p>因为只在准入层做决策，不深入每个 Pod 的放置，控制面开销相对可控；但社区资料普遍评价其可扩展性为「中等」，超大规模集群需关注 Workload 数量与调度延迟。运维上更接近原生 K8s 组件，升级与云托管更顺滑。</p></div>
+  <div class="box"><div class="box-h">Volcano</div><p>周期驱动 + 快照 + 多级回调，能承载大规模批处理，社区评价可扩展性「高」；但调度器本身的复杂度、插件配置与快照规模会直接影响性能，需要更专业的调优与值守。InfraCloud 2025 基准显示其在分布式训练场景可将 GPU 碎片降低约 40%。</p></div>
+</div>
+<p class="note">注：性能数据来自公开基准，实际表现强依赖负载形态、配置与硬件，请以自家压测为准。</p>
+
+<!-- ============ 9 ============ -->
+<h2 id="c9">9. 选型决策树</h2>
+<div class="flow">
+  <li><b>你的团队规模小、GPU 数量有限，只想「先跑稳」？</b><div class="fd">都不必上，原生 kube-scheduler + namespace 即可；有了多团队公平诉求再引入 Kueue。<span class="tag g">→ 架构 A/B</span></div></li>
+  <li><b>多团队/多租户，核心诉求是「配额、公平、可审计」？</b><div class="fd">选 <strong>Kueue</strong>：它把「谁能用、用多少、何时用」产品化，原生集成、增量接入、云厂商一致。<span class="tag">→ Kueue</span></div></li>
+  <li><b>以分布式训练为主，必须严格 Gang、Backfill、队列优先级？</b><div class="fd">选 <strong>Volcano</strong>：调度层 gang + 丰富调度策略，AI 训练场景验证充分。<span class="tag v">→ Volcano</span></div></li>
+  <li><b>既要治理秩序，又要严格训练语义？</b><div class="fd">两者组合：<strong>Kueue 管准入/配额/承诺，Volcano 管训练作业语义与调度策略</strong>。代价是两个控制面协同、策略可能重复。<span class="tag a">→ Kueue + Volcano</span></div></li>
+  <li><b>在 AKS/GKE 等托管集群，希望少运维？</b><div class="fd">优先 Kueue（有托管扩展）；引入第三方调度器前先确认平台支持度。<span class="tag t">→ 托管 Kueue</span></div></li>
+</div>
+<div class="callout tip"><strong>经验法则</strong>（来自 Jimmy Song《AI 基础设施手册》）：<strong>Kueue 更像资源治理框架</strong>（准入 + 配额 + 承诺 + 统计），是平台化的底座；<strong>Volcano 更像批处理调度引擎</strong>（训练/作业语义），是训练类负载的加速器。按「缺治理」还是「缺调度语义」来判断，比纠结功能清单更有效。</div>
+
+<!-- ============ 10 ============ -->
+<h2 id="c10">10. 迁移成本与常见误区</h2>
+<h3>迁移成本</h3>
+<div class="grid2">
+  <div class="box green"><div class="box-h">迁移到 Kueue</div><p>低。作业仍用原生 Job/JobSet，加 queue-name 标签与 LocalQueue/ClusterQueue 即可，无需改 schedulerName。适合渐进式接入。</p></div>
+  <div class="box amber"><div class="box-h">迁移到 Volcano</div><p>中高。可能需要把作业改造成 VCJob 或配置 PodGroup，设置 schedulerName=volcano，团队需理解 Action/Plugin/Queue 概念与调优。</p></div>
+</div>
+
+<h3>常见误区</h3>
+<div class="callout rose">
+<p><strong>误区 1：「Kueue 不支持 Gang Scheduling」</strong>——已过时。Kueue 通过 all-or-nothing 提供作业级 gang 语义，只是层级与严格度不同（见第 4 节）。</p>
+<p><strong>误区 2：「Kueue 替代 kube-scheduler」</strong>——错。Kueue 只做准入，Pod 放置仍由 kube-scheduler 负责。</p>
+<p><strong>误区 3：「用了 Volcano 就不需要配额治理」</strong>——不一定。Volcano 有队列配额，但「承诺/统计/对账」等治理能力不如 Kueue 产品化，生产平台常两者叠加。</p>
+<p><strong>误区 4：「两者只能二选一」</strong>——错。它们正交可组合，组合方式见 <a href="kueue-volcano-together.html">协同配合篇</a>。</p>
+</div>
+
+<!-- ============ 11 ============ -->
+<h2 id="c11">11. 总结</h2>
+<div class="kpis">
+  <div class="kpi"><div class="kv">治理</div><div class="kl">Kueue 关键词</div></div>
+  <div class="kpi"><div class="kv">调度</div><div class="kl">Volcano 关键词</div></div>
+  <div class="kpi"><div class="kv">正交</div><div class="kl">两者关系</div></div>
+  <div class="kpi"><div class="kv">组合</div><div class="kl">生产推荐</div></div>
+</div>
+<p>一句话收束：<strong>缺「秩序与配额」选 Kueue，缺「批处理调度语义」选 Volcano，两者都缺就组合使用</strong>。判断的关键不是功能清单的长短，而是你的集群当前痛在「调度之前」还是「调度之中」。理解了这一点，就能在看各种集成方案、抢占策略和拓扑调度时抓住主线。</p>
+
+<h2 id="meta">元信息</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>项</th><th>内容</th></tr></thead>
+<tbody>
+<tr><td>目标读者</td><td>正在为 AI/批处理集群做调度选型的平台工程师、架构师</td></tr>
+<tr><td>技术栈版本</td><td>Kueue v1beta1/v1beta2；Volcano v1.9+/v1.10+</td></tr>
+<tr><td>预计阅读时间</td><td>约 25 分钟</td></tr>
+<tr><td>姊妹篇</td><td><a href="kueue.html">Kueue 深度指南</a> · <a href="volcano.html">Volcano 原理详解</a> · <a href="kueue-volcano-together.html">两者如何协同</a> · <a href="ai-gpu-scheduling.html">AI GPU 调度方案</a></td></tr>
+</tbody>
+</table></div>
+<p class="note">参考来源：Kueue / Volcano 官方文档、Jimmy Song《AI 基础设施手册》、InfraCloud《Batch Scheduling on Kubernetes》三方对比、hikube/cloud 技术博客。对比结论基于公开资料整理，落地请以自家压测与版本文档为准。</p>
+
+
+<div class="pager">
+  <a href="/scheduler/">← 返回调度器系列目录</a>
+  <a href="kueue.html">Kueue 深度指南 →</a>
+</div>
+</article>
+</div>
+
+<button id="toTop" title="回到顶部">↑</button>
+<footer>© Kueue vs Volcano 深度对比 · 基于官方文档与公开资料整理 · 小胖鱼@Think · 调度器系列</footer>
+<script>
+var toTop=document.getElementById('toTop');
+window.addEventListener('scroll',function(){toTop.classList.toggle('show',window.scrollY>400);});
+toTop.addEventListener('click',function(){window.scrollTo({top:0,behavior:'smooth'});});
+var links=document.querySelectorAll('.toc a');
+var sections=[];
+links.forEach(function(a){var el=document.querySelector(a.getAttribute('href')); if(el) sections.push({a:a,el:el});});
+window.addEventListener('scroll',function(){
+  var y=window.scrollY+120, cur=null;
+  sections.forEach(function(s){if(s.el.offsetTop<=y) cur=s.a;});
+  links.forEach(function(a){a.classList.remove('active');});
+  if(cur) cur.classList.add('active');
+});
+</script>
+</body>
+</html>

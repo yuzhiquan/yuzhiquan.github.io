@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="系统拆解 Volcano 的 Session+Action+Plugin 三层架构、调度全流程、插件扩展点体系，补齐核心对象实战、策略配置、GPU 与拓扑感知、生产排障，并深度对比 kube-scheduler。">
+<title>Volcano 调度器原理详解：从调度流程到插件体系｜小胖鱼@Think</title>
+<style>
+:root{
+  --primary:#2563eb; --primary-d:#1e40af; --primary-l:#dbeafe;
+  --ink:#1e293b; --ink-soft:#475569; --muted:#94a3b8;
+  --bg:#f1f5f9; --card:#ffffff; --line:#e2e8f0;
+  --accent:#0ea5e9; --shadow:0 10px 30px rgba(15,23,42,.08);
+  --code-bg:#0f172a; --radius:14px;
+  --green:#16a34a; --green-l:#f0fdf4; --amber:#f59e0b; --amber-l:#fffbeb;
+  --violet:#6366f1; --violet-l:#eef2ff; --rose:#e11d48; --rose-l:#fff1f2;
+  --teal:#0d9488; --teal-l:#f0fdfa;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif;
+  line-height:1.85;font-size:16px;-webkit-font-smoothing:antialiased}
+
+.topbar{background:#0f172a;color:#e2e8f0;font-size:14px}
+.topbar-inner{max-width:1240px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.topbar a{color:#93c5fd;text-decoration:none}
+.topbar a:hover{color:#fff;text-decoration:underline}
+.topbar .brand{font-weight:700;color:#fff}
+
+.hero{background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 55%,#0ea5e9 100%);
+  color:#fff;padding:64px 24px 120px;position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;inset:0;
+  background:radial-gradient(circle at 85% 20%,rgba(255,255,255,.18),transparent 45%),
+             radial-gradient(circle at 15% 80%,rgba(255,255,255,.12),transparent 40%)}
+.hero-inner{max-width:960px;margin:0 auto;position:relative;z-index:1}
+.hero .kicker{display:inline-block;font-size:13px;letter-spacing:2px;font-weight:600;
+  background:rgba(255,255,255,.16);padding:6px 14px;border-radius:999px;margin-bottom:20px}
+.hero h1{font-size:clamp(28px,4.5vw,46px);line-height:1.25;margin:0 0 18px;font-weight:800;letter-spacing:.5px}
+.hero p{font-size:clamp(15px,2vw,18px);opacity:.92;max-width:780px;margin:0 0 26px}
+.badges{display:flex;flex-wrap:wrap;gap:10px}
+.badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);
+  padding:6px 13px;border-radius:8px;font-size:13px;backdrop-filter:blur(4px)}
+
+.wrap{max-width:1240px;margin:-70px auto 60px;padding:0 24px;position:relative;z-index:2;
+  display:grid;grid-template-columns:270px minmax(0,1fr);gap:28px;align-items:start}
+
+aside.toc{position:sticky;top:24px;background:var(--card);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:22px 18px;max-height:calc(100vh - 48px);overflow-y:auto}
+.toc h3{margin:0 0 14px;font-size:15px;color:var(--primary-d);display:flex;align-items:center;gap:8px}
+.toc h3::before{content:"";width:4px;height:16px;background:var(--primary);border-radius:2px}
+.toc-list,.toc-sub{list-style:none;margin:0;padding:0}
+.toc a{display:block;color:var(--ink-soft);text-decoration:none;font-size:13.5px;
+  padding:6px 10px;border-radius:7px;line-height:1.5;transition:.18s}
+.toc a:hover{background:var(--primary-l);color:var(--primary-d)}
+.toc .toc-l2>a{font-weight:600;color:var(--ink)}
+.toc a.active{background:var(--primary);color:#fff}
+.toc-list::-webkit-scrollbar{width:5px}
+.toc-list::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:5px}
+
+article{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);
+  padding:42px clamp(22px,4vw,56px);min-width:0}
+article h1,article h2,article h3,article h4{color:var(--ink);scroll-margin-top:24px;line-height:1.35}
+article h2{font-size:24px;margin:44px 0 16px;padding:0 0 12px;border-bottom:2px solid var(--line);font-weight:800}
+article h2::before{content:"";display:inline-block;width:8px;height:8px;background:var(--primary);
+  border-radius:2px;margin-right:11px;vertical-align:middle}
+article h3{font-size:19px;margin:28px 0 12px;font-weight:700;color:var(--primary-d)}
+article h4{font-size:16px;margin:20px 0 8px;font-weight:700;color:var(--teal)}
+article p{margin:14px 0}
+article strong{color:var(--primary-d);font-weight:700}
+article a{color:var(--primary);text-decoration:none;border-bottom:1px dashed var(--primary)}
+blockquote{margin:18px 0;padding:14px 20px;background:var(--primary-l);
+  border-left:4px solid var(--primary);border-radius:0 10px 10px 0;color:var(--ink-soft)}
+blockquote p{margin:0}
+.lead{font-size:17px;line-height:1.9;color:var(--ink-soft);
+  padding:2px 0 2px 18px;border-left:3px solid var(--accent);margin:20px 0}
+
+.callout{margin:20px 0;padding:16px 20px;background:var(--green-l);border-left:4px solid var(--green);
+  border-radius:0 10px 10px 0;color:#14532d;font-size:14.5px}
+.callout.warn{background:var(--amber-l);border-left-color:var(--amber);color:#78350f}
+.callout.tip{background:var(--violet-l);border-left-color:var(--violet);color:#312e81}
+.callout.rose{background:var(--rose-l);border-left-color:var(--rose);color:#9f1239}
+.callout p{margin:6px 0 0}
+
+table{width:100%;border-collapse:collapse;margin:20px 0;font-size:14.5px;
+  border-radius:10px;overflow:hidden;box-shadow:0 0 0 1px var(--line)}
+thead th{background:linear-gradient(135deg,#1e40af,#2563eb);color:#fff;
+  text-align:left;padding:12px 14px;font-weight:600;white-space:nowrap}
+tbody td{padding:11px 14px;border-top:1px solid var(--line);vertical-align:top}
+tbody tr:nth-child(even){background:#f8fafc}
+tbody tr:hover{background:var(--primary-l)}
+.table-wrap{overflow-x:auto;margin:20px 0}
+.table-wrap table{margin:0}
+caption{caption-side:bottom;text-align:center;color:var(--muted);font-size:12.5px;padding:10px}
+
+pre{background:var(--code-bg);color:#e2e8f0;padding:18px 20px;border-radius:12px;
+  overflow-x:auto;font-size:13.5px;line-height:1.7;margin:18px 0;position:relative}
+pre code{font-family:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,"Noto Sans Mono CJK SC",monospace}
+code{background:#f1f5f9;color:#db2777;padding:2px 6px;border-radius:5px;font-size:.9em;
+  font-family:"SFMono-Regular",Consolas,monospace}
+pre code{background:none;color:inherit;padding:0}
+
+article ol,article ul{padding-left:24px;margin:14px 0}
+article li{margin:7px 0}
+
+/* ---- 组件：卡片网格 ---- */
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin:22px 0}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:22px 0}
+.box{background:#f8fafc;border:1px solid var(--line);border-radius:12px;padding:18px 20px}
+.box .box-h{display:flex;align-items:center;gap:9px;font-weight:700;color:var(--primary-d);
+  font-size:15.5px;margin-bottom:8px}
+.box p{margin:6px 0;font-size:14px;color:var(--ink-soft)}
+.box.blue{background:var(--primary-l);border-color:#bfdbfe}
+.box.green{background:var(--green-l);border-color:#bbf7d0}
+.box.green .box-h{color:#15803d}
+.box.amber{background:var(--amber-l);border-color:#fde68a}
+.box.amber .box-h{color:#b45309}
+.box.violet{background:var(--violet-l);border-color:#c7d2fe}
+.box.violet .box-h{color:#4338ca}
+.box.teal{background:var(--teal-l);border-color:#99f6e4}
+.box.teal .box-h{color:#0f766e}
+.box.rose{background:var(--rose-l);border-color:#fecdd3}
+.box.rose .box-h{color:#be123c}
+.tag{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.3px;
+  padding:3px 9px;border-radius:999px;background:var(--primary-l);color:var(--primary-d);margin-right:6px}
+.tag.g{background:#dcfce7;color:#15803d}.tag.a{background:#fef3c7;color:#b45309}
+.tag.v{background:#e0e7ff;color:#4338ca}.tag.r{background:#ffe4e6;color:#be123c}
+.tag.t{background:#ccfbf1;color:#0f766e}
+
+/* ---- 组件：横向流程 pipeline ---- */
+.pipeline{display:flex;flex-wrap:wrap;align-items:stretch;gap:6px;margin:22px 0}
+.pnode{flex:1 1 130px;min-width:118px;background:var(--card);border:1.5px solid var(--primary-l);
+  border-radius:10px;padding:12px 12px;text-align:center;box-shadow:0 4px 14px rgba(15,23,42,.05)}
+.pnode .pn-t{font-weight:700;color:var(--primary-d);font-size:14px;line-height:1.4}
+.pnode .pn-d{font-size:12px;color:var(--ink-soft);margin-top:5px;line-height:1.5}
+.parrow{align-self:center;color:var(--primary);font-size:20px;font-weight:800;flex:0 0 auto}
+
+/* ---- 组件：纵向步骤 flow ---- */
+.flow{list-style:none;margin:22px 0;padding:0;counter-reset:fl}
+.flow li{position:relative;padding:14px 18px 14px 58px;margin:0 0 10px;background:#f8fafc;
+  border:1px solid var(--line);border-radius:12px}
+.flow li::before{counter-increment:fl;content:counter(fl);position:absolute;left:16px;top:14px;
+  width:28px;height:28px;border-radius:50%;background:var(--primary);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px}
+.flow li b{color:var(--primary-d)}
+.flow li .fd{color:var(--ink-soft);font-size:14px;margin-top:3px}
+.flow li::after{content:"↓";position:absolute;left:29px;bottom:-12px;color:var(--primary);font-weight:800}
+.flow li:last-child::after{display:none}
+
+/* ---- 组件：问题→对策 pq ---- */
+.pq{display:grid;grid-template-columns:1fr 34px 1fr;gap:8px;align-items:center;margin:10px 0}
+.pq .prob,.pq .sol{border-radius:12px;padding:14px 16px;height:100%}
+.pq .prob{background:var(--rose-l);border:1px solid #fecdd3}
+.pq .sol{background:var(--green-l);border:1px solid #bbf7d0}
+.pq .prob b{color:#be123c}.pq .sol b{color:#15803d}
+.pq .prob p,.pq .sol p{margin:5px 0 0;font-size:13.5px;color:var(--ink-soft)}
+.pq .arw{text-align:center;color:var(--primary);font-size:22px;font-weight:800}
+.pq .tagline{font-size:11.5px;color:var(--muted);display:block;margin-top:8px;font-family:Consolas,monospace}
+
+/* ---- 组件：VS 双栏 ---- */
+.vs{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:22px 0}
+.vs .side{border-radius:12px;padding:18px 20px}
+.vs .side.hl{background:var(--primary-l);border:1px solid #bfdbfe}
+.vs .side.alt{background:var(--violet-l);border:1px solid #c7d2fe}
+.vs .side h4{margin:0 0 10px;font-size:17px}
+.vs .side.hl h4{color:var(--primary-d)}.vs .side.alt h4{color:#4338ca}
+.vs .side ul{margin:0;padding-left:20px;font-size:14px}
+
+/* ---- 组件：矩阵圆点 ---- */
+.dot{display:inline-block;width:11px;height:11px;border-radius:50%;vertical-align:middle}
+.dot.on{background:var(--primary)}.dot.off{background:#e2e8f0;border:1px solid #cbd5e1}
+
+/* ---- 组件：分层架构 ---- */
+.layer{border-radius:12px;padding:14px 18px;margin:10px 0;border-left:5px solid}
+.layer.dp{background:#eff6ff;border-color:#3b82f6}
+.layer.cp{background:#fefce8;border-color:#eab308}
+.layer.pl{background:#f5f3ff;border-color:#8b5cf6}
+.layer .lt{font-weight:800;font-size:15px;margin-bottom:6px}
+.layer.dp .lt{color:#1d4ed8}.layer.cp .lt{color:#a16207}.layer.pl .lt{color:#6d28d9}
+.layer .lc{font-size:13.5px;color:var(--ink-soft)}
+
+/* ---- 组件：KPI ---- */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:22px 0}
+.kpi{background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;border-radius:12px;
+  padding:18px;text-align:center}
+.kpi .kv{font-size:26px;font-weight:800;line-height:1.2}
+.kpi .kl{font-size:12.5px;opacity:.9;margin-top:6px}
+
+.note{font-size:13px;color:var(--muted)}
+.divider{height:1px;background:var(--line);margin:30px 0}
+
+#toTop{position:fixed;right:26px;bottom:26px;width:46px;height:46px;border:none;
+  border-radius:50%;background:var(--primary);color:#fff;font-size:20px;cursor:pointer;
+  box-shadow:0 8px 20px rgba(37,99,235,.4);opacity:0;pointer-events:none;transition:.3s;z-index:50}
+#toTop.show{opacity:1;pointer-events:auto}
+#toTop:hover{background:var(--primary-d);transform:translateY(-3px)}
+
+footer{text-align:center;color:var(--muted);font-size:13px;padding:30px 20px 50px}
+.pager{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:36px;padding-top:22px;border-top:1px solid var(--line)}
+.pager a{color:var(--primary);text-decoration:none;font-size:14px}
+
+@media(max-width:960px){
+  .wrap{grid-template-columns:1fr;margin-top:-50px}
+  aside.toc{position:static;max-height:none}
+  .toc-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:2px}
+  article{padding:28px 20px}
+  .hero{padding-bottom:90px}
+  .vs,.pq{grid-template-columns:1fr}
+  .pq .arw{transform:rotate(90deg)}
+}
+</style>
+</head>
+<body>
+<div class="topbar"><div class="topbar-inner">
+  <a class="brand" href="/">小胖鱼@Think</a><span>·</span>
+  <a href="/scheduler/">调度器系列</a>
+  <span style="margin-left:auto"><a href="/">博客首页</a></span>
+</div></div>
+
+<header class="hero"><div class="hero-inner">
+  <span class="kicker">KUBERNETES · BATCH SCHEDULING · CNCF VOLCANO</span>
+  <h1>Volcano 调度器原理详解<br>从调度流程到插件体系</h1>
+  <p>从「调度单元错配」这一根源出发，系统拆解 Volcano 的 Session + Action + Plugin 三层架构、调度全流程与插件扩展点体系；补齐核心对象实战、关键策略配置、GPU 与拓扑感知、生产排障，并深度对比 kube-scheduler。</p>
+  <div class="badges">
+    <span class="badge">📘 12 章正文</span>
+    <span class="badge">🧩 20+ 扩展点</span>
+    <span class="badge">🎯 Volcano v1.9+</span>
+    <span class="badge">⏱️ 约 35 分钟</span>
+  </div>
+</div></header>
+
+<div class="wrap">
+<aside class="toc">
+  <h3>目录导航</h3>
+  <ul class="toc-list">
+<li><a href="#abstract">摘要</a></li>
+<li class="toc-l2"><a href="#c0">0. 为什么需要 Volcano</a></li>
+<li class="toc-l2"><a href="#c1">1. Volcano 是什么</a></li>
+<li class="toc-l2"><a href="#c2">2. 整体调度流程</a></li>
+<li class="toc-l2"><a href="#c3">3. 插件与扩展点体系</a></li>
+<li class="toc-l2"><a href="#c4">4. 扩展点 × 插件矩阵</a></li>
+<li class="toc-l2"><a href="#c5">5. 与 kube-scheduler 对比</a></li>
+<li class="toc-l2"><a href="#c6">6. 核心概念与 YAML 实战</a></li>
+<li class="toc-l2"><a href="#c7">7. 关键调度策略配置</a></li>
+<li class="toc-l2"><a href="#c8">8. GPU 与拓扑感知</a></li>
+<li class="toc-l2"><a href="#c9">9. 生产实践：部署与排障</a></li>
+<li class="toc-l2"><a href="#c10">10. 生态、版本与选型</a></li>
+<li class="toc-l2"><a href="#c11">11. 总结与面试题</a></li>
+<li><a href="#meta">元信息</a></li>
+  </ul>
+</aside>
+
+<article>
+
+<h2 id="abstract">摘要</h2>
+<p class="lead">Volcano 是 CNCF 旗下首个、也是目前唯一的官方容器批处理调度项目。它把批处理领域的完整语义——作业（Job/PodGroup）、队列（Queue）、公平、抢占回收、拓扑感知——搬进了 Kubernetes 调度器。本文从「调度单元错配」这一根源出发，系统拆解 Volcano 的 Session + Action + Plugin 三层架构、调度全流程、插件扩展点体系，并补齐核心对象实战、关键策略配置、GPU/拓扑感知与生产排障，最后给出与 kube-scheduler 的深度对比和选型建议。</p>
+
+<div class="callout tip"><strong>阅读约定</strong>：本文在原《Volcano 调度器原理详解》基础上扩展了实战、策略配置、GPU 与生产章节。涉及 API 与特性以 Volcano v1.9+ / v1.10+ 为准；部分高级特性（如动态 MIG、volcano-global 多集群）的成熟度已在文中标注，落地前请核对目标版本文档。</div>
+
+<!-- ============ 0 ============ -->
+<h2 id="c0">0. 为什么需要 Volcano：问题与对策</h2>
+<p>理解 Volcano，先要理解它为什么存在。根源只有一句话：<strong>调度单元的错配</strong>。原生 kube-scheduler 以「单个 Pod」为单元逐个调度，这对无状态 Web 服务没问题；但批处理 / AI 训练的语义是「一组 Pod 才是一个任务」。这个错配引出五个问题，下面把每个问题与 Volcano 的对策逐条对应。</p>
+
+<div class="pq">
+  <div class="prob"><b>① 分布式训练「部分调度死锁」· 最核心</b><p>MPI/PyTorch DDP 需 N 个 Pod 同时启动。K8s 逐个调度：先起的 Pod 占住资源并等待通信，剩下的 Pod 因资源不足 Pending——全体卡死，谁也不释放。</p></div>
+  <div class="arw">→</div>
+  <div class="sol"><b>Gang Scheduling（全有或全无）</b><p>用 PodGroup 把一组 Pod 绑成整体，<code>minAvailable</code> 定义最小运行数。凑不齐就一个都不调，凑齐才一起调，从根上杜绝死锁。</p><span class="tagline">gang 插件 · jobValidFn / jobReadyFn / jobStarvingFn</span></div>
+</div>
+<div class="pq">
+  <div class="prob"><b>② 多租户资源争抢、无配额</b><p>K8s 没有「作业队列」概念，Pod 直接进调度队列裸竞争。重要任务可能被海量小任务挤掉，团队之间无公平性保障。</p></div>
+  <div class="arw">→</div>
+  <div class="sol"><b>多层级队列 + 配额</b><p>引入 Queue CRD（可分层），<code>deserved</code>/<code>guarantee</code>/<code>capability</code> 描述应得、保底、上限，按权重或显式配额分配，实现租户隔离与公平。</p><span class="tagline">proportion（按权重）· capacity（显式配额）· queueOrderFn</span></div>
+</div>
+<div class="pq">
+  <div class="prob"><b>③ 资源借还不灵活</b><p>K8s 的抢占只按 Pod 优先级，没有「跨队列回收」：A 队列借用了 B 队列的空闲资源，当 B 自己要用时却拿不回来。</p></div>
+  <div class="arw">→</div>
+  <div class="sol"><b>抢占与回收分离</b><p><code>preempt</code> 处理同队列内高优先级抢占；<code>reclaim</code> 按队列权重把「借出去」的应得份额收回来。两个独立 Action，各管一层。</p><span class="tagline">preempt + reclaim Action · preemptableFn / reclaimableFn / victimTasksFn</span></div>
+</div>
+<div class="pq">
+  <div class="prob"><b>④ 资源碎片、利用率低</b><p>默认 LeastAllocated 策略倾向把 Pod 打散，节点残留大量碎片，昂贵的 GPU 资源白白浪费。</p></div>
+  <div class="arw">→</div>
+  <div class="sol"><b>装箱 + 碎片回填</b><p><code>binpack</code> 把 Pod 往已用节点上紧凑堆放；<code>backfill</code> 用调度周期剩余碎片资源去塞 pending 的小任务，榨干每一份资源。</p><span class="tagline">binpack · backfill Action · nodeOrderFn</span></div>
+</div>
+<div class="pq">
+  <div class="prob"><b>⑤ 异构设备与拓扑感知</b><p>GPU/NPU 共享、NUMA 亲和、多机通信拓扑——AI 训练对「放在哪」极其敏感，默认调度器无能为力。</p></div>
+  <div class="arw">→</div>
+  <div class="sol"><b>设备与拓扑感知插件</b><p><code>numaaware</code> 考虑 CPU NUMA，<code>deviceshare</code> 支持 GPU 共享，task-topology / 网络拓扑感知降低跨节点通信开销。</p><span class="tagline">numaaware · deviceshare · network topology aware</span></div>
+</div>
+
+<div class="callout"><strong>本质</strong>：K8s 调度的是「一个个 Pod」，Volcano 调度的是「一组组作业 + 一层层队列」。多出来的复杂度，全部服务于批处理场景的刚需：整体调度、公平配额、借还回收、高利用率、异构感知。</div>
+
+<h3>三个层层递进的设计支柱</h3>
+<div class="grid3">
+  <div class="box blue"><div class="box-h">① 显式建模批处理概念</div><p>用 PodGroup 把一组 Pod 绑成「作业」，用 Queue 把租户映射成「队列」——让「组」和「队列」成为调度器看得见的一等公民，而不只是外部约定。</p></div>
+  <div class="box violet"><div class="box-h">② 周期快照 + Session</div><p>要做到「全有或全无」，必须先看到全局再一次性决策。所以 Volcano 不用事件驱动，而是每周期拉一份一致性快照，在 Session 内基于同一份「事实」做整体判断。</p></div>
+  <div class="box teal"><div class="box-h">③ Action 时机 + Plugin 逻辑</div><p>把决策时机切细（入队/分配/抢占/回收/回填），每个时机再挂可插拔算法。扩展点之所以多，正是因为时机被切得细——这是「为什么比 K8s 多」的真正答案。</p></div>
+</div>
+
+<h3>调度流程：每一步的动机</h3>
+<ul class="flow">
+  <li><b>Cache · 准备与快照</b><div class="fd">监听集群 → 缓存 Node / Pod / Job / Queue，拉取一致性快照。<strong>解决：</strong>分布式系统里信息难同步；用某一时刻的快照调度，保证同周期内所有决策基于同一份「事实」，不会互相打架。</div></li>
+  <li><b>Action 1 · enqueue 入队</b><div class="fd">按队列配额与规则过滤 Job，状态 pending → inqueue。<strong>解决：</strong>配额准入，拦住超额作业（对应问题②多租户公平）。</div></li>
+  <li><b>Action 2 · allocate 分配</b><div class="fd">队列→作业→任务层层排序，predicates 预选 + nodeorder/binpack 优选，选点绑定；凑不齐 minAvailable 则整个 Job 不调。<strong>解决：</strong>gang 全有或全无（①）、binpack 提升利用率（④）、numaaware 处理拓扑（⑤）。</div></li>
+  <li><b>Action 3/4 · preempt / reclaim</b><div class="fd">preempt 同队列内高优先级抢占；reclaim 跨队列按权重回收借出的资源。<strong>解决：</strong>资源借还分两层（③），让高价值任务拿得到资源。</div></li>
+  <li><b>Action 5 · backfill 回填</b><div class="fd">用本周期剩余的碎片资源，调度 pending 的小任务 / BestEffort 作业。<strong>解决：</strong>见缝插针，把利用率榨到最高（④）。</div></li>
+  <li><b>Apply · 提交收尾</b><div class="fd">把本周期所有绑定/驱逐决策一次性应用到集群，关闭 Session。<strong>解决：</strong>原子性，避免「调了一半」的中间态，让调度效果可预期。</div></li>
+</ul>
+<p class="note">贯穿全流程的机制：每个 Action 具体怎么排序、怎么过滤、谁能抢谁，都由 Plugin 注册的扩展点回调决定——这就是 Action + Plugin 分层。</p>
+
+<!-- ============ 1 ============ -->
+<h2 id="c1">1. Volcano 是什么</h2>
+<p>Volcano 是 CNCF 旗下的、基于 Kubernetes 的高性能批处理调度引擎，也是 CNCF <strong>首个且唯一的官方容器批处理调度项目</strong>。原生 kube-scheduler 以单个 Pod 为调度单元，难以满足 AI 训练、MPI、Spark/Flink、Ray 等场景中「一组 Pod 必须同时启动」的需求。Volcano 在 K8s 之上提供了作业级（Job/PodGroup）调度、多层级队列配额、Gang Scheduling、公平共享、抢占回收和异构设备（GPU/NPU）支持。</p>
+<p>它的调度器 <code>volcano-scheduler</code> 采用高度可扩展的 <strong>Session + Action + Plugin</strong> 三层架构：每个调度周期开启一个 Session，按顺序执行多个 Action，而每个 Action 的具体算法由注册的 Plugin 提供。这种分层让调度策略完全可插拔。</p>
+
+<div class="grid3">
+  <div class="box"><div class="box-h"><span class="tag">A</span> Action</div><p>定义「做什么」：enqueue / allocate / preempt / reclaim / backfill 等调度环节。</p></div>
+  <div class="box"><div class="box-h"><span class="tag v">P</span> Plugin</div><p>定义「怎么做」：通过向 Session 注册回调函数（扩展点）提供具体算法。</p></div>
+  <div class="box"><div class="box-h"><span class="tag t">S</span> Session</div><p>承载一个调度周期：基于集群快照做决策，周期结束统一提交，保证一致性。</p></div>
+</div>
+
+<h3>能力全景</h3>
+<div class="grid2">
+  <div class="box blue"><div class="box-h">统一调度</div><p>支持原生 K8s 工作负载；通过 VolcanoJob 完整支持 PyTorch/TensorFlow/Spark/Flink/Ray；在线微服务与离线批处理统一调度，提升集群利用率。</p></div>
+  <div class="box green"><div class="box-h">丰富调度策略</div><p>Gang、Binpack、DRF、Proportion/Capacity、NodeGroup、SLA、Task-topology、NUMA-aware，以及异构设备（GPU/NPU）调度。</p></div>
+  <div class="box violet"><div class="box-h">队列资源管理</div><p>多维资源配额（CPU/Memory/GPU）；多层级队列与资源继承；队列间借用、回收、抢占；多租户隔离与优先级。</p></div>
+  <div class="box amber"><div class="box-h">高级能力</div><p>网络拓扑感知、在线离线混部（超卖/CPU burst）、多集群调度（volcano-global）、动态重调度（descheduler）、Dashboard 与指标。</p></div>
+</div>
+
+<!-- ============ 2 ============ -->
+<h2 id="c2">2. 整体调度流程</h2>
+<p>Volcano 的调度决策不是事件驱动，而是<strong>周期驱动</strong>：每个周期开启一个 Session，从 Cache 拉取集群快照，遍历待调度 Job，依次执行各 Action，为 Job 找到合适节点并绑定，最后关闭 Session。</p>
+
+<h3>整体调度闭环：一次会话 = 一个调度周期</h3>
+<div class="pipeline">
+  <div class="pnode"><div class="pn-t">提交作业</div><div class="pn-d">VCJob / PodGroup<br>schedulerName=volcano</div></div>
+  <div class="parrow">→</div>
+  <div class="pnode"><div class="pn-t">Controller</div><div class="pn-d">创建 PodGroup<br>与 Task(Pod)</div></div>
+  <div class="parrow">→</div>
+  <div class="pnode"><div class="pn-t">Watch &amp; Cache</div><div class="pn-d">监听集群状态<br>形成一致性快照</div></div>
+  <div class="parrow">→</div>
+  <div class="pnode"><div class="pn-t">Open Session</div><div class="pn-d">开启周期<br>加载快照与插件</div></div>
+  <div class="parrow">→</div>
+  <div class="pnode"><div class="pn-t">Actions</div><div class="pn-d">动作流水线<br>产出绑定/驱逐决策</div></div>
+  <div class="parrow">→</div>
+  <div class="pnode"><div class="pn-t">Apply &amp; Close</div><div class="pn-d">绑定 Pod 到 Node<br>提交变更 / 关闭</div></div>
+</div>
+<p class="note">⟳ 周期性重复（默认约 1s 一次），非事件驱动——保证每周期决策整体一致。</p>
+
+<h3>一次会话内部：Action 流水线</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>顺序</th><th>Action</th><th>职责</th><th>对应痛点</th></tr></thead>
+<tbody>
+<tr><td>1</td><td><code>enqueue</code> 入队</td><td>按配额/规则过滤，任务状态 pending → inqueue</td><td>配额准入</td></tr>
+<tr><td>2</td><td><code>allocate</code> 分配</td><td>预选 + 优选，为 Pod 选最合适的节点并绑定</td><td>核心分配 / gang / 利用率 / 拓扑</td></tr>
+<tr><td>3</td><td><code>preempt</code> 抢占</td><td>同队列内，高优先级任务抢占低优先级任务资源</td><td>优先级保障</td></tr>
+<tr><td>4</td><td><code>reclaim</code> 回收</td><td>跨队列按权重，回收超出应得份额的资源</td><td>资源借还</td></tr>
+<tr><td>5</td><td><code>backfill</code> 回填</td><td>用碎片资源调度 pending 任务，提升利用率</td><td>碎片浪费</td></tr>
+</tbody>
+</table></div>
+<div class="callout warn"><strong>配置注意</strong>：默认配置为 <code>actions: enqueue, allocate, backfill</code>（或含 preempt / reclaim）；其中 enqueue 与 preempt、reclaim 通常不同时启用。高频调度场景下 Action 顺序直接影响结果，调整前务必压测。</div>
+
+<h3>核心 allocate 展开：层层排序 → 选点 → 绑定</h3>
+<div class="pipeline">
+  <div class="pnode"><div class="pn-t">队列排序</div><div class="pn-d">Queue Order</div></div><div class="parrow">→</div>
+  <div class="pnode"><div class="pn-t">作业排序</div><div class="pn-d">Job Order / gang</div></div><div class="parrow">→</div>
+  <div class="pnode"><div class="pn-t">任务排序</div><div class="pn-d">Task Order</div></div><div class="parrow">→</div>
+  <div class="pnode"><div class="pn-t">节点预选</div><div class="pn-d">predicates 过滤</div></div><div class="parrow">→</div>
+  <div class="pnode"><div class="pn-t">节点优选</div><div class="pn-d">nodeorder / binpack</div></div><div class="parrow">→</div>
+  <div class="pnode"><div class="pn-t">绑定</div><div class="pn-d">Bind / Pipeline 占坑</div></div>
+</div>
+<p class="note">allocate 是最核心的 Action，采用「层层排序 → 预选 → 优选 → 绑定」的经典流程；Pipeline 占坑是 gang 实现原子性的关键——先预留、凑齐后再统一绑定。</p>
+
+<!-- ============ 3 ============ -->
+<h2 id="c3">3. 插件与扩展点体系</h2>
+<p>每个 Plugin 必须实现 <code>Name()</code>、<code>OnSessionOpen(ssn)</code>、<code>OnSessionClose(ssn)</code> 三个方法。真正的扩展逻辑发生在 <code>OnSessionOpen</code>：插件在此把算法函数注册到 Session 的各类扩展点（本质是若干 Fn map），Action 执行时再回调它们。</p>
+
+<h3>插件接口：三个方法</h3>
+<div class="grid3">
+  <div class="box"><div class="box-h">Name() string</div><p>返回插件唯一名称，供 ConfigMap 配置引用。</p></div>
+  <div class="box"><div class="box-h">OnSessionOpen(ssn)</div><p>每个调度周期开始时调用，在此把算法函数注册到 Session 的各个扩展点。</p></div>
+  <div class="box"><div class="box-h">OnSessionClose(ssn)</div><p>会话结束时清理中间状态、更新指标。</p></div>
+</div>
+
+<h3>扩展点四大类（20+ 个 Fn）</h3>
+<div class="grid2">
+  <div class="box blue"><div class="box-h">① 排序类 Ordering</div><p><code>jobOrderFn</code> · <code>queueOrderFn</code> · <code>taskOrderFn</code> · <code>nodeOrderFn</code> · <code>batchNodeOrderFn</code> · <code>bestNodeFn</code> · <code>namespaceOrderFn</code> · <code>clusterOrderFn</code></p></div>
+  <div class="box green"><div class="box-h">② 过滤与准入 Validation</div><p><code>predicateFn</code> · <code>prePredicateFn</code> · <code>jobEnqueueableFn</code> · <code>jobValidFn</code> · <code>jobReadyFn</code> · <code>jobStarvingFn</code></p></div>
+  <div class="box amber"><div class="box-h">③ 抢占与回收 Preempt / Reclaim</div><p><code>preemptableFn</code> · <code>reclaimableFn</code> · <code>overusedFn</code> · <code>allocatableFn</code> · <code>victimTasksFn</code> · <code>reclaimFn</code></p></div>
+  <div class="box violet"><div class="box-h">④ 状态与预留 State / Reserve</div><p><code>reservedNodesFn</code> · <code>targetJobFn</code> · <code>jobPipelineFn</code> · <code>jobEnqueuedFn</code> · <code>eventHandler</code></p></div>
+</div>
+
+<h3>三种扩展方式：从易到难</h3>
+<div class="grid3">
+  <div class="box green"><div class="box-h">A · 配置内置插件</div><p>在 ConfigMap 的 <code>tiers</code> 里增减/排序插件，零代码改行为。首选。</p></div>
+  <div class="box amber"><div class="box-h">B · Extender 外部扩展</div><p>通过 HTTP 回调外部服务，钩子最全、可跨语言，无需重编译调度器。</p></div>
+  <div class="box rose"><div class="box-h">C · 自定义 Plugin</div><p>实现 Plugin 接口 + <code>RegisterPluginBuilder</code> 注册，编译进自定义调度器。</p></div>
+</div>
+<div class="callout tip"><strong>机制要点</strong>：同一扩展点可被多个插件注册，结果按 tier 顺序组合——这正是默认配置分两层 plugins 的原因。例如 priority 与 gang 都注册 <code>jobOrderFn</code>，需靠分层顺序决定最终排序。</div>
+
+<!-- ============ 4 ============ -->
+<h2 id="c4">4. 扩展点 × 插件对应矩阵</h2>
+<p>官方内置约 15 个插件，每个只注册自己关心的扩展点。下表把常用内置插件（列）与四大类扩展点（行）交叉，<span class="dot on"></span> 表示「该插件注册了这个回调」。</p>
+<div class="table-wrap"><table>
+<caption>● = 该插件注册了此扩展点（回调）；○ = 不涉及 · 依据 Volcano 官方文档整理</caption>
+<thead><tr><th>扩展点 \ 插件</th><th>gang</th><th>priority</th><th>drf</th><th>proportion</th><th>binpack</th><th>nodeorder</th><th>extender</th></tr></thead>
+<tbody>
+<tr><td>jobOrderFn</td><td><span class="dot on"></span></td><td><span class="dot on"></span></td><td><span class="dot on"></span></td><td><span class="dot off"></span></td><td><span class="dot off"></span></td><td><span class="dot off"></span></td><td><span class="dot off"></span></td></tr>
+<tr><td>jobValidFn</td><td><span class="dot on"></span></td><td><span class="dot off"></span></td><td><span class="dot off"></span></td><td><span class="dot off"></span></td><td><span class="dot off"></span></td><td><span class="dot off"></span></td><td><span class="dot off"></span></td></tr>
+<tr><td>jobReadyFn</td><td><span class="dot on"></span></td><td><span class="dot off"></span></td><td><span class="dot off"></span></td><td><span class="dot off"></span></td><td><span class="dot off"></span></td><td><span class="dot off"></span></td><td><span class="dot off"></span></td></tr>
+<tr><td>jobStarvingFn</td><td><span class="dot on"></span></td><td><span class="dot on"></span></td><td><span class="dot off"></span></td><td><span class="dot off"></span></td><td><span class="dot off"></span></td><td><span class="dot off"></span></td><td><span class="dot off"></span></td></tr>
+<tr><td>queueOrderFn</td><td><span class="dot off"></span></td><td><span class="dot off"></span></td><td><span class="dot on"></span></td><td><span class="dot on"></span></td><td><span class="dot off"></span></td><td><span class="dot off"></span></td><td><span class="dot off"></span></td></tr>
+<tr><td>predicateFn</td><td><span class="dot off"></span></td><td><span class="dot off"></span></td><td><span class="dot off"></span></td><td><span class="dot off"></span></td><td><span class="dot off"></span></td><td><span class="dot off"></span></td><td><span class="dot on"></span></td></tr>
+<tr><td>nodeOrderFn</td><td><span class="dot off"></span></td><td><span class="dot off"></span></td><td><span class="dot off"></span></td><td><span class="dot off"></span></td><td><span class="dot on"></span></td><td><span class="dot on"></span></td><td><span class="dot on"></span></td></tr>
+<tr><td>preemptableFn</td><td><span class="dot on"></span></td><td><span class="dot on"></span></td><td><span class="dot on"></span></td><td><span class="dot off"></span></td><td><span class="dot off"></span></td><td><span class="dot off"></span></td><td><span class="dot on"></span></td></tr>
+<tr><td>reclaimableFn</td><td><span class="dot on"></span></td><td><span class="dot off"></span></td><td><span class="dot on"></span></td><td><span class="dot on"></span></td><td><span class="dot off"></span></td><td><span class="dot off"></span></td><td><span class="dot off"></span></td></tr>
+</tbody>
+</table></div>
+<h3>常用插件职责速查</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>插件</th><th>作用</th><th>主要注册扩展点</th></tr></thead>
+<tbody>
+<tr><td><code>gang</code></td><td>Gang 调度，minAvailable 全有或全无</td><td>jobValidFn / jobReadyFn / jobOrderFn / preemptableFn / reclaimableFn</td></tr>
+<tr><td><code>priority</code></td><td>按 PriorityClass 定义优先级</td><td>jobOrderFn / taskOrderFn / preemptableFn / jobStarvingFn</td></tr>
+<tr><td><code>conformance</code></td><td>保护 kube-system 关键 Pod 不被驱逐</td><td>preemptableFn / reclaimableFn</td></tr>
+<tr><td><code>drf</code></td><td>主导资源公平（Dominant Resource Fairness）</td><td>jobOrderFn / queueOrderFn / preemptableFn / reclaimFn</td></tr>
+<tr><td><code>proportion</code></td><td>按权重分配队列资源份额</td><td>queueOrderFn / overusedFn / allocatableFn / reclaimableFn</td></tr>
+<tr><td><code>capacity</code></td><td>显式队列配额（与 proportion 二选一）</td><td>准入与分配检查相关</td></tr>
+<tr><td><code>binpack</code></td><td>紧凑装箱，减少资源碎片</td><td>nodeOrderFn</td></tr>
+<tr><td><code>numaaware</code></td><td>NUMA 感知绑定</td><td>predicateFn / batchNodeOrderFn</td></tr>
+<tr><td><code>extender</code></td><td>通过 HTTP 调用外部服务执行自定义逻辑</td><td>predicateFn / batchNodeOrderFn / preemptableFn 等全套钩子</td></tr>
+</tbody>
+</table></div>
+<p class="note">观察：① extender 覆盖最广，是外部扩展的万能钩子；② gang 专注作业状态与抢占相关钩子；③ 排序类钩子被多个插件重复注册，须靠 tier 顺序组合；④ capacity 与 proportion 互斥，通常二选一。</p>
+
+<!-- ============ 5 ============ -->
+<h2 id="c5">5. 与 K8s 官方调度器对比</h2>
+<p>Volcano 的扩展点数量（20+）明显多于 Kubernetes 官方调度框架（约 12~13 个）。但这并不是简单的「功能堆得多」，而是两种扩展模型的本质差异：官方调度器是<strong>线性流水线（Pipeline）</strong>，一次只调一个 Pod，扩展点是主线上固定的阶段卡槽；Volcano 是<strong>多级决策回调（Hook）</strong>，一次调一批 Job，扩展点是 Action 回调的各种决策函数。</p>
+
+<div class="vs">
+  <div class="side hl"><h4>◆ kube-scheduler · 线性流水线</h4><p class="note">一次只调一个 Pod；扩展点 = 主线上固定的「阶段卡槽」，约 12~13 个。</p><ul><li>QueueSort → PreFilter → Filter → PostFilter</li><li>PreScore → Score → NormalizeScore</li><li>Reserve → Permit → PreBind → Bind → PostBind</li></ul></div>
+  <div class="side alt"><h4>▲ Volcano · 多级决策回调</h4><p class="note">一次调一批 Job；扩展点 = Action 回调的「决策函数」，20+ 个 Fn（四大类）。</p><ul><li>jobOrderFn / queueOrderFn / taskOrderFn</li><li>predicateFn / jobValidFn / jobReadyFn</li><li>preemptableFn / victimTasksFn / reclaimableFn…</li></ul></div>
+</div>
+
+<h3>语义映射：很多钩子一一对应，只是 Volcano 拆得更细</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>K8s 扩展点</th><th>Volcano 对应钩子</th><th>差异</th></tr></thead>
+<tbody>
+<tr><td>QueueSort</td><td>jobOrderFn / queueOrderFn / taskOrderFn</td><td>一个拆成对象三层</td></tr>
+<tr><td>Filter</td><td>predicateFn / prePredicateFn</td><td>基本对应</td></tr>
+<tr><td>Score + NormalizeScore</td><td>nodeOrderFn / batchNodeOrderFn / bestNodeFn</td><td>新增批量打分</td></tr>
+<tr><td>PostFilter（抢占）</td><td>preemptableFn / victimTasksFn / reclaimableFn / reclaimFn</td><td>抢占与回收分离</td></tr>
+<tr><td>PreEnqueue</td><td>jobEnqueueableFn / jobValidFn / jobStarvingFn</td><td>更细的作业状态</td></tr>
+<tr><td>Permit（gang）</td><td>jobReadyFn / jobPipelineFn</td><td>原生 gang 支持</td></tr>
+<tr><td>Reserve</td><td>reservedNodesFn / targetJobFn</td><td>资源预留</td></tr>
+</tbody>
+</table></div>
+
+<div class="grid3">
+  <div class="box"><div class="box-h">1 · 调度对象层级</div><p>K8s 只围绕 Pod 一个层级；Volcano 要同时排 Queue→Job→Task→Node 四层，每层都要排序/判断，钩子自然翻倍。</p></div>
+  <div class="box"><div class="box-h">2 · 模型粒度不同</div><p>K8s 是「阶段卡槽」，一个阶段一个接口；Volcano 是「决策回调」，同类能力拆成 Order/Valid/Ready/Starving 等更细的 Fn。</p></div>
+  <div class="box"><div class="box-h">3 · 功能内建范围</div><p>gang、DRF、配额、抢占回收、资源预留都是 Volcano 原生能力；K8s 多交给 out-of-tree 插件（如 Coscheduling / Kueue）。</p></div>
+</div>
+<div class="callout"><strong>一句话总结</strong>：K8s 用「少而固定的阶段」换取简洁，Volcano 用「多而细的回调」换取批处理场景的可控性——这是为 Gang 调度、多租户配额、抢占回收这些批处理刚需付出的复杂度代价。</div>
+
+<!-- ============ 6 ============ -->
+<h2 id="c6">6. 核心概念与 YAML 实战</h2>
+<h3>三个核心对象</h3>
+<div class="grid3">
+  <div class="box blue"><div class="box-h">Job（VCJob）</div><p>Volcano 自定义 CRD，描述一个批处理作业：多个 Task、每个 Task 的副本数、生命周期策略。是对原生 Job 语义的扩展。</p></div>
+  <div class="box green"><div class="box-h">PodGroup</div><p> gang 调度的载体，绑定一组 Pod，声明 <code>minMember</code> / <code>minTaskMember</code>。原生 Job/Deployment 也可通过标签关联 PodGroup。</p></div>
+  <div class="box violet"><div class="box-h">Queue</div><p>租户/队列的抽象，可分层。通过 <code>weight</code> 或 <code>capability</code> / <code>guarantee</code> 描述资源份额，是公平与配额的基础。</p></div>
+</div>
+
+<h3>实战一：一个 Gang 调度的 VCJob</h3>
+<pre><code>apiVersion: batch.volcano.sh/v1alpha1
+kind: Job
+metadata:
+  name: pytorch-ddp
+spec:
+  minAvailable: 4            # 凑齐 4 个 Pod 才一起启动（gang）
+  schedulerName: volcano
+  queue: research-queue
+  plugins:
+    env: []
+    svc: []
+  tasks:
+    - name: worker
+      replicas: 4
+      template:
+        spec:
+          containers:
+            - name: pytorch
+              image: pytorch/pytorch:2.1.0-cuda12.1-cudnn8-runtime
+              command: ["python", "train.py"]
+              resources:
+                limits:
+                  nvidia.com/gpu: 1
+      policies:
+        - event: PodEvicted
+          action: RestartJob</code></pre>
+<p><code>minAvailable: 4</code> 是 gang 的关键：Volcano 会为这 4 个 Pod 预留资源，凑不齐就一个都不绑定，从根本上避免「3 个 GPU 占着空等第 4 个」的死锁。</p>
+
+<h3>实战二：队列配额</h3>
+<pre><code>apiVersion: scheduling.volcano.sh/v1beta1
+kind: Queue
+metadata:
+  name: research-queue
+spec:
+  weight: 2                  # 按权重参与 proportion 分配
+  capability:                # 资源上限
+    nvidia.com/gpu: "16"
+    cpu: "64"
+  guarantee:                 # 保底份额（可选）
+    nvidia.com/gpu: "4"</code></pre>
+<p><code>weight</code> 用于 proportion 插件按权重分配；<code>capability</code> 是该队列能用的资源上限；<code>guarantee</code> 是保底份额。注意 proportion 与 capacity 插件二选一，前者按权重、后者按显式配额。</p>
+
+<!-- ============ 7 ============ -->
+<h2 id="c7">7. 关键调度策略配置</h2>
+<p>Volcano 的策略通过 ConfigMap 中的 <code>tiers</code>（插件分层）与 <code>actions</code>（动作顺序）组合。默认配置通常包含两个 tier。</p>
+<pre><code># volcano-scheduler-configmap 片段
+actions: "enqueue, allocate, backfill"
+tiers:
+  - plugins:
+      - name: priority        # 第一层：排序与抢占决策
+      - name: gang
+      - name: conformance
+      - name: drf
+      - name: proportion
+  - plugins:
+      - name: predicates      # 第二层：节点选择与放置
+      - name: nodeorder
+      - name: binpack</code></pre>
+
+<div class="grid2">
+  <div class="box green"><div class="box-h"><span class="tag g">gang</span> 全有或全无</div><p>分布式训练的基石。基于 PodGroup 的 <code>minMember</code> 判断作业是否 Ready；未 Ready 的作业通过 jobPipelineFn 占坑预留，凑齐后统一绑定。</p></div>
+  <div class="box blue"><div class="box-h"><span class="tag">binpack</span> 紧凑装箱</div><p>通过 nodeOrderFn 给「已用较多」的节点打高分，把 Pod 往一起堆，减少节点碎片。对 GPU 这种离散昂贵资源尤其重要。</p></div>
+  <div class="box violet"><div class="box-h"><span class="tag v">drf</span> 主导资源公平</div><p>Dominant Resource Fairness，按作业「主导资源」（CPU/GPU/内存中的最大占比）排序，适合多维资源的公平分配。</p></div>
+  <div class="box amber"><div class="box-h"><span class="tag a">preempt / reclaim</span> 抢占与回收</div><p>preempt 在队列内按优先级抢占；reclaim 跨队列按份额把借出的资源收回。两个 Action 独立配置，配合 conformance 保护系统 Pod。</p></div>
+</div>
+<div class="callout warn"><strong>常见坑</strong>：proportion 与 capacity 插件互斥，同时启用会导致配额判定冲突；enqueue 与 preempt/reclaim 通常不同时启用；修改 Action 顺序或插件分层后必须回归测试 gang 与公平性。</div>
+
+<!-- ============ 8 ============ -->
+<h2 id="c8">8. GPU 与拓扑感知</h2>
+<p>AI 训练对「放在哪」极其敏感。Volcano 在设备与拓扑层面提供了多项原生能力。</p>
+<div class="grid2">
+  <div class="box teal"><div class="box-h"><span class="tag t">deviceshare</span> GPU 共享</div><p>支持 GPU 共享与 MIG 模式，让多个任务共享一张卡，提升细粒度利用率。配合 vCUDA 可实现软件层 vGPU 切分与显存隔离。</p></div>
+  <div class="box blue"><div class="box-h"><span class="tag">numaaware</span> NUMA 感知</div><p>考虑 CPU NUMA 拓扑，把 Pod 绑定到内存访问最优的 NUMA 节点，降低跨 NUMA 访存开销，提升多核处理器的计算性能。</p></div>
+  <div class="box violet"><div class="box-h"><span class="tag v">task-topology</span> 任务拓扑</div><p>针对通信密集型应用，按任务间通信关系优化放置，把通信密集的 Pod 就近调度，减少跨节点网络开销。</p></div>
+  <div class="box green"><div class="box-h"><span class="tag g">network topology</span> 网络拓扑感知</div><p>充分考虑节点间网络带宽特性，为分布式训练优化数据传输路径，显著降低通信开销、提升模型训练速度。</p></div>
+</div>
+<div class="callout tip"><strong>多架构支持</strong>：Volcano 支持 x86、Arm、鲲鹏、昇腾（Ascend）等多种架构，以及 GPU 的多种虚拟化技术（动态 MIG、vCUDA、细粒度资源控制、多容器共享、统一监控）。成熟度为 Beta/Alpha 不等，生产采用前请核对目标版本。</div>
+
+<!-- ============ 9 ============ -->
+<h2 id="c9">9. 生产实践：部署与排障</h2>
+<h3>部署要点</h3>
+<ol>
+  <li><strong>安装</strong>：通过 Helm chart 或 <code>kubectl apply -f volcano-development.yaml</code> 安装，会部署 volcano-scheduler、controllers、webhooks 与 CRD。</li>
+  <li><strong>确认调度器</strong>：作业需显式设置 <code>schedulerName: volcano</code>，否则仍由默认 kube-scheduler 处理，gang/队列能力不生效。</li>
+  <li><strong>配置队列</strong>：先建 Queue 并规划权重/配额，再让作业 <code>spec.queue</code> 指向它；多租户场景优先 proportion 或 capacity。</li>
+  <li><strong>调优 ConfigMap</strong>：根据负载在 tiers 中增减插件、调整 actions 顺序；改完重启 volcano-scheduler。</li>
+  <li><strong>可观测</strong>：接入 volcano metrics 与 Dashboard，关注作业 Pending 时长、gang 成功率、队列份额、抢占/回收事件。</li>
+</ol>
+
+<h3>排障清单</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>现象</th><th>排查方向</th></tr></thead>
+<tbody>
+<tr><td>作业一直 Pending，Pod 起不来</td><td>是否设置 schedulerName=volcano；PodGroup 是否创建；minMember 是否大于集群可满足的资源；队列是否有配额。</td></tr>
+<tr><td> gang 作业卡在部分调度</td><td>检查 gang 插件是否启用；jobReadyFn 判定条件；是否有足够节点满足整组资源；考虑 Binpack 减少碎片。</td></tr>
+<tr><td>队列资源被挤占</td><td>检查 proportion/capability 配置；是否被其他队列借用；reclaim 是否启用；conformance 是否保护了系统 Pod。</td></tr>
+<tr><td>优先级不生效</td><td>PriorityClass 是否正确；priority 插件是否在 tier 中；jobOrderFn 是否被其他插件覆盖（tier 顺序）。</td></tr>
+<tr><td>调度器频繁重启 / 性能下降</td><td>检查调度周期与快照规模；扩展点回调是否有耗时逻辑（尤其 extender HTTP）；减少不必要的插件。</td></tr>
+</tbody>
+</table></div>
+<div class="callout rose"><strong>经验</strong>：Volcano 的问题大多不是「功能坏了」，而是「策略没配对」。先看 schedulerName 和插件配置，再看队列配额，最后才看调度算法本身。</div>
+
+<!-- ============ 10 ============ -->
+<h2 id="c10">10. 生态、版本与选型</h2>
+<h3>生态集成</h3>
+<p>Volcano 已成为批处理场景的事实标准，被主流 AI/大数据框架广泛适配：Spark、TensorFlow、PyTorch、Flink、Argo、Ray、MindSpore、PaddlePaddle、OpenMPI、Horovod、Kubeflow 等。相关子项目包括 volcano-global（多集群）、descheduler（重调度）、dashboard（可视化）。</p>
+
+<h3>与同类方案的关系</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>方案</th><th>定位</th><th>与 Volcano 关系</th></tr></thead>
+<tbody>
+<tr><td>kube-scheduler</td><td>K8s 原生调度器，Pod 级流水线</td><td>Volcano 补充其批处理语义，可共存（不同 schedulerName）</td></tr>
+<tr><td>Kueue</td><td>K8s 原生作业队列与配额（准入控制）</td><td>正交：Kueue 管治理/准入，Volcano 管批处理调度，可组合</td></tr>
+<tr><td>Apache YuniKorn</td><td>替换型通用调度器，层级队列 + DRF</td><td>竞争关系，均面向批处理，侧重不同</td></tr>
+</tbody>
+</table></div>
+<p>如果你正在纠结 Kueue 与 Volcano 如何取舍或组合，参见本站姊妹篇：<a href="kueue-vs-volcano.html">Kueue vs Volcano 深度对比</a> 与 <a href="kueue-volcano-together.html">两者如何协同配合</a>。</p>
+
+<!-- ============ 11 ============ -->
+<h2 id="c11">11. 总结与面试题</h2>
+<h3>核心要点回顾</h3>
+<ol>
+  <li><strong>存在根源</strong>是调度单元错配：K8s 以 Pod 为单位逐个调度，批处理需要以「作业 + 队列」为单位整体调度。五大痛点（死锁/无配额/难回收/碎片/拓扑）由此而来。</li>
+  <li><strong>周期驱动而非事件驱动</strong>：每个 Session 基于快照做决策并统一提交，保证一致性与大规模批处理能力——这是实现 Gang 整体调度的前提。</li>
+  <li><strong>Action + Plugin 两层可插拔</strong>：Action 定义调度环节，Plugin 通过注册扩展点回调提供算法，策略可按 ConfigMap 灵活组合。</li>
+  <li><strong>allocate 是核心</strong>：队列→作业→任务层层排序，再经 predicates 预选、nodeorder/binpack 优选，最后绑定或 pipeline 占坑。</li>
+  <li><strong>扩展点四大类</strong>：排序、过滤准入、抢占回收、状态预留，共 20+ 个 Fn；同一 Fn 可被多插件注册，靠 tier 顺序组合。</li>
+  <li><strong>三种扩展方式</strong>：配置内置插件（零代码）、extender（HTTP 跨语言）、自定义 Plugin（编译进调度器）。</li>
+  <li><strong>对比 K8s</strong>：官方是单 Pod 线性流水线（~13 扩展点），Volcano 是作业级多级回调（20+），多出的复杂度服务于 Gang、配额、抢占回收。</li>
+</ol>
+
+<h3>高频面试题</h3>
+<div class="grid2">
+  <div class="box"><div class="box-h">Q1 · Volcano 为什么不用事件驱动？</div><p>因为 gang「全有或全无」必须先看到全局再一次性决策。周期驱动 + 一致性快照让同周期内所有决策基于同一份「事实」，避免事件驱动下的中间态与互相打架。</p></div>
+  <div class="box"><div class="box-h">Q2 · gang 是怎么实现的？</div><p>基于 PodGroup 的 minMember 判定作业是否 Ready；未 Ready 时用 jobPipelineFn 占坑预留资源，凑齐后统一绑定。核心插件是 gang，涉及 jobValid/Ready/Starving 等钩子。</p></div>
+  <div class="box"><div class="box-h">Q3 · preempt 和 reclaim 区别？</div><p>preempt 是同队列内按优先级抢占；reclaim 是跨队列按权重把借出的应得份额收回。两个独立 Action，分别对应队列内公平与队列间借还。</p></div>
+  <div class="box"><div class="box-h">Q4 · 扩展点为什么比 K8s 多？</div><p>不是功能堆得多，而是模型不同：K8s 是单 Pod 线性流水线（阶段卡槽），Volcano 要排 Queue→Job→Task→Node 四层，且把同类能力拆成 Order/Valid/Ready/Starving 等更细的回调。</p></div>
+</div>
+
+<h2 id="meta">元信息</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>项</th><th>内容</th></tr></thead>
+<tbody>
+<tr><td>目标读者</td><td>中高级 Kubernetes 平台工程师、AI 基础设施工程师</td></tr>
+<tr><td>前置知识</td><td>K8s Job / CRD / 调度框架、GPU 调度基础、批处理系统概念</td></tr>
+<tr><td>技术栈版本</td><td>Volcano v1.9+ / v1.10+；Part 子项目（volcano-global / descheduler）成熟度不一</td></tr>
+<tr><td>预计阅读时间</td><td>约 35 分钟</td></tr>
+</tbody>
+</table></div>
+<p class="note">参考来源：Volcano 官方文档（Introduction / Scheduler / Plugin System / How to configure）、K8s Scheduling Framework 文档、Jimmy Song《AI 基础设施手册》。部分结构图依据官方文档整理。</p>
+
+
+<div class="pager">
+  <a href="/scheduler/">← 返回调度器系列目录</a>
+  <a href="kueue.html">Kueue 深度指南 →</a>
+</div>
+</article>
+</div>
+
+<button id="toTop" title="回到顶部">↑</button>
+<footer>© Volcano 调度器原理详解 · 基于 Volcano 官方文档与公开资料整理 · 小胖鱼@Think · 调度器系列</footer>
+<script>
+var toTop=document.getElementById('toTop');
+window.addEventListener('scroll',function(){toTop.classList.toggle('show',window.scrollY>400);});
+toTop.addEventListener('click',function(){window.scrollTo({top:0,behavior:'smooth'});});
+var links=document.querySelectorAll('.toc a');
+var sections=[];
+links.forEach(function(a){var el=document.querySelector(a.getAttribute('href')); if(el) sections.push({a:a,el:el});});
+window.addEventListener('scroll',function(){
+  var y=window.scrollY+120, cur=null;
+  sections.forEach(function(s){if(s.el.offsetTop<=y) cur=s.a;});
+  links.forEach(function(a){a.classList.remove('active');});
+  if(cur) cur.classList.add('active');
+});
+</script>
+</body>
+</html>
