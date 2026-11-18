@@ -148,7 +148,371 @@ tr:nth-child(even) td{background:#fbfcfe;}
     <div data-page-node-id="5O7SVlfxY1Q0s2U7v8Oev8" class="lg"><i data-page-node-id="npuujR7gwdIGre5AUfCNST" style="background:var(--slt)"></i><!--pnid:bB8vk1kS7bEaZPbCxP2uUD-->贯穿机制</div>
   </div>
 
-  <!--pnid:p8f0gbmivroStCTwj0vStc--><!-- ============ PHASE 0 ============ -->
+  <!--pnid:p8f0gbmivroStCTwj0vStc-->
+<section style="max-width:1220px;margin:34px auto;padding:0 22px">
+  <h2 style="font-size:22px;font-weight:800;color:#0f172a;margin:0 0 6px">端到端全景图</h2>
+  <p style="color:#64748b;font-size:14px;margin:0 0 18px;line-height:1.7">
+    下面两张全景图与正文 8 阶段一一对应：<b>横版</b>以泳道呈现多组件如何并行决策与异步写回（可左右拖动）；
+    <b>纵版</b>沿主干自上而下逐阶段展开。为避免与正文样式互相影响，两图在独立画框中渲染。
+  </p>
+
+  <details open style="border:1px solid #e2e8f0;border-radius:12px;margin-bottom:18px;background:#fff;overflow:hidden">
+    <summary style="cursor:pointer;padding:12px 18px;font-weight:700;color:#0f172a;background:#f8fafc;border-bottom:1px solid #e2e8f0">
+      ① 横版泳道全景（左右拖动查看完整流水线）
+    </summary>
+    <iframe class="vf-pano-h" title="Volcano 端到端流程图横版" srcdoc="&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;zh-CN&quot;&gt;
+&lt;head&gt;
+
+&lt;meta charset=&quot;UTF-8&quot;&gt;
+&lt;meta content=&quot;width=device-width, initial-scale=1.0&quot; name=&quot;viewport&quot;&gt;
+&lt;title&gt;Volcano 端到端调度流程 · 横版泳道&lt;/title&gt;
+&lt;style&gt;
+  html,body{margin:0;padding:0;background:#eef1f6}
+  .page{max-width:1560px;margin:24px auto;padding:0 12px}
+  @media print{html,body{background:#fff}.page{margin:0;padding:0}.hf{box-shadow:none}}
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div class=&quot;page&quot;&gt;
+&lt;style&gt;
+.hf{--ink:#16213a;--mut:#5b6779;--line:#dce3ee;
+ font-family:-apple-system,BlinkMacSystemFont,&quot;Segoe UI&quot;,&quot;PingFang SC&quot;,&quot;Microsoft YaHei&quot;,sans-serif;
+ background:#f5f7fc;color:var(--ink);border:1px solid var(--line);border-radius:16px;padding:26px 26px 30px;line-height:1.5}
+.hf *{box-sizing:border-box}
+.hf-hd{text-align:center;margin-bottom:4px}
+.hf-hd h2{margin:0 0 5px;font-size:22px}
+.hf-hd p{margin:0;color:var(--mut);font-size:12px}
+.hf-legend{display:flex;flex-wrap:wrap;gap:8px 14px;justify-content:center;margin:14px 0 18px;font-size:11px;color:var(--mut)}
+.hf-legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:#fff;padding:6px}
+.grid-sw{display:grid;grid-template-columns:118px repeat(8,minmax(148px,1fr));gap:5px;min-width:1380px}
+.cell{border-radius:8px;padding:8px 9px;font-size:10.8px;line-height:1.5;min-height:74px;border:1px solid transparent}
+.hdr{background:#1e293b;color:#fff;font-weight:700;text-align:center;font-size:11px;border:none;display:flex;align-items:center;justify-content:center;min-height:52px}
+.hdr small{display:block;font-weight:400;color:#94a3b8;font-size:9.5px}
+.lane{background:#eef2f7;color:#334155;font-weight:700;font-size:11.5px;display:flex;align-items:center;gap:7px;border-color:#dce3ee;min-height:74px}
+.lane .ic{width:24px;height:24px;border-radius:6px;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;flex:none}
+.ph{background:#f1f5f9;border:1px solid #dce3ee;color:#94a3b8;display:flex;align-items:center;justify-content:center}
+.sub{background:#fff;border:1px solid #e2e8f0;color:#334155}
+.sub b{display:block;font-size:10.9px;margin-bottom:2px}
+.sub code{background:rgba(60,80,130,.09);padding:0 3px;border-radius:3px;font-size:9.6px;color:#0b3a82}
+.sub .x{color:#94a3b8;font-style:italic}
+.c-indigo{background:#eef2ff;border-color:#c7d2fe}.c-indigo b{color:#3730a3}
+.c-cyan{background:#ecfeff;border-color:#a5f3fc}.c-cyan b{color:#0e7490}
+.c-violet{background:#f5f3ff;border-color:#ddd6fe}.c-violet b{color:#6d28d9}
+.c-rose{background:#fff1f2;border-color:#fecdd3}.c-rose b{color:#be123c}
+.c-amber{background:#fffbeb;border-color:#fde68a}.c-amber b{color:#b45309}
+.c-green{background:#ecfdf5;border-color:#a7f3d0}.c-green b{color:#047857}
+.oktag{color:#059669;font-weight:700}.notag{color:#e11d48;font-weight:700}.waitag{color:#d97706;font-weight:700}
+.note{margin-top:14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:9px}
+.note .n{background:#fff;border:1px solid var(--line);border-left:4px solid var(--c);border-radius:9px;padding:10px 12px;font-size:11.2px;color:#334155}
+.note .n b{color:var(--c);font-size:11.8px}
+.note .n code{background:rgba(60,80,130,.09);padding:0 3px;border-radius:3px;font-size:10px;color:#0b3a82}
+@media(max-width:640px){.hf{padding:16px}}
+&lt;/style&gt;
+&lt;div class=&quot;hf&quot;&gt;
+  &lt;div class=&quot;hf-hd&quot;&gt;
+    &lt;h2&gt;Volcano 端到端调度流程 · 横版泳道&lt;/h2&gt;
+    &lt;p&gt;行为参与组件，列从左到右为一次调度的时间阶段 —— 看各组件如何交错协作&lt;/p&gt;
+  &lt;/div&gt;
+  &lt;div class=&quot;hf-legend&quot;&gt;
+    &lt;span&gt;&lt;i style=&quot;background:#4f46e5&quot;&gt;&lt;/i&gt;提交/配置&lt;/span&gt;
+    &lt;span&gt;&lt;i style=&quot;background:#0891b2&quot;&gt;&lt;/i&gt;Controller&lt;/span&gt;
+    &lt;span&gt;&lt;i style=&quot;background:#7c3aed&quot;&gt;&lt;/i&gt;Scheduler/Session&lt;/span&gt;
+    &lt;span&gt;&lt;i style=&quot;background:#e11d48&quot;&gt;&lt;/i&gt;Actions 决策&lt;/span&gt;
+    &lt;span&gt;&lt;i style=&quot;background:#d97706&quot;&gt;&lt;/i&gt;Statement/写回&lt;/span&gt;
+    &lt;span&gt;&lt;i style=&quot;background:#059669&quot;&gt;&lt;/i&gt;落地闭环&lt;/span&gt;
+    &lt;span style=&quot;color:#059669&quot;&gt;✅提交&lt;/span&gt;&lt;span style=&quot;color:#e11d48&quot;&gt;❌回滚/驱逐&lt;/span&gt;&lt;span style=&quot;color:#d97706&quot;&gt;🟡转下轮&lt;/span&gt;
+  &lt;/div&gt;
+
+  &lt;div class=&quot;scroll&quot;&gt;
+  &lt;div class=&quot;grid-sw&quot;&gt;
+    &lt;div class=&quot;cell hdr&quot;&gt;组件 ／ 阶段&lt;/div&gt;
+    &lt;div class=&quot;cell hdr&quot;&gt;T0&lt;small&gt;提交&lt;/small&gt;&lt;/div&gt;
+    &lt;div class=&quot;cell hdr&quot;&gt;T1&lt;small&gt;展开&lt;/small&gt;&lt;/div&gt;
+    &lt;div class=&quot;cell hdr&quot;&gt;T2&lt;small&gt;快照&lt;/small&gt;&lt;/div&gt;
+    &lt;div class=&quot;cell hdr&quot;&gt;T3&lt;small&gt;enqueue&lt;/small&gt;&lt;/div&gt;
+    &lt;div class=&quot;cell hdr&quot;&gt;T4&lt;small&gt;allocate 决策&lt;/small&gt;&lt;/div&gt;
+    &lt;div class=&quot;cell hdr&quot;&gt;T5&lt;small&gt;preempt/reclaim/backfill&lt;/small&gt;&lt;/div&gt;
+    &lt;div class=&quot;cell hdr&quot;&gt;T6&lt;small&gt;提交/写回&lt;/small&gt;&lt;/div&gt;
+    &lt;div class=&quot;cell hdr&quot;&gt;T7&lt;small&gt;落地/下轮&lt;/small&gt;&lt;/div&gt;
+
+    &lt;div class=&quot;cell lane&quot;&gt;&lt;span class=&quot;ic&quot; style=&quot;background:#4f46e5&quot;&gt;用&lt;/span&gt;用户 / 管理员&lt;/div&gt;
+    &lt;div class=&quot;cell sub c-indigo&quot;&gt;&lt;b&gt;编写 Manifest&lt;/b&gt;Queue（weight/deserved/capability）+ VCJob（queue/minAvailable:8/replicas:8）+ 节点打标 + 调度器 ConfigMap&lt;/div&gt;
+    &lt;div class=&quot;cell sub&quot;&gt;&lt;span class=&quot;x&quot;&gt;kubectl apply -f&lt;/span&gt;&lt;/div&gt;
+    &lt;div class=&quot;cell ph&quot;&gt;·&lt;/div&gt;&lt;div class=&quot;cell ph&quot;&gt;·&lt;/div&gt;&lt;div class=&quot;cell ph&quot;&gt;·&lt;/div&gt;&lt;div class=&quot;cell ph&quot;&gt;·&lt;/div&gt;&lt;div class=&quot;cell ph&quot;&gt;·&lt;/div&gt;
+    &lt;div class=&quot;cell sub&quot;&gt;&lt;span class=&quot;x&quot;&gt;观察 Pod 状态&lt;/span&gt;&lt;/div&gt;
+    &lt;div class=&quot;cell sub c-green&quot;&gt;&lt;b&gt;结果&lt;/b&gt;Pod Running / 作业完成&lt;/div&gt;
+
+    &lt;div class=&quot;cell lane&quot;&gt;&lt;span class=&quot;ic&quot; style=&quot;background:#475569&quot;&gt;API&lt;/span&gt;API Server&lt;/div&gt;
+    &lt;div class=&quot;cell sub c-indigo&quot;&gt;&lt;b&gt;接收 CRD&lt;/b&gt;持久化 Queue / VCJob / Pod 对象&lt;/div&gt;
+    &lt;div class=&quot;cell sub&quot;&gt;&lt;span class=&quot;x&quot;&gt;存储 PodGroup/Pod&lt;/span&gt;&lt;/div&gt;
+    &lt;div class=&quot;cell sub&quot;&gt;&lt;span class=&quot;x&quot;&gt;informer 事件流&lt;/span&gt;&lt;/div&gt;
+    &lt;div class=&quot;cell ph&quot;&gt;·&lt;/div&gt;&lt;div class=&quot;cell ph&quot;&gt;·&lt;/div&gt;&lt;div class=&quot;cell ph&quot;&gt;·&lt;/div&gt;
+    &lt;div class=&quot;cell sub c-amber&quot;&gt;&lt;b&gt;接收写回&lt;/b&gt;Binding 创建 / Pod Delete&lt;/div&gt;
+    &lt;div class=&quot;cell sub&quot;&gt;&lt;span class=&quot;x&quot;&gt;nodeName 落库&lt;/span&gt;&lt;/div&gt;
+
+    &lt;div class=&quot;cell lane&quot;&gt;&lt;span class=&quot;ic&quot; style=&quot;background:#0891b2&quot;&gt;CT&lt;/span&gt;vc-controller&lt;/div&gt;
+    &lt;div class=&quot;cell ph&quot;&gt;·&lt;/div&gt;
+    &lt;div class=&quot;cell sub c-cyan&quot;&gt;&lt;b&gt;展开作业&lt;/b&gt;VCJob → PodGroup(MinMember=8) + 8 Pod(Pending)&lt;br&gt;写入 PodGroup/Queue 注解&lt;/div&gt;
+    &lt;div class=&quot;cell sub&quot;&gt;&lt;span class=&quot;x&quot;&gt;watch Pod 变化&lt;/span&gt;&lt;/div&gt;
+    &lt;div class=&quot;cell ph&quot;&gt;·&lt;/div&gt;&lt;div class=&quot;cell ph&quot;&gt;·&lt;/div&gt;
+    &lt;div class=&quot;cell sub&quot;&gt;&lt;span class=&quot;x&quot;&gt; victim 被删→补副本&lt;/span&gt;&lt;/div&gt;
+    &lt;div class=&quot;cell ph&quot;&gt;·&lt;/div&gt;
+    &lt;div class=&quot;cell sub c-green&quot;&gt;&lt;b&gt;重建 victim&lt;/b&gt;新 Pod Pending→下轮重调&lt;/div&gt;
+
+    &lt;div class=&quot;cell lane&quot;&gt;&lt;span class=&quot;ic&quot; style=&quot;background:#7c3aed&quot;&gt;SC&lt;/span&gt;Scheduler&lt;br&gt;主循环&lt;/div&gt;
+    &lt;div class=&quot;cell ph&quot;&gt;·&lt;/div&gt;&lt;div class=&quot;cell ph&quot;&gt;·&lt;/div&gt;
+    &lt;div class=&quot;cell sub c-violet&quot;&gt;&lt;b&gt;runOnce&lt;/b&gt;&lt;code&gt;wait.Until(1s)&lt;/code&gt; 串行&lt;br&gt;&lt;code&gt;openSession()&lt;/code&gt;&lt;/div&gt;
+    &lt;div class=&quot;cell sub c-violet&quot;&gt;&lt;b&gt;Snapshot&lt;/b&gt;Jobs/Nodes/Queues 全量&lt;br&gt;插件 OnSessionOpen 注册 Fn&lt;/div&gt;
+    &lt;div class=&quot;cell sub c-rose&quot;&gt;&lt;b&gt;enqueue&lt;/b&gt;配额准入，过滤 Job&lt;/div&gt;
+    &lt;div class=&quot;cell sub c-rose&quot;&gt;&lt;b&gt;allocate&lt;/b&gt;三层 Pop 轮转&lt;br&gt;逐 task 选点 + AddTask&lt;/div&gt;
+    &lt;div class=&quot;cell sub c-rose&quot;&gt;&lt;b&gt;preempt→reclaim→backfill&lt;/b&gt;抢占/回收/碎片兜底&lt;/div&gt;
+    &lt;div class=&quot;cell sub c-amber&quot;&gt;&lt;b&gt;Commit&lt;/b&gt;→closeSession&lt;/div&gt;
+    &lt;div class=&quot;cell sub&quot;&gt;&lt;span class=&quot;x&quot;&gt;等待下一周期&lt;/span&gt;&lt;/div&gt;
+
+    &lt;div class=&quot;cell lane&quot;&gt;&lt;span class=&quot;ic&quot; style=&quot;background:#7c3aed&quot;&gt;SS&lt;/span&gt;Session&lt;br&gt;快照+插件&lt;/div&gt;
+    &lt;div class=&quot;cell ph&quot;&gt;·&lt;/div&gt;&lt;div class=&quot;cell ph&quot;&gt;·&lt;/div&gt;
+    &lt;div class=&quot;cell sub c-violet&quot;&gt;&lt;b&gt;拍快照&lt;/b&gt;同一份事实&lt;br&gt;无独立 Tasks 字段&lt;/div&gt;
+    &lt;div class=&quot;cell sub&quot;&gt;&lt;span class=&quot;x&quot;&gt;Fn map 挂载&lt;/span&gt;&lt;/div&gt;
+    &lt;div class=&quot;cell sub c-rose&quot;&gt;&lt;b&gt;队列 Pop&lt;/b&gt;查 Overused&lt;br&gt;（权重/配额公平）&lt;/div&gt;
+    &lt;div class=&quot;cell sub c-rose&quot;&gt;&lt;b&gt;Job Pop&lt;/b&gt;逐 task 选点&lt;br&gt;Idle−/Used+ 扣资源&lt;br&gt;◆JobReady 判定&lt;/div&gt;
+    &lt;div class=&quot;cell sub c-rose&quot;&gt;&lt;b&gt;饥饿 job&lt;/b&gt;交给抢占回收&lt;/div&gt;
+    &lt;div class=&quot;cell sub c-amber&quot;&gt;&lt;b&gt;Statement.operations&lt;/b&gt;Evict/Pipeline/Allocate&lt;/div&gt;
+    &lt;div class=&quot;cell ph&quot;&gt;·&lt;/div&gt;
+
+    &lt;div class=&quot;cell lane&quot;&gt;&lt;span class=&quot;ic&quot; style=&quot;background:#d97706&quot;&gt;BD&lt;/span&gt;Cache /&lt;br&gt;Binder&lt;/div&gt;
+    &lt;div class=&quot;cell ph&quot;&gt;·&lt;/div&gt;&lt;div class=&quot;cell ph&quot;&gt;·&lt;/div&gt;&lt;div class=&quot;cell ph&quot;&gt;·&lt;/div&gt;&lt;div class=&quot;cell ph&quot;&gt;·&lt;/div&gt;&lt;div class=&quot;cell ph&quot;&gt;·&lt;/div&gt;&lt;div class=&quot;cell ph&quot;&gt;·&lt;/div&gt;
+    &lt;div class=&quot;cell sub c-amber&quot;&gt;&lt;b&gt;AddBindTask 入队&lt;/b&gt;BindFlowChannel(~5000)&lt;br&gt;状态 Allocated→Binding&lt;br&gt;&lt;span style=&quot;color:#b45309; font-weight:700&quot;&gt;⟵ 异步边界 ⟶&lt;/span&gt;&lt;/div&gt;
+    &lt;div class=&quot;cell sub c-amber&quot;&gt;&lt;b&gt;后台 ~20ms 消费&lt;/b&gt;A: &lt;code&gt;Pods().Bind(v1.Binding)&lt;/code&gt; 创建 Binding&lt;br&gt;B: &lt;code&gt;Pods().Delete()&lt;/code&gt; 删 victim&lt;/div&gt;
+    &lt;div class=&quot;cell ph&quot;&gt;·&lt;/div&gt;
+
+    &lt;div class=&quot;cell lane&quot;&gt;&lt;span class=&quot;ic&quot; style=&quot;background:#059669&quot;&gt;KU&lt;/span&gt;kubelet&lt;/div&gt;
+    &lt;div class=&quot;cell ph&quot;&gt;·&lt;/div&gt;&lt;div class=&quot;cell ph&quot;&gt;·&lt;/div&gt;&lt;div class=&quot;cell ph&quot;&gt;·&lt;/div&gt;&lt;div class=&quot;cell ph&quot;&gt;·&lt;/div&gt;&lt;div class=&quot;cell ph&quot;&gt;·&lt;/div&gt;&lt;div class=&quot;cell ph&quot;&gt;·&lt;/div&gt;&lt;div class=&quot;cell ph&quot;&gt;·&lt;/div&gt;
+    &lt;div class=&quot;cell sub&quot;&gt;&lt;span class=&quot;x&quot;&gt;watch nodeName&lt;/span&gt;&lt;/div&gt;
+    &lt;div class=&quot;cell sub c-green&quot;&gt;&lt;b&gt;拉起容器&lt;/b&gt;Pod → Running&lt;br&gt;资源占用持久化&lt;/div&gt;
+  &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;div class=&quot;note&quot;&gt;
+    &lt;div class=&quot;n&quot; style=&quot;--c:#e11d48&quot;&gt;&lt;b&gt;◆ Gang 判定（T4）&lt;/b&gt;逐 Pod 选点是物理动作，但不立即绑定；结果记入同一 Statement，用 &lt;code&gt;JobReady&lt;/code&gt; 判断整组是否凑齐 minAvailable：&lt;span class=&quot;oktag&quot;&gt;✅8/8 整组 Commit&lt;/span&gt; / &lt;span class=&quot;notag&quot;&gt;❌4/8 整组 Discard 一个不占&lt;/span&gt;。决策单位 = PodGroup，执行单位 = 单 Pod。&lt;/div&gt;
+    &lt;div class=&quot;n&quot; style=&quot;--c:#7c3aed&quot;&gt;&lt;b&gt;三层轮转 = 公平（T4）&lt;/b&gt;&lt;code&gt;queues.Pop()→jobs.Pop()→tasks.Pop()&lt;/code&gt;，处理完 Push 回堆按最新资源重算优先级。资源在队列间轮转流动，而非喂饱一个再管下一个 —— 这就是跨租户公平，扁平单队列做不到。&lt;/div&gt;
+    &lt;div class=&quot;n&quot; style=&quot;--c:#d97706&quot;&gt;&lt;b&gt;&quot;整体 vs 逐条&quot;不矛盾&lt;/b&gt;整体判定保 gang 原子性（能不能做），逐 task 记账保执行单位（做哪些）。Commit 把每条 Allocate 转成 BindTask 入队，Session 到此结束、未碰 API；真正写 API 由后台异步完成，不阻塞 1 秒主循环。&lt;/div&gt;
+    &lt;div class=&quot;n&quot; style=&quot;--c:#059669&quot;&gt;&lt;b&gt;驱逐也在真实集群生效&lt;/b&gt;改 cache 的 Releasing 只是内部记账（防本轮重复分配）；真正生效靠 defaultEvictor 的 &lt;code&gt;UpdateStatus&lt;/code&gt;+&lt;code&gt;Pods().Delete()&lt;/code&gt;。victim 由 controller 重建，下轮资源已被高优先级任务占用。&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;"
+      style="width:100%;border:0;display:block;min-height:1100px" scrolling="no"></iframe>
+  </details>
+
+  <details style="border:1px solid #e2e8f0;border-radius:12px;background:#fff;overflow:hidden">
+    <summary style="cursor:pointer;padding:12px 18px;font-weight:700;color:#0f172a;background:#f8fafc;border-bottom:1px solid #e2e8f0">
+      ② 纵版全景（自上而下的完整链路）
+    </summary>
+    <iframe class="vf-pano-v" title="Volcano 端到端流程图纵版" srcdoc="&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;zh-CN&quot;&gt;
+&lt;head&gt;
+
+&lt;meta charset=&quot;UTF-8&quot;&gt;
+&lt;meta content=&quot;width=device-width, initial-scale=1.0&quot; name=&quot;viewport&quot;&gt;
+&lt;title&gt;Volcano 端到端调度流程 · 纵版&lt;/title&gt;
+&lt;style&gt;
+  html,body{margin:0;padding:0;background:#eef1f6}
+  .page{max-width:1040px;margin:28px auto;padding:0 12px}
+  @media print{html,body{background:#fff}.page{margin:0;padding:0}.hf,.vf{box-shadow:none}}
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div class=&quot;page&quot;&gt;
+&lt;style&gt;
+.vf{--ink:#16213a;--mut:#5b6779;--line:#dce3ee;--card:#fff;
+ font-family:-apple-system,BlinkMacSystemFont,&quot;Segoe UI&quot;,&quot;PingFang SC&quot;,&quot;Microsoft YaHei&quot;,sans-serif;
+ background:#f5f7fc;color:var(--ink);border:1px solid var(--line);border-radius:16px;padding:28px 30px 34px;line-height:1.55}
+.vf *{box-sizing:border-box}
+.vf-hd{text-align:center}
+.vf-hd h2{margin:0 0 6px;font-size:23px;letter-spacing:.3px}
+.vf-hd p{margin:0;color:var(--mut);font-size:12.5px}
+.vf-legend{display:flex;flex-wrap:wrap;gap:8px 16px;justify-content:center;margin:16px auto 26px;padding:11px 16px;background:#fff;border:1px solid var(--line);border-radius:10px;font-size:11.5px;color:var(--mut);max-width:960px}
+.vf-legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.stg{position:relative;background:#fff;border:1px solid var(--line);border-left:5px solid var(--c);border-radius:12px;padding:15px 18px;margin:0 auto;max-width:960px;box-shadow:0 2px 9px rgba(20,30,60,.05)}
+.stg-hd{display:flex;align-items:center;gap:12px;margin-bottom:11px}
+.stg-num{flex:none;width:34px;height:34px;border-radius:9px;background:var(--c);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px}
+.stg-hd h3{margin:0;font-size:15.5px}
+.stg-hd small{display:block;color:var(--mut);font-size:11.5px;font-weight:400}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:9px}
+.card{background:var(--soft);border:1px solid var(--line);border-radius:9px;padding:9px 12px;font-size:12.3px}
+.card b{display:block;font-size:12.8px;margin-bottom:3px}
+.card code{background:rgba(60,80,130,.10);padding:1px 5px;border-radius:4px;font-size:11px;color:#0b3a82;white-space:nowrap}
+.card .d{color:var(--mut);margin-top:3px;font-size:11.2px;line-height:1.5}
+.arrow{text-align:center;color:var(--c);font-size:20px;line-height:1;margin:5px 0;font-weight:700}
+.arrow span{display:block;font-size:10.5px;color:var(--mut);font-weight:400;margin-top:1px}
+.core{background:#fff;border:1px dashed #e11d48;border-radius:12px;padding:14px 16px;margin-top:10px}
+.core-t{font-size:12.5px;font-weight:700;color:#e11d48;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.chain{display:flex;flex-wrap:wrap;align-items:center;gap:5px;font-size:11.5px;margin-bottom:12px}
+.chain .n{background:#fff1f2;border:1px solid #fecdd3;color:#9f1239;padding:4px 9px;border-radius:7px;font-weight:600}
+.chain .n.hi{background:#e11d48;color:#fff}
+.chain .ar{color:#cbd5e1}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:7px;margin-bottom:11px}
+.step{background:#fff;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:11.3px}
+.step b{color:#4338ca}
+.decide{background:#fffbeb;border:1px solid #fcd34d;border-radius:9px;padding:9px 12px;font-size:11.8px;text-align:center;font-weight:600;color:#92400e}
+.branches{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:8px}
+.br{border-radius:9px;padding:9px 11px;font-size:11.5px}
+.br.ok{background:#ecfdf5;border:1px solid #6ee7b7;color:#065f46}
+.br.no{background:#fff1f2;border:1px solid #fda4af;color:#9f1239}
+.br b{display:block;font-size:12px;margin-bottom:2px}
+.async{border-top:2px dashed #d97706;text-align:center;margin:16px auto 14px;max-width:960px;color:#b45309;font-size:11px;font-weight:600;letter-spacing:.5px}
+.async span{background:#f5f7fc;padding:0 12px}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.mini{font-size:11.5px}
+.tldr{margin-top:24px;background:linear-gradient(135deg,#1e293b,#334155);color:#e2e8f0;border-radius:12px;padding:16px 20px;font-size:12.5px;line-height:1.7;max-width:960px;margin-left:auto;margin-right:auto}
+.tldr b{color:#fbbf24}
+@media(max-width:640px){.branches,.split{grid-template-columns:1fr}.vf{padding:18px}}
+&lt;/style&gt;
+&lt;div class=&quot;vf&quot;&gt;
+  &lt;div class=&quot;vf-hd&quot;&gt;
+    &lt;h2&gt;Volcano 端到端调度流程 · 纵版&lt;/h2&gt;
+    &lt;p&gt;从 Job 提交到 Pod Running —— 8 阶段全链路 · 含 Gang 决策 / 三层轮转 / 异步写回&lt;/p&gt;
+  &lt;/div&gt;
+  &lt;div class=&quot;vf-legend&quot;&gt;
+    &lt;span&gt;&lt;i style=&quot;background:#4f46e5&quot;&gt;&lt;/i&gt;提交/配置&lt;/span&gt;
+    &lt;span&gt;&lt;i style=&quot;background:#0891b2&quot;&gt;&lt;/i&gt;Controller 展开&lt;/span&gt;
+    &lt;span&gt;&lt;i style=&quot;background:#7c3aed&quot;&gt;&lt;/i&gt;Session 内存&lt;/span&gt;
+    &lt;span&gt;&lt;i style=&quot;background:#e11d48&quot;&gt;&lt;/i&gt;Actions 决策核心&lt;/span&gt;
+    &lt;span&gt;&lt;i style=&quot;background:#d97706&quot;&gt;&lt;/i&gt;提交/异步写回&lt;/span&gt;
+    &lt;span&gt;&lt;i style=&quot;background:#059669&quot;&gt;&lt;/i&gt;落地闭环&lt;/span&gt;
+    &lt;span&gt;&lt;i style=&quot;background:#fcd34d; border:1px solid #d97706&quot;&gt;&lt;/i&gt;判定分支&lt;/span&gt;
+  &lt;/div&gt;
+
+  &lt;div class=&quot;stg&quot; style=&quot;--c:#4f46e5; --soft:#eef2ff&quot;&gt;
+    &lt;div class=&quot;stg-hd&quot;&gt;&lt;div class=&quot;stg-num&quot;&gt;0&lt;/div&gt;&lt;div&gt;&lt;h3&gt;提交准备层&lt;/h3&gt;&lt;small&gt;Submit &amp;amp; Configure · 用户/管理员编写 Manifest&lt;/small&gt;&lt;/div&gt;&lt;/div&gt;
+    &lt;div class=&quot;grid&quot;&gt;
+      &lt;div class=&quot;card&quot;&gt;&lt;b&gt;① Queue 队列&lt;/b&gt;&lt;code&gt;scheduling.volcano.sh/v1beta1&lt;/code&gt;&lt;div class=&quot;d&quot;&gt;管理员建队列并配额。&lt;code&gt;weight&lt;/code&gt; 比例 / &lt;code&gt;deserved&lt;/code&gt; 应得 / &lt;code&gt;guarantee&lt;/code&gt; 独占 / &lt;code&gt;capability&lt;/code&gt; 硬上限。安装自带 &lt;code&gt;root&lt;/code&gt; + &lt;code&gt;default&lt;/code&gt;。&lt;/div&gt;&lt;/div&gt;
+      &lt;div class=&quot;card&quot;&gt;&lt;b&gt;② VCJob 作业&lt;/b&gt;&lt;code&gt;batch.volcano.sh/v1alpha1&lt;/code&gt;&lt;div class=&quot;d&quot;&gt;用户提交作业：&lt;code&gt;spec.queue: training&lt;/code&gt;（声明归属）、&lt;code&gt;minAvailable: 8&lt;/code&gt;（gang 门槛）、&lt;code&gt;replicas: 8&lt;/code&gt;、&lt;code&gt;schedulerName: volcano&lt;/code&gt;。&lt;/div&gt;&lt;/div&gt;
+      &lt;div class=&quot;card&quot;&gt;&lt;b&gt;③ 节点打标&lt;/b&gt;&lt;code&gt;kubectl label/annotate&lt;/code&gt;&lt;div class=&quot;d&quot;&gt;为硬件感知插件准备数据：机柜 &lt;code&gt;topology.kubernetes.io/rack&lt;/code&gt;、功率 &lt;code&gt;power-capacity-watts&lt;/code&gt;、供电 &lt;code&gt;power-feed=dual&lt;/code&gt; 写到 Node 的 label/annotation。&lt;/div&gt;&lt;/div&gt;
+      &lt;div class=&quot;card&quot;&gt;&lt;b&gt;④ 调度器配置&lt;/b&gt;&lt;code&gt;volcano-scheduler-configmap&lt;/code&gt;&lt;div class=&quot;d&quot;&gt;定义 &lt;code&gt;actions: enqueue,allocate,preempt,reclaim,backfill&lt;/code&gt; 与 &lt;code&gt;tiers&lt;/code&gt; 插件分层；硬约束（predicates）在前层，软打分（nodeorder/binpack）在后层。&lt;/div&gt;&lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div class=&quot;arrow&quot; style=&quot;--c:#4f46e5&quot;&gt;↓&lt;span&gt;apply -f → API Server&lt;/span&gt;&lt;/div&gt;
+
+  &lt;div class=&quot;stg&quot; style=&quot;--c:#0891b2; --soft:#ecfeff&quot;&gt;
+    &lt;div class=&quot;stg-hd&quot;&gt;&lt;div class=&quot;stg-num&quot;&gt;1&lt;/div&gt;&lt;div&gt;&lt;h3&gt;Controller 展开&lt;/h3&gt;&lt;small&gt;vc-controller · 作业 → 调度单元（此处才形成&quot;队列/作业/任务&quot;三层）&lt;/small&gt;&lt;/div&gt;&lt;/div&gt;
+    &lt;div class=&quot;grid&quot;&gt;
+      &lt;div class=&quot;card&quot;&gt;&lt;b&gt;创建 PodGroup&lt;/b&gt;&lt;code&gt;MinMember = minAvailable = 8&lt;/code&gt;&lt;div class=&quot;d&quot;&gt;一个 VCJob 对应一个 PodGroup，作为 gang 的&quot;全有或全无&quot;绑定单元。&lt;/div&gt;&lt;/div&gt;
+      &lt;div class=&quot;card&quot;&gt;&lt;b&gt;展开 N 个 Pod&lt;/b&gt;&lt;code&gt;replicas: 8 → 8 Pod&lt;/code&gt;&lt;div class=&quot;d&quot;&gt;每个 task 副本生成一个 Pod，初始 &lt;code&gt;Pending&lt;/code&gt;、&lt;code&gt;spec.nodeName&lt;/code&gt; 为空。&lt;/div&gt;&lt;/div&gt;
+      &lt;div class=&quot;card&quot;&gt;&lt;b&gt;写入三层关联&lt;/b&gt;&lt;code&gt;annotation&lt;/code&gt;&lt;div class=&quot;d&quot;&gt;每个 Pod 被打上 PodGroup 名、Queue 名注解 —— 队列/作业/任务的归属在 Pod 创建那一刻就写死。&lt;/div&gt;&lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;card&quot; style=&quot;margin-top:9px; background:#fff&quot;&gt;&lt;b&gt;因果纠正&lt;/b&gt;：不是&quot;提交任务→聚合成作业→塞进队列&quot;；而是&lt;b&gt;提交作业&lt;/b&gt;（声明 queue/replicas/minAvailable）→ controller 按 replicas &lt;b&gt;展开成任务&lt;/b&gt;，队列归属是&lt;b&gt;声明式&lt;/b&gt;的。&lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div class=&quot;arrow&quot; style=&quot;--c:#0891b2&quot;&gt;↓&lt;span&gt;Pod 进入调度队列，等待 scheduler&lt;/span&gt;&lt;/div&gt;
+
+  &lt;div class=&quot;stg&quot; style=&quot;--c:#7c3aed; --soft:#f5f3ff&quot;&gt;
+    &lt;div class=&quot;stg-hd&quot;&gt;&lt;div class=&quot;stg-num&quot;&gt;2&lt;/div&gt;&lt;div&gt;&lt;h3&gt;调度主循环&lt;/h3&gt;&lt;small&gt;Scheduler Main Loop · 周期驱动、严格串行&lt;/small&gt;&lt;/div&gt;&lt;/div&gt;
+    &lt;div class=&quot;grid&quot;&gt;
+      &lt;div class=&quot;card&quot;&gt;&lt;b&gt;单行主循环&lt;/b&gt;&lt;code&gt;go wait.Until(runOnce, 1s, stopCh)&lt;/code&gt;&lt;div class=&quot;d&quot;&gt;单 goroutine 同步调用 runOnce，绝无两个 Session 并发。&lt;/div&gt;&lt;/div&gt;
+      &lt;div class=&quot;card&quot;&gt;&lt;b&gt;sliding 计时&lt;/b&gt;&lt;code&gt;周期 ≈ 本轮耗时 + 1s&lt;/code&gt;&lt;div class=&quot;d&quot;&gt;计时从&quot;跑完&quot;才开始，调度慢不会并发追赶，只把周期自然拉长。&lt;/div&gt;&lt;/div&gt;
+      &lt;div class=&quot;card&quot;&gt;&lt;b&gt;选主与数据同步&lt;/b&gt;&lt;code&gt;leader election&lt;/code&gt;&lt;div class=&quot;d&quot;&gt;生产多副本只有一个 active 在调度；Cache informer 并发更新快照但不参与决策。&lt;/div&gt;&lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div class=&quot;arrow&quot; style=&quot;--c:#7c3aed&quot;&gt;↓&lt;span&gt;每个周期开头 openSession()&lt;/span&gt;&lt;/div&gt;
+
+  &lt;div class=&quot;stg&quot; style=&quot;--c:#7c3aed; --soft:#f5f3ff&quot;&gt;
+    &lt;div class=&quot;stg-hd&quot;&gt;&lt;div class=&quot;stg-num&quot;&gt;3&lt;/div&gt;&lt;div&gt;&lt;h3&gt;Session 初始化&lt;/h3&gt;&lt;small&gt;openSession · 拍一致性快照 + 挂载插件函数表&lt;/small&gt;&lt;/div&gt;&lt;/div&gt;
+    &lt;div class=&quot;grid&quot;&gt;
+      &lt;div class=&quot;card&quot;&gt;&lt;b&gt;全量快照&lt;/b&gt;&lt;code&gt;cache.Snapshot()&lt;/code&gt;&lt;div class=&quot;d&quot;&gt;Jobs / Nodes / Queues / Namespaces / HyperNodes 全量装入，多为引用；Task 嵌在 Job 内，&lt;b&gt;无独立 Tasks 字段&lt;/b&gt;。&lt;/div&gt;&lt;/div&gt;
+      &lt;div class=&quot;card&quot;&gt;&lt;b&gt;插件函数表&lt;/b&gt;&lt;code&gt;30+ Fn map&lt;/code&gt;&lt;div class=&quot;d&quot;&gt;jobOrderFns / queueOrderFns / predicateFns / jobReadyFns 等初始为空。&lt;/div&gt;&lt;/div&gt;
+      &lt;div class=&quot;card&quot;&gt;&lt;b&gt;OnSessionOpen&lt;/b&gt;&lt;code&gt;AddXxxFn(...)&lt;/code&gt;&lt;div class=&quot;d&quot;&gt;各插件把算法函数注册进 map，供 Action 执行时统一回调 —— 扩展点多正因决策时机切得细。&lt;/div&gt;&lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;card&quot; style=&quot;margin-top:9px; background:#fff&quot;&gt;&lt;div class=&quot;d&quot;&gt;整轮调度都基于这&lt;b&gt;同一份快照&lt;/b&gt;，中途不再刷新；新来的 Pod 这一轮不考虑，等下个周期。&lt;/div&gt;&lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div class=&quot;arrow&quot; style=&quot;--c:#7c3aed&quot;&gt;↓&lt;span&gt;共用同一 ssn，依次执行 Actions&lt;/span&gt;&lt;/div&gt;
+
+  &lt;div class=&quot;stg&quot; style=&quot;--c:#e11d48; --soft:#fff1f2&quot;&gt;
+    &lt;div class=&quot;stg-hd&quot;&gt;&lt;div class=&quot;stg-num&quot;&gt;4&lt;/div&gt;&lt;div&gt;&lt;h3&gt;Actions 决策流水线 ★核心&lt;/h3&gt;&lt;small&gt;配置顺序即执行顺序 · 代价递增：先温和、再加码、最后兜底&lt;/small&gt;&lt;/div&gt;&lt;/div&gt;
+    &lt;div class=&quot;chain&quot;&gt;
+      &lt;span class=&quot;n&quot;&gt;enqueue 入队/配额准入&lt;/span&gt;&lt;span class=&quot;ar&quot;&gt;→&lt;/span&gt;
+      &lt;span class=&quot;n hi&quot;&gt;allocate 分配（展开）&lt;/span&gt;&lt;span class=&quot;ar&quot;&gt;→&lt;/span&gt;
+      &lt;span class=&quot;n&quot;&gt;preempt 同队列抢占&lt;/span&gt;&lt;span class=&quot;ar&quot;&gt;→&lt;/span&gt;
+      &lt;span class=&quot;n&quot;&gt;reclaim 跨队列回收&lt;/span&gt;&lt;span class=&quot;ar&quot;&gt;→&lt;/span&gt;
+      &lt;span class=&quot;n&quot;&gt;backfill 碎片回填&lt;/span&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;core&quot;&gt;
+      &lt;div class=&quot;core-t&quot;&gt;◆ allocate 内部深挖 —— 一轮处理多个 PodGroup，但每次决策单位 = 一个 PodGroup&lt;/div&gt;
+      &lt;div class=&quot;steps&quot;&gt;
+        &lt;div class=&quot;step&quot;&gt;&lt;b&gt;① 准备筛选&lt;/b&gt;&lt;br&gt;跳过 pending / JobValid 不通过 / 被 gate 的 job；无资源请求的 task 留给 backfill。&lt;/div&gt;
+        &lt;div class=&quot;step&quot;&gt;&lt;b&gt;② 三层轮转 Pop&lt;/b&gt;&lt;br&gt;&lt;code&gt;queues.Pop()&lt;/code&gt;查 Overused → &lt;code&gt;jobs.Pop()&lt;/code&gt;查 JobReady → &lt;code&gt;tasks.Pop()&lt;/code&gt;；处理完 Push 回堆按最新资源重算 → 跨队列公平。&lt;/div&gt;
+        &lt;div class=&quot;step&quot;&gt;&lt;b&gt;③ 单 task 六步&lt;/b&gt;&lt;br&gt;选队列 QueueOrderFn → 选作业 JobOrderFn → 选任务 TaskOrderFn → predicate 预选 → nodeOrder 优选 → Allocate/Pipeline。&lt;/div&gt;
+        &lt;div class=&quot;step&quot;&gt;&lt;b&gt;④ AddTask 扣资源&lt;/b&gt;&lt;br&gt;Idle− / Used+（Pipeline 则加 Pipelined 做软预留），≈Reserve 但非扩展点，仅内存记账防重复占位。&lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;decide&quot;&gt;◆ 判定：&lt;code&gt;ssn.JobReady(job)&lt;/code&gt; —— 整组凑齐 minAvailable（如 8/8）了吗？&lt;/div&gt;
+      &lt;div class=&quot;branches&quot;&gt;
+        &lt;div class=&quot;br ok&quot;&gt;&lt;b&gt;✅ 满足 → Commit()&lt;/b&gt;整组 Operation 一起提交（决策单位=PodGroup）；8 个 task 一起进入绑定队列。凑不齐就一个都不占 —— 从根上杜绝 Gang 死锁。&lt;/div&gt;
+        &lt;div class=&quot;br no&quot;&gt;&lt;b&gt;❌ 不满足 → Discard()&lt;/b&gt;整组回滚（反向 RemoveTask），一个 Pod 都不绑；该 job 保持饥饿态，交给后续 preempt/reclaim 补救。&lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;mini&quot; style=&quot;margin-top:10px; color:#5b6779&quot;&gt;补充：&lt;b&gt;preempt/reclaim&lt;/b&gt; 拿饥饿 job 当输入，自己选 victim → &lt;code&gt;Evict&lt;/code&gt; → 同一 Statement 事务内&quot;驱逐+占位&quot;一起提交；&lt;b&gt;backfill&lt;/b&gt; 只挑无资源请求的 BestEffort 任务，用前面分剩的碎片兜底。&lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div class=&quot;arrow&quot; style=&quot;--c:#e11d48&quot;&gt;↓&lt;span&gt;stmt.Commit() 遍历 operations&lt;/span&gt;&lt;/div&gt;
+
+  &lt;div class=&quot;stg&quot; style=&quot;--c:#d97706; --soft:#fffbeb&quot;&gt;
+    &lt;div class=&quot;stg-hd&quot;&gt;&lt;div class=&quot;stg-num&quot;&gt;5&lt;/div&gt;&lt;div&gt;&lt;h3&gt;Statement 提交&lt;/h3&gt;&lt;small&gt;整体判定已完成，开始逐 task 记账入队（此刻仍未碰 API Server）&lt;/small&gt;&lt;/div&gt;&lt;/div&gt;
+    &lt;div class=&quot;grid&quot;&gt;
+      &lt;div class=&quot;card&quot;&gt;&lt;b&gt;遍历 operations&lt;/b&gt;&lt;code&gt;Evict / Pipeline / Allocate&lt;/code&gt;&lt;div class=&quot;d&quot;&gt;每条操作的单位是&lt;b&gt;单个 task&lt;/b&gt;；整体决定&quot;能不能做&quot;，逐 task 决定&quot;记哪些账&quot;。&lt;/div&gt;&lt;/div&gt;
+      &lt;div class=&quot;card&quot;&gt;&lt;b&gt;Allocate 分支&lt;/b&gt;&lt;code&gt;CreateBindContext → AddBindTask&lt;/code&gt;&lt;div class=&quot;d&quot;&gt;状态 &lt;code&gt;Allocated → Binding&lt;/code&gt;，绑定请求丢进 BindFlowChannel（容量约 5000）。&lt;/div&gt;&lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;div class=&quot;async&quot;&gt;&lt;span&gt;⟵ ⟶　异 步 边 界　⟵ ⟶　Session 到此结束，真正写 API 由后台 goroutine 完成&lt;/span&gt;&lt;/div&gt;
+
+  &lt;div class=&quot;stg&quot; style=&quot;--c:#d97706; --soft:#fffbeb&quot;&gt;
+    &lt;div class=&quot;stg-hd&quot;&gt;&lt;div class=&quot;stg-num&quot;&gt;6&lt;/div&gt;&lt;div&gt;&lt;h3&gt;异步写回 API Server&lt;/h3&gt;&lt;small&gt;后台每约 20ms 消费 channel · 绑定与驱逐是两条不同写回路径&lt;/small&gt;&lt;/div&gt;&lt;/div&gt;
+    &lt;div class=&quot;split&quot;&gt;
+      &lt;div class=&quot;card&quot;&gt;&lt;b&gt;路径 A · 绑定&lt;/b&gt;&lt;div class=&quot;d&quot;&gt;PreBind 插件 → &lt;code&gt;Binder.Bind()&lt;/code&gt; → &lt;code&gt;Pods(ns).Bind(v1.Binding)&lt;/code&gt; 创建 Binding 子资源 → API Server 才把 nodeName 落到 Pod 上（与 kube-scheduler 一致，不是直接 patch nodeName）。&lt;/div&gt;&lt;/div&gt;
+      &lt;div class=&quot;card&quot;&gt;&lt;b&gt;路径 B · 驱逐&lt;/b&gt;&lt;div class=&quot;d&quot;&gt;defaultEvictor 先 &lt;code&gt;UpdateStatus&lt;/code&gt;（PodReady=False、DisruptionTarget=True）→ &lt;code&gt;Pods().Delete()&lt;/code&gt; 真正删 Pod。不经过 PDB，失败会 resyncTask 重新入队。&lt;/div&gt;&lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div class=&quot;arrow&quot; style=&quot;--c:#059669&quot;&gt;↓&lt;span&gt;kubelet / controller watch 到变化&lt;/span&gt;&lt;/div&gt;
+
+  &lt;div class=&quot;stg&quot; style=&quot;--c:#059669; --soft:#ecfdf5&quot;&gt;
+    &lt;div class=&quot;stg-hd&quot;&gt;&lt;div class=&quot;stg-num&quot;&gt;7&lt;/div&gt;&lt;div&gt;&lt;h3&gt;落地闭环&lt;/h3&gt;&lt;small&gt;真实集群生效 · 资源占用持久化&lt;/small&gt;&lt;/div&gt;&lt;/div&gt;
+    &lt;div class=&quot;grid&quot;&gt;
+      &lt;div class=&quot;card&quot;&gt;&lt;b&gt;正常绑定&lt;/b&gt;&lt;code&gt;kubelet → Pod Running&lt;/code&gt;&lt;div class=&quot;d&quot;&gt;kubelet watch 到 nodeName → 拉起容器 → Pod Running；真实 Pod 占用资源，下轮快照从 Cache 看到它。&lt;/div&gt;&lt;/div&gt;
+      &lt;div class=&quot;card&quot;&gt;&lt;b&gt;被驱逐的 victim&lt;/b&gt;&lt;code&gt;ReplicaSet / vc-controller 重建&lt;/code&gt;&lt;div class=&quot;d&quot;&gt;Pod 被删 → 控制器补副本 → 新 Pod Pending → 下一轮 Session 重调度，此时资源已被高优先级任务占用。&lt;/div&gt;&lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;div class=&quot;tldr&quot;&gt;&lt;b&gt;一句话贯穿：&lt;/b&gt;提交 Job（声明 queue/replicas/minAvailable）→ controller 造 PodGroup+Pod 并写死三层关联 → 每 1s 串行拍快照开 Session → allocate 在队列/作业/任务间逐层 Pop 轮转，每个 gang 作业&quot;整组 Commit 或整组 Discard&quot; → preempt/reclaim/backfill 补救兜底 → Commit 把 Allocate 转成 BindTask 入队 → 后台异步创建 Binding / 删除 Pod → kubelet 落地、控制器重建 → 下轮继续。&lt;b&gt;多出来的复杂度，全是批处理语义（作业、队列、公平、抢占、拓扑）的代价。&lt;/b&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;"
+      style="width:100%;border:0;display:block;min-height:1400px" scrolling="no"></iframe>
+  </details>
+</section>
+
+<script>
+(function () {
+  function fit(iframe) {
+    try {
+      var d = iframe.contentDocument;
+      if (d && d.body) {
+        var h = Math.max(d.body.scrollHeight, d.documentElement.scrollHeight);
+        if (h > 200) iframe.style.height = (h + 24) + 'px';
+      }
+    } catch (e) {}
+  }
+  document.querySelectorAll('iframe.vf-pano-h, iframe.vf-pano-v').forEach(function (f) {
+    if (f.dataset.fit) return;
+    f.dataset.fit = '1';
+    f.addEventListener('load', function () { fit(f); });
+    if (f.contentDocument && f.contentDocument.readyState === 'complete') fit(f);
+  });
+})();
+</script>
+
+  <!-- ============ PHASE 0 ============ -->
   <section data-page-node-id="2UUskpthtewShPVGx086Dl" class="phase">
     <div data-page-node-id="5ZKOd107sDAylEMyy2DsGR" class="phase-hd" style="background:linear-gradient(90deg,#4338ca,#6366f1)">
       <div data-page-node-id="YAQkIyztnNMMg2CURrcWK0" class="phase-badge"><!--pnid:Kcyhx44XQNI2PqTIaq1MqS-->0</div>
