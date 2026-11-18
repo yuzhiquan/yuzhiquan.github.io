@@ -1,8 +1,6 @@
 ---
 layout: page
 title: 简历
-icon: fas fa-address-card
-order: 5
 permalink: /resume/
 ---
 
