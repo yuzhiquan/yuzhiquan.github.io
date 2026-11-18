@@ -66,7 +66,7 @@ footer{text-align:center;color:var(--muted);font-size:13px;padding:26px 20px 50p
 </div></header>
 
 <main>
-  <div class="intro">本系列持续收录调度器相关的深度文章，每篇都是自包含的富 HTML 长文。当前已发布 <b>8 篇</b>：从 kube-scheduler、Kueue、Volcano 三大核心原理出发（含 Volcano 端到端调度流程图），延伸到两者的对比与协同，落到 AI/GPU 调度方案全景与 Koordinator 混部超卖实战。建议按「原理 → 对比 → 协同 → 全景」顺序阅读。</div>
+  <div class="intro">本系列持续收录调度器相关的深度文章，每篇都是自包含的富 HTML 长文。当前已发布 <b>9 篇</b>：从 kube-scheduler、Kueue、Volcano 三大核心原理出发（含 Kueue、Volcano 各自的端到端调度流程图），延伸到两者的对比与协同，落到 AI/GPU 调度方案全景与 Koordinator 混部超卖实战。建议按「原理 → 对比 → 协同 → 全景」顺序阅读。</div>
 
   <h2 class="sec-head">核心原理</h2>
   <div class="grid">
@@ -97,6 +97,13 @@ footer{text-align:center;color:var(--muted);font-size:13px;padding:26px 20px 50p
       <p>端到端全景：8 大阶段覆盖对象模型、Session 快照、插件扩展点、五大 Action、gang 全有全无、Statement 事务与异步 Bind / Evict 写回。基于 master 分支源码核实的完整链路图。</p>
       <span class="cta">开始阅读 →</span>
       <div class="meta"><span>🕒 约 25 分钟</span><span>🔄 8 阶段</span><span>🎯 源码核实</span></div>
+    </a>
+    <a class="card" href="kueue-scheduling-flow.html">
+      <span class="tag teal">全景流程</span>
+      <h3>Kueue 完整调度流程图：从 Job 创建到 Pod 调度成功</h3>
+      <p>端到端全景：8 大阶段覆盖 Webhook 挂起、Workload 投影、LocalQueue/ClusterQueue/Cohort 三层配额、Flavor 四维判定、Gang 原子准入、Cohort 借用与抢占，到注入 nodeSelector 由 kube-scheduler 落地。含横版/纵版两张全景图。</p>
+      <span class="cta">开始阅读 →</span>
+      <div class="meta"><span>🕒 约 25 分钟</span><span>🔄 8 阶段</span><span>🗺️ 双视图</span></div>
     </a>
   </div>
 
