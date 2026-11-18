@@ -222,10 +222,10 @@ footer{text-align:center;color:var(--muted);font-size:13px;padding:30px 20px 50p
   <h1>Volcano 调度器原理详解<br>从调度流程到插件体系</h1>
   <p>从「调度单元错配」这一根源出发，系统拆解 Volcano 的 Session + Action + Plugin 三层架构、调度全流程与插件扩展点体系；补齐核心对象实战、关键策略配置、GPU 与拓扑感知、生产排障，并深度对比 kube-scheduler。</p>
   <div class="badges">
-    <span class="badge">📘 12 章正文</span>
+    <span class="badge">📘 17 章正文</span>
     <span class="badge">🧩 20+ 扩展点</span>
-    <span class="badge">🎯 Volcano v1.9+</span>
-    <span class="badge">⏱️ 约 35 分钟</span>
+    <span class="badge">🔬 源码级深度</span>
+    <span class="badge">⏱️ 约 55 分钟</span>
   </div>
 </div></header>
 
@@ -245,7 +245,13 @@ footer{text-align:center;color:var(--muted);font-size:13px;padding:30px 20px 50p
 <li class="toc-l2"><a href="#c8">8. GPU 与拓扑感知</a></li>
 <li class="toc-l2"><a href="#c9">9. 生产实践：部署与排障</a></li>
 <li class="toc-l2"><a href="#c10">10. 生态、版本与选型</a></li>
-<li class="toc-l2"><a href="#c11">11. 总结与面试题</a></li>
+<li class="toc-l2"><a href="#c11n">11. 运行时序：快照、串行与周期</a></li>
+<li class="toc-l2"><a href="#c12n">12. 结果落地：绑定与驱逐</a></li>
+<li class="toc-l2"><a href="#c13n">13. 对象模型：从提交到调度单元</a></li>
+<li class="toc-l2"><a href="#c14n">14. allocate 深挖：层级决策与资源记账</a></li>
+<li class="toc-l2"><a href="#c15n">15. 通俗理解：Gang 与决策单位</a></li>
+<li class="toc-l2"><a href="#c16n">16. 一次调度全景：纵向与横向</a></li>
+<li class="toc-l2"><a href="#c17">17. 总结与面试题</a></li>
 <li><a href="#meta">元信息</a></li>
   </ul>
 </aside>
@@ -253,7 +259,7 @@ footer{text-align:center;color:var(--muted);font-size:13px;padding:30px 20px 50p
 <article>
 
 <h2 id="abstract">摘要</h2>
-<p class="lead">Volcano 是 CNCF 旗下首个、也是目前唯一的官方容器批处理调度项目。它把批处理领域的完整语义——作业（Job/PodGroup）、队列（Queue）、公平、抢占回收、拓扑感知——搬进了 Kubernetes 调度器。本文从「调度单元错配」这一根源出发，系统拆解 Volcano 的 Session + Action + Plugin 三层架构、调度全流程、插件扩展点体系，并补齐核心对象实战、关键策略配置、GPU/拓扑感知与生产排障，最后给出与 kube-scheduler 的深度对比和选型建议。</p>
+<p class="lead">Volcano 是 CNCF 旗下首个、也是目前唯一的官方容器批处理调度项目。它把批处理领域的完整语义——作业（Job/PodGroup）、队列（Queue）、公平、抢占回收、拓扑感知——搬进了 Kubernetes 调度器。本文从「调度单元错配」这一根源出发，系统拆解 Volcano 的 Session + Action + Plugin 三层架构、调度全流程、插件扩展点体系，并补齐核心对象实战、关键策略配置、GPU/拓扑感知与生产排障，并新增 6 章基于 master 分支源码核实的深度展开（运行时序 / 写回链路 / 对象模型 / allocate 深挖 / gang 通俗理解 / 一次调度全景），最后给出与 kube-scheduler 的深度对比和选型建议。</p>
 
 <div class="callout tip"><strong>阅读约定</strong>：本文在原《Volcano 调度器原理详解》基础上扩展了实战、策略配置、GPU 与生产章节。涉及 API 与特性以 Volcano v1.9+ / v1.10+ 为准；部分高级特性（如动态 MIG、volcano-global 多集群）的成熟度已在文中标注，落地前请核对目标版本文档。</div>
 
@@ -590,8 +596,237 @@ tiers:
 </table></div>
 <p>如果你正在纠结 Kueue 与 Volcano 如何取舍或组合，参见本站姊妹篇：<a href="kueue-vs-volcano.html">Kueue vs Volcano 深度对比</a> 与 <a href="kueue-volcano-together.html">两者如何协同配合</a>。</p>
 
-<!-- ============ 11 ============ -->
-<h2 id="c11">11. 总结与面试题</h2>
+
+<!-- ============ 新 11 ============ -->
+<h2 id="c11n">11. 运行时序：快照、串行与周期</h2>
+<p>前面讲的是「调度做什么」，这一章回答「调度怎么跑」。两个核心事实常被误解：一次调度是否同时考虑所有任务，以及多个调度周期是否并发。答案是：<strong>数据上把全部任务读入快照，决策上逐 Action 筛选；而 Session 严格串行，默认每轮结束后再等 1 秒</strong>。</p>
+
+<div class="flow">
+  <li><b>① Snapshot() 全量快照（数据层：全部可见）</b><div class="fd"><code>ssn.Jobs / ssn.Nodes / ssn.Queues = snapshot.X</code> 整体引用赋值、无过滤；Task 随 JobInfo 进入。<strong>时间维度：快照在每个调度周期开始时拍下，整个 Session 内不再刷新</strong>——一次性一致视图，非实时数据。</div></li>
+  <li><b>② enqueue → allocate 主分配</b><div class="fd">只看 inqueue、JobValid 通过、有资源请求的 Job/Task；gang 在此做 minAvailable 全有全无判定。成功者状态变更、节点资源被占用。</div></li>
+  <li><b>③ preempt → reclaim 抢占回收</b><div class="fd">只处理被抢占 / 被回收的具体任务，改变资源归属；范围更窄，依赖前面是否已产生 Pending 任务。</div></li>
+  <li><b>④ backfill 碎片回填（只挑无请求任务）</b><div class="fd">源码 <code>if task.HasSchedulingResourceRequests() { continue }</code>：只要有资源请求就跳过，只留 Pending/Pipelined 的无请求（BestEffort）任务，填前面分完后的剩余碎片。</div></li>
+</div>
+<div class="callout"><strong>数据上是、决策上不是</strong>：一次 Session 把所有任务读进快照，但没有哪个 Action 会「考虑所有任务」。backfill 尤其特殊——它压根不调度正经作业，只捡被前面跳过的无请求边角料，且用的是前面分完后剩余的资源。</div>
+
+<h3>串行调度周期：单 goroutine，跑完再等 1 秒</h3>
+<p>单一调度循环 <code>wait.Until(pc.runOnce, schedulePeriod, stopCh)</code> —— 单 goroutine 同步调用，Session 严格串行、不重叠。一个 Session 内部：<code>OpenSession → enqueue → allocate → preempt → reclaim → backfill → CloseSession</code>（串行的 for 循环，共用同一 ssn）。</p>
+<div class="pipeline">
+  <div class="pnode"><div class="pn-t">Session #N</div><div class="pn-d">① 快照 ② Actions ③ Close</div></div><div class="parrow">≈1s→</div>
+  <div class="pnode"><div class="pn-t">Session #N+1</div><div class="pn-d">① 快照 ② Actions ③ Close</div></div><div class="parrow">+1s→</div>
+  <div class="pnode"><div class="pn-t">…</div><div class="pn-d">串行不重叠</div></div>
+</div>
+<div class="callout tip"><strong>默认 1 秒、跑完再等</strong>：周期默认 <code>defaultSchedulerPeriod = time.Second</code>（启动参数 <code>--schedule-period</code>）。<code>wait.Until</code> 采用 sliding 计时——从本轮结束后才开始算 1 秒，所以真实周期 ≈ 本轮耗时 + 1 秒，调度慢不会并发追赶。注意区分：调度决策串行，但 Cache 的 informer / worker（NodeWorkerThreads=20 等）是并发更新数据的，只是不参与决策。生产多副本通过 leader election 保证全局只有一个 active 实例在调度。</div>
+
+<!-- ============ 新 12 ============ -->
+<h2 id="c12n">12. 结果落地：绑定与驱逐</h2>
+<p>调度决策做完，怎么在真实集群生效？两个关键认知：<strong>Volcano 从不创建 workload——Pod 早已由 controller 建好，scheduler 只给它们选节点；写回靠的是实打实的 K8s API 调用（创建 Binding 对象 / 删除 Pod），而且是异步的，不在 Session 内同步完成</strong>。</p>
+
+<h3>绑定写回链路：Session 提交 → Binding 对象 → kubelet</h3>
+<div class="flow">
+  <li><b>① Session 决策（内存态）：只记录决策，不写 API</b><div class="fd"><code>Statement.Allocate()</code> 设 <code>task.Pod.Spec.NodeName = hostname</code> 并加入 operations——纯内存，gang 不过就 Discard 回滚。</div></li>
+  <li><b>② Commit：入队而非直接写</b><div class="fd"><code>Commit() → allocate() → CreateBindContext() → cache.AddBindTask()</code>，丢进 BindFlowChannel（容量 5000）。此时仍未调用 API Server。</div></li>
+  <li><b>③ Cache 后台（异步）：每 20ms 消费</b><div class="fd"><code>wait.Until(processBindTask, 20ms)</code> → <code>BindTask()</code> 起 goroutine → 先跑 PreBind 插件 → 再 <code>Binder.Bind()</code>。批量大小默认 1，可用 <code>BATCH_BIND_NUM</code> 调。</div></li>
+  <li><b>④ API Server：真正写回——创建 Binding 对象</b><div class="fd"><code>Pods(ns).Bind(&amp;v1.Binding{Target: Node/xxx})</code>。不是 Update/Patch 的 spec.nodeName，而是 POST 一个 Binding 子资源（与 kube-scheduler 一致）。成功后记「Scheduled」事件。</div></li>
+  <li><b>⑤ kubelet 接手</b><div class="fd">API Server 把 nodeName 落库，目标节点 kubelet watch 到并启动容器。调度器的活到此结束。</div></li>
+</div>
+<div class="callout warn"><strong>内存设值 ≠ 落库</strong>：内存里的 <code>Spec.NodeName</code> 只用于决策和 cache 记账；真正改变集群状态的是那次 Binding POST。bind 失败会回滚 PreBind 并把任务重新入队重调。</div>
+
+<h3>驱逐写回链路：改 cache 只是记账，Delete API 才生效</h3>
+<div class="flow">
+  <li><b>① Session 内（内存态）：只记账不删</b><div class="fd"><code>Statement.Evict()</code> 把 task 改为 Releasing、更新 node 记账、加入 operations。gang/抢占判定失败就 Discard 回滚。</div></li>
+  <li><b>② Commit → Cache：改 cache + 起 goroutine</b><div class="fd"><code>cache.Evict()</code> 标记 Releasing、记 PodGroup 的 Evict 事件，然后 <code>go sc.Evictor.Evict(p, reason)</code>。返回 nil 只代表入队成功。</div></li>
+  <li><b>③ defaultEvictor（真实生效）：真正删 Pod</b><div class="fd">先 UpdateStatus 打上 <code>PodReady=False</code> 和 <code>DisruptionTarget=True(PreemptionByScheduler)</code>，再 <code>Pods(ns).Delete(p.Name)</code> —— 这一步才真正删除集群里的 Pod。</div></li>
+  <li><b>④ Controller（重建）连锁反应</b><div class="fd">Pod 被删 → ReplicaSet / vc-controller 发现副本不足 → 创建新 Pod（<strong>Volcano 自己不重建</strong>）→ Pending → 下一轮 Session 重调，此时资源已被高优先级任务占用。</div></li>
+</div>
+<div class="callout rose"><strong>PDB 注意</strong>：preempt 与 reclaim 走同一条路（都是 Evict，区别只在范围和 reason）。但默认 evictor 直接 Delete、没走 policy/v1 的 Eviction subresource，因此<strong>不会自动做 PDB 校验</strong>，对有 PDB 保护的业务要留意。失败会 resyncTask 重新入队。</div>
+
+<h3>allocate 与 preempt / reclaim 的协作关系</h3>
+<div class="grid2">
+  <div class="box blue"><div class="box-h">allocate（独立 Action）</div><p>只用空闲资源、全程无 Evict：Statement 只有 Pipeline/Allocate，代码里无任何 Evict 调用。gang 的 JobReady 通过才 Commit，资源不够就直接放弃这个 job，不驱逐别人。</p></div>
+  <div class="box amber"><div class="box-h">Session 传递（交接）</div><p>allocate 的产物 = preempt 的输入：仍缺资源的 job 保持饥饿态，preempt 用 <code>if !ssn.JobStarving(job) { continue }</code> 筛出它们；allocate 标注的不可调度节点也被 preempt 复用。</p></div>
+</div>
+<div class="callout"><strong>判断逻辑在抢占 Action 内部</strong>：preempt/reclaim 自己判断 + 自己闭环（同一 Statement 事务）——选 victim → <code>nodeStmt.Evict(victim)</code> → <code>preemptorFitsOnNode()</code> 检查资源 → 够则 <code>nodeStmt.Pipeline(preemptor)</code>。驱逐和占位在同一 Statement 里一起 Commit；没达到 JobPipelined 就整体 Discard 回滚。三者串在同一 Session、共用一份快照，看起来像「allocate 的补救」，但代码上是平级 Action。进阶：gangpreempt/gangreclaim 会锁定节点（NominatedHyperNode），下一轮 allocate 走 <code>allocateFromNomination</code> 快速兑现。</div>
+
+<!-- ============ 新 13 ============ -->
+<h2 id="c13n">13. 对象模型：从提交到调度单元</h2>
+<p>前面反复提到 Queue / Job / Task 三层，这里回答它们的来源：<strong>层级不是调度器运行时把散装 Pod「聚合」出来的，而是提交时就定义好的对象模型</strong>。用户提交 VCJob（作业），其中声明 queue、minAvailable、各 task 的 replicas；vc-controller 据此展开成 PodGroup + 多个 Pod，并把三层关联写进 Pod 的 annotation。</p>
+
+<div class="flow">
+  <li><b>① 用户提交：VCJob（batch.volcano.sh/v1alpha1 的 Job CRD）</b><div class="fd"><code>spec.queue</code> 声明归属队列，<code>minAvailable: 8</code> 是 gang 约束，<code>tasks[].replicas: 8</code> 展开成 8 个 Pod。Queue 是独立 CRD，管理员提前建好。</div></li>
+  <li><b>② controller 创建：1 个 PodGroup + N 个 Pod</b><div class="fd">PodGroup 的 <code>MinMember = minAvailable</code> 把 8 个 Pod 绑成一个 gang 单元；每个 Pod 带 annotation：<code>KubeGroupNameAnnotationKey</code> → PodGroup，<code>QueueNameKey</code> → Queue。</div></li>
+  <li><b>③ 快照 → allocate 逐层 pop</b><div class="fd">Pop Queue（查 Overused）→ Pop Job/SubJob（查 JobReady）→ Pop Task（predicate + nodeOrder）。</div></li>
+  <li><b>④ node.AddTask 扣减内存资源</b><div class="fd"><code>Idle.sub / Used.Add</code>；Pipeline 则是 <code>Pipelined.Add</code> 软预留（<code>FutureIdle = Idle + Releasing − Pipelined</code>）。类似 K8s Reserve 的作用，但不是独立扩展点——直接在 NodeInfo 里改字段；Session 结束即丢弃，真正持久化靠 Binding 写回后的真实 Pod。</div></li>
+</div>
+<pre><code>apiVersion: batch.volcano.sh/v1alpha1
+kind: Job                 # ← 这就是「作业」
+metadata:
+  name: pytorch-ddp
+spec:
+  queue: training         # ← 提交时声明归属队列
+  minAvailable: 8         # ← gang 约束 → PodGroup.MinMember
+  tasks:
+  - name: worker
+    replicas: 8           # ← 展开成 8 个 Pod
+    template: ...
+</code></pre>
+<div class="table-wrap"><table>
+<caption>对象三层与提交字段的对应</caption>
+<thead><tr><th>层级</th><th>K8s 对象</th><th>谁创建</th><th>提交里怎么指定</th></tr></thead>
+<tbody>
+<tr><td>队列</td><td>Queue CRD</td><td>管理员提前建</td><td><code>spec.queue</code> 声明归属</td></tr>
+<tr><td>作业</td><td>VCJob + PodGroup</td><td>你提交 Job；controller 造 PodGroup</td><td><code>minAvailable</code> → MinMember</td></tr>
+<tr><td>任务</td><td>Pod</td><td>controller 按 replicas 展开</td><td><code>replicas: 8</code> → 8 个 Pod</td></tr>
+</tbody>
+</table></div>
+<p>一句话：<strong>提交 Job（声明 queue/replicas/minAvailable）→ controller 造 PodGroup + Pod → Session 快照 → allocate 逐层 pop → AddTask 扣内存资源 → Commit 后异步 Binding 落库</strong>。</p>
+
+<h3>Queue：内置队列与三级资源模型</h3>
+<p>安装后自动创建 <code>root</code>（根队列）与 <code>default</code>（默认队列 weight=1，VCJob 没写 spec.queue 就落这里），均不可改删；其余按业务自建。核心是三级配额模型：<code>guarantee ≤ deserved/weight ≤ capability</code>。</p>
+<div class="grid3">
+  <div class="box green"><div class="box-h">guarantee 硬下限</div><p>独占预留，其他队列不能用。</p></div>
+  <div class="box blue"><div class="box-h">deserved / weight 软基准</div><p>应得份额；空闲可借出、繁忙可回收；二者互斥。</p></div>
+  <div class="box rose"><div class="box-h">capability 硬上限</div><p>绝对封顶，再空闲也不能超。</p></div>
+</div>
+<p>另有 priority（分配/抢占优先级）、reclaimable（超额能否被回收，默认 true）、parent（分层父队列）、state（仅 Open 可接收任务）。Kubeflow 等框架无 <code>spec.queue</code>，改用注解 <code>scheduling.volcano.sh/queue-name</code> + <code>spec.schedulingPolicy.{queue,minAvailable}</code>。</p>
+<div class="callout warn"><strong>capacity 与 proportion 二选一</strong>：<code>capacity</code>（配 deserved）与 <code>proportion</code>（配 weight）不能同时启用。动态扩缩容集群适合 proportion（自动重算 deserved），精细控制 GPU 等资源适合 capacity；官方 v1.9+ 推荐 capacity。提交后准入组件校验队列是否存在、state 是否 Open；分层队列还要求叶子节点。</div>
+<pre><code>apiVersion: scheduling.volcano.sh/v1beta1
+kind: Queue
+metadata:
+  name: training
+spec:
+  deserved:                    # 应得份额（可借出 / 可回收）
+    cpu: "16"
+    nvidia.com/gpu: "8"
+  guarantee:                   # 独占预留
+    resource:
+      cpu: "8"
+      nvidia.com/gpu: "2"
+  capability:                  # 硬上限
+    cpu: "32"
+    nvidia.com/gpu: "16"
+  priority: 100
+  reclaimable: true
+</code></pre>
+
+<!-- ============ 新 14 ============ -->
+<h2 id="c14n">14. allocate 深挖：层级决策与资源记账</h2>
+<p>这一章把最核心的 allocate 拆开，并回答三个此前一笔带过的问题：allocate 内部到底做了哪几件事、为什么按队列→作业→任务分级、Session 里装的什么、整体决策后如何开启 Binding。以下均基于 master 分支源码核实。</p>
+
+<h3>allocate 内部四件事</h3>
+<div class="flow">
+  <li><b>0 · 准备：筛选谁有资格被分配（buildAllocateContext）</b><div class="fd">跳过 pending、JobValid 不通过、被 unschedulable 抑制、队列不存在的 job；<code>organizeJobWorksheet</code> 分 nominated（上轮抢占锁定）与 regular 两阶段；无资源请求的 task 直接跳过，留给 backfill。</div></li>
+  <li><b>1 · 三层决策循环：固定六步</b><div class="fd">QueueOrderFn → JobOrderFn → TaskOrderFn → predicate 过滤 → nodeOrderFn 打分 → Allocate/Pipeline。</div></li>
+  <li><b>2 · 单 task 动作（allocateResourcesForTasks）</b><div class="fd">配额检查 Allocatable + PrePredicateFn；预选 predicate（resourcefit + predicates）；优选 prioritizeNodes 分两梯度——Idle 就够的节点优先，其次 FutureIdle（Idle+Releasing−Pipelined）才够的节点。空闲够 → <code>stmt.Allocate()</code>；只有 FutureIdle 够 → <code>stmt.Pipeline()</code> 占坑。</div></li>
+  <li><b>3 · gang 判定与事务提交（最关键）</b><div class="fd"><code>if stmt != nil &amp;&amp; ssn.JobReady(job) { stmt.Commit() }</code> —— 满足 gang 才提交，不满足整体 Discard 回滚。这就是 Gang 死锁不再发生的机制：要么整组全部分到，要么一个都不占。</div></li>
+</div>
+<div class="callout"><strong>allocate 不做的事同样重要</strong>：不写 API Server（只内存决策 + Statement 记账）；不驱逐任何 Pod（Statement 只有 Pipeline/Allocate，资源不够就放弃，交给 preempt/reclaim）。但会处理 NominatedNodeName、HyperNode 拓扑、shard 分片、FitErrors 追踪等高级细节。</div>
+
+<h3>为什么按「队列 → 作业 → 任务」分级</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>层级</th><th>决策问题</th><th>排序/判定</th><th>若扁平化会怎样</th></tr></thead>
+<tbody>
+<tr><td><strong>L1 队列 Queue</strong></td><td>谁先用资源？租户间公平</td><td>QueueOrderFn，判 Overused；proportion/capacity</td><td>没配额概念，某部门大作业吃光集群</td></tr>
+<tr><td><strong>L2 作业 Job</strong></td><td>这一组能不能一起上？Gang 原子性</td><td>JobOrderFn，判 JobReady(minAvailable)；gang/priority/drf</td><td>无 gang 判定，8 卡训练全体死锁</td></tr>
+<tr><td><strong>L3 任务 Task</strong></td><td>每个 Pod 放哪个节点？放置效率</td><td>TaskOrderFn，predicate + nodeOrder；predicates/nodeorder/binpack</td><td>亲和性、GPU/NUMA、装箱全失效</td></tr>
+</tbody>
+</table></div>
+<div class="callout tip"><strong>分层的根本原因</strong>：公平（Queue）、原子性（Job）、放置（Task）是三种不同粒度的决策，minAvailable 是 Job 属性、配额是 Queue 属性、节点匹配是 Pod 属性，无法压成一层。且顺序必须从粗到细——先定归属，才能做 gang 整组回滚。<code>queues.Push(queue) / jobs.Push(job)</code> 把队列/作业压回优先级队列，下一轮按最新资源占用重算优先级，资源在队列间轮转流动——这是分层才能实现的跨租户公平。</div>
+
+<h3>Session 解剖 &amp; 从整体决策到 Binding</h3>
+<div class="grid2">
+  <div class="box violet"><div class="box-h">① Session = 一个调度周期的内存世界</div><p><strong>快照数据</strong>：Jobs/Nodes/Queues/NamespaceInfo/HyperNodes/TotalResource（⚠ 没有独立 Tasks 字段——Task 嵌在 JobInfo 里）。<br><strong>插件函数表</strong>（初始空 map）：queueOrderFns / jobOrderFns / predicateFns / jobReadyFns… 30+ 个插件在 OnSessionOpen 里注册算法。<br><strong>客户端与状态</strong>：kubeClient / vcClient / cache / recorder；Statement 不持有，用 <code>ssn.Statement()</code> 现场造。</p></div>
+  <div class="box teal"><div class="box-h">② 整体判定，逐条记账</div><p>「选择」是整体的：Queue→Job→Task 逐层 Pop，gang 不通过整个 Statement Discard。「产物」是逐 task 的：<code>operations[]</code> 每条 = <code>operation{name, task}</code>，类型只有 Evict/Pipeline/Allocate；Allocate 时内存里设 <code>Pod.Spec.NodeName</code>、状态置 Allocated（不写 API）。</p></div>
+</div>
+<p>③ gang 通过后：<code>stmt.Commit()</code> 遍历 operations → case Allocate: <code>s.allocate(task)</code> → CreateBindContext（状态置 Binding）→ <code>cache.AddBindTask</code> 入 channel。── 异步边界 ── BindFlowChannel → processBindTask → Binder.Bind(PreBind) → <code>Pods().Bind()</code> 创建 Binding 写 API Server。</p>
+<div class="callout"><strong>整体决策与逐 Pod 绑定并不矛盾</strong>：整体判定保 gang 原子性，逐 task 记账保执行单位；Commit 把每条 Allocate 逐个转成 BindTask 入队，后台异步为每个 Pod 创建 Binding。</div>
+
+<!-- ============ 新 15 ============ -->
+<h2 id="c15n">15. 通俗理解：Gang 与决策单位</h2>
+<p>前面几章偏机制细节，这一章用大白话把两个最容易被问到的点讲透：Gang 调度到底怎么保证「全有或全无」、allocate 一次决策的单位究竟是一组 Pod 还是单个 Pod。</p>
+
+<h3>Gang 调度通俗版：「8 人聚餐订位」</h3>
+<p><strong>一句话：把一组 Pod 当成「一单生意」——凑得齐就整单成交，凑不齐就整单作废，绝不做一半。</strong>8 卡训练要 8 个 Pod 同时起来互相通信，就像 8 个人吃饭必须坐一桌。</p>
+<div class="vs">
+  <div class="side alt"><h4>❌ K8s 默认：来一个安排一个</h4><ul>
+    <li>先到 4 人 → 坐了 4 个座位占着不走</li>
+    <li>后到 4 人 → 没整桌，永远等不到位</li>
+    <li>先到的 4 人 → 等同伴，不肯让座</li>
+    <li><strong>结果：全体卡死，座位（GPU）白占着</strong></li>
+  </ul></div>
+  <div class="side hl"><h4>✅ Volcano Gang：凑不齐全撤回</h4><ul>
+    <li>① 绑成一单：PodGroup + minAvailable:8</li>
+    <li>② 先看全貌：拍资源快照，看清总共剩几张卡</li>
+    <li>③ 试算+撤回：内存里分一个问一次「够 8 了吗」，JobReady 通过才整体 Commit；不够就 Discard 全撤回，一个不占</li>
+  </ul></div>
+</div>
+<div class="callout tip"><strong>为什么撤回不留痕迹</strong>：整个试算都在 Session 内存里进行，NodeName 只是内存对象，gang 不通过就 Discard 回滚——没碰 API Server，所以不存在「占了又放」的副作用。三招记忆：先绑成一单（PodGroup）+ 看全貌（快照）+ 凑不齐全撤回（JobReady 才 Commit）。</div>
+
+<h3>allocate 的决策单位：整体决策，逐 Pod 选点</h3>
+<div class="kpis">
+  <div class="kpi"><div class="kv">PodGroup</div><div class="kl">决策单位 · 整组 Commit/Discard</div></div>
+  <div class="kpi"><div class="kv">单个 Pod</div><div class="kl">节点选点 · predicate + nodeOrder</div></div>
+</div>
+<p>结论：<strong>allocate 的决策单位是一个 PodGroup（作业），不是单个 Pod。但一轮会处理多个 PodGroup——「一次遍历多组、逐个组决策」</strong>。要分清「决策单位」与「执行单位」。</p>
+<pre><code>for {
+  queue := queues.Pop()   // 弹出一个队列
+  job := jobs.Pop()       // 弹出该队列里的一个作业(PodGroup)
+  // → 组内每个 task 逐个选节点
+  // → JobReady(job)：整组 Commit 还是 Discard
+  queues.Push(queue)      // 队列重新入队
+}</code></pre>
+<div class="table-wrap"><table>
+<thead><tr><th>维度</th><th>单位</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>决策判定</td><td>一个 PodGroup</td><td>JobReady 针对整组；gang 不满足整组 Discard</td></tr>
+<tr><td>节点选点</td><td>单个 Pod</td><td>组内逐个 task 做 predicate + nodeOrder（物理上一次只能放一个）</td></tr>
+<tr><td>结果提交</td><td>一个 PodGroup</td><td>整组 Operation 放同一个 Statement，一起 Commit/Discard</td></tr>
+</tbody>
+</table></div>
+<div class="callout rose"><strong>为什么不能像 K8s 那样以单 Pod 为单位</strong>：每分一个 Pod 就立刻绑定 → Pod 互不相关 → 「4 个起来、4 个卡住」死锁。Volcano 让组内 Pod 逐个选节点但不立刻绑定，先记在同一个 Statement，整组试算完再决定一起提交或整组回滚——这就是 Gang 的落点。</div>
+
+<!-- ============ 新 16 ============ -->
+<h2 id="c16n">16. 一次调度全景：纵向流程与横向泳道</h2>
+<p>这一章用「3 个队列 / 6 个作业」的背景，把一次 Session 内部的调度过程用两张互补的视角看清：纵向流程沿主干逐层下钻，看清每一步的判定；横向泳道把三条队列作为行、推进阶段作为从左到右的时间轴，看清多队列如何并行轮转。</p>
+
+<h3>场景 · openSession 拍下的集群快照（全量引用）</h3>
+<div class="grid3">
+  <div class="box blue"><div class="box-h">training · weight=5 · 未超用</div><p>job-A：8 Pod，minAvail=8，Gang<br>job-B：4 Pod，minAvail=4，Pending</p></div>
+  <div class="box green"><div class="box-h">default · weight=1 · 未超用</div><p>job-C：2 Pod，minAvail=2，Gang<br>job-D：1 Pod，无资源请求，BestEffort</p></div>
+  <div class="box amber"><div class="box-h">research · weight=2 · 已超用</div><p>job-E：4 Pod，minAvail=4，超配额<br>job-F：2 Pod，minAvail=2，饥饿</p></div>
+</div>
+
+<h3>纵向流程：一次 Session 的 Action 主链（共用同一份快照）</h3>
+<div class="pipeline">
+  <div class="pnode"><div class="pn-t">① enqueue</div><div class="pn-d">配额准入</div></div><div class="parrow">→</div>
+  <div class="pnode"><div class="pn-t">② allocate</div><div class="pn-d">核心分配</div></div><div class="parrow">→</div>
+  <div class="pnode"><div class="pn-t">③ preempt</div><div class="pn-d">同队列抢占</div></div><div class="parrow">→</div>
+  <div class="pnode"><div class="pn-t">④ reclaim</div><div class="pn-d">跨队列回收</div></div><div class="parrow">→</div>
+  <div class="pnode"><div class="pn-t">⑤ backfill</div><div class="pn-d">碎片填缝</div></div>
+</div>
+<div class="flow">
+  <li><b>① queues.Pop() 选队列</b><div class="fd">按 QueueOrderFn，查 Overused。权重高、未超用的优先；已超用的 research 排后。▶ 本轮 Pop → training（weight=5，未超用）。</div></li>
+  <li><b>② jobs.Pop() 选作业</b><div class="fd">按 JobOrderFn；gang / priority / drf 决定顺序，跳过 pending、JobValid 不通过的。▶ 本轮 Pop → job-A（gang，minAvailable=8）。</div></li>
+  <li><b>③ 遍历 job-A 的 8 个 task — 逐个选节点 + 扣资源</b><div class="fd">每个 task：PrePredicateFn → predicate 预选 → nodeOrder 优选（Idle 梯度优先，其次 FutureIdle）→ 落 Statement；AddTask 使 Idle−/Used+。task1 → Allocate(node-03) … task8 → Pipeline(node-07)。</div></li>
+  <li><b>④ ssn.JobReady(job-A)？凑齐 minAvailable=8 了吗</b><div class="fd">✅ 满足（8/8）→ <code>stmt.Commit()</code>，8 个 task 一起转 BindTask 整组提交；❌ 不满足（如 4/8）→ <code>stmt.Discard()</code>，8 个 task 全回滚一个不占，饥饿 job 留给 preempt。</div></li>
+  <li><b>⑤ queues.Push / jobs.Push，处理完重新压回优先级队列</b><div class="fd">下一轮按最新资源占用重算优先级，资源在队列间轮转（跨租户公平）。⟲ 回到 ①，直到无可分配任务。</div></li>
+</div>
+<p><strong>多队列轮转演示（同一 Session 内的几轮迭代）</strong>：轮 1 · training：Pop job-A → 8/8 → Commit；再 Pop job-B → 资源不足 → Discard。轮 2 · default：Pop job-C → 2/2 → Commit；job-D 无资源请求 → 留给 backfill。轮 3 · research：Pop job-F（饥饿）→ 无空闲 → 交 preempt/reclaim，队列 Push 回堆下周期重排。</p>
+
+<h3>横向泳道：队列为行、阶段为时间轴</h3>
+<div class="table-wrap"><table>
+<caption>每格是该队列在该阶段的调度事件：✅提交 / ❌回滚 / 🟡转交 / ⚪跳过</caption>
+<thead><tr><th>队列／阶段</th><th>② enqueue</th><th>③ allocate ①</th><th>④ allocate ②</th><th>⑤ allocate ③</th><th>⑥ 补救兜底</th><th>⑦ 提交写回</th></tr></thead>
+<tbody>
+<tr><td><strong>training</strong> w5</td><td>job-A/B 配额通过→inqueue</td><td>Pop job-A，8 task 选点 8/8 ✅</td><td>Pop job-B，空闲不足→回滚 ❌</td><td>job-B 仍饥饿转交抢占 🟡</td><td>同队列抢占：无更低 victim</td><td>job-A 8 task→AddBindTask ✅</td></tr>
+<tr><td><strong>default</strong> w1</td><td>job-C 入队；job-D 留 backfill ⚪</td><td>等待 training 轮转…</td><td>Pop job-C，2/2 ✅ Commit</td><td>job-D 被跳过留回填 ⚪</td><td>backfill 碎片调度 job-D ✅</td><td>job-C 2 + job-D 1→AddBindTask ✅</td></tr>
+<tr><td><strong>research</strong> w2</td><td>job-E 受限；job-F 入队</td><td>超用队列排序靠后…</td><td>等待轮转…</td><td>Pop job-F，无空闲 ❌</td><td>reclaim 跨队列按权重回收 🟡</td><td>本轮无 Binding，Push 回堆 ⚪</td></tr>
+</tbody>
+</table></div>
+<div class="callout tip"><strong>本轮结果</strong>：job-A(8) + job-C(2) + job-D(1) 共 11 个 task 生成 BindTask → 异步 Binding → kubelet 拉起；job-B / job-E / job-F 因 gang 不满足或配额受限本轮不绑定，Push 回堆进入下一周期。纵向图沿主干看每一步判定（Pop→选点→JobReady→Commit/Discard→Push 轮转）；横向图以队列为行、阶段为横轴，看多队列如何并行轮转。</div>
+
+<!-- ============ 17 ============ -->
+<h2 id="c17">17. 总结与面试题</h2>
 <h3>核心要点回顾</h3>
 <ol>
   <li><strong>存在根源</strong>是调度单元错配：K8s 以 Pod 为单位逐个调度，批处理需要以「作业 + 队列」为单位整体调度。五大痛点（死锁/无配额/难回收/碎片/拓扑）由此而来。</li>
@@ -618,10 +853,10 @@ tiers:
 <tr><td>目标读者</td><td>中高级 Kubernetes 平台工程师、AI 基础设施工程师</td></tr>
 <tr><td>前置知识</td><td>K8s Job / CRD / 调度框架、GPU 调度基础、批处理系统概念</td></tr>
 <tr><td>技术栈版本</td><td>Volcano v1.9+ / v1.10+；Part 子项目（volcano-global / descheduler）成熟度不一</td></tr>
-<tr><td>预计阅读时间</td><td>约 35 分钟</td></tr>
+<tr><td>预计阅读时间</td><td>约 55 分钟</td></tr>
 </tbody>
 </table></div>
-<p class="note">参考来源：Volcano 官方文档（Introduction / Scheduler / Plugin System / How to configure）、K8s Scheduling Framework 文档、Jimmy Song《AI 基础设施手册》。部分结构图依据官方文档整理。</p>
+<p class="note">参考来源：Volcano 官方文档（Introduction / Scheduler / Plugin System / How to configure）、Volcano master 分支源码（scheduler.go / allocate.go / session.go / statement.go / cache.go / node_info.go）、K8s Scheduling Framework 文档、Jimmy Song《AI 基础设施手册》。第 11–16 章基于源码核实整理。</p>
 
 
 <div class="pager">

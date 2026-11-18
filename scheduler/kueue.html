@@ -145,9 +145,9 @@ footer{text-align:center;color:var(--muted);font-size:13px;padding:30px 20px 50p
   <h1>Kueue 深度指南<br>从调度流程到核心机制</h1>
   <p>从调度全流程出发，系统拆解 Kueue 的准入模型、核心对象、配额与抢占机制；补齐动手实战、进阶特性（TAS / MultiKueue / Fair Sharing / DRA）与生产排障，并汇总基于公开资料整理的经典面试题——一份可随时回顾的全景指南。</p>
   <div class="badges">
-    <span class="badge">📘 12 章正文</span>
+    <span class="badge">📘 14 章正文</span>
     <span class="badge">🖼️ 6 张示意图</span>
-    <span class="badge">⏱️ 约 40 分钟</span>
+    <span class="badge">⏱️ 约 50 分钟</span>
     <span class="badge">🎯 Kueue v1beta1 / v1beta2</span>
   </div>
 </div></header>
@@ -164,11 +164,13 @@ footer{text-align:center;color:var(--muted);font-size:13px;padding:30px 20px 50p
     <li class="toc-l2"><a href="#c5">5. 调度逻辑全景</a></li>
     <li class="toc-l2"><a href="#c6">6. Job 到 Workload 的生成规则</a></li>
     <li class="toc-l2"><a href="#c7">7. 配额判定与抢占决策</a></li>
-    <li class="toc-l2"><a href="#c8">8. 动手实战：跑通第一个队列</a></li>
-    <li class="toc-l2"><a href="#c9">9. 进阶特性全景</a></li>
-    <li class="toc-l2"><a href="#c10">10. 生产实践：可观测与排障</a></li>
-    <li class="toc-l2"><a href="#c11">11. 经典面试题</a></li>
-    <li class="toc-l2"><a href="#c12">12. 学习地图与总结</a></li>
+    <li class="toc-l2"><a href="#c8g">8. Gang Scheduling 与 all-or-nothing</a></li>
+    <li class="toc-l2"><a href="#c9c">9. 排队排序与 Cohort 配额借用</a></li>
+    <li class="toc-l2"><a href="#c8">10. 动手实战：跑通第一个队列</a></li>
+    <li class="toc-l2"><a href="#c9">11. 进阶特性全景</a></li>
+    <li class="toc-l2"><a href="#c10">12. 生产实践：可观测与排障</a></li>
+    <li class="toc-l2"><a href="#c11">13. 经典面试题</a></li>
+    <li class="toc-l2"><a href="#c12">14. 学习地图与总结</a></li>
     <li><a href="#meta">元信息</a></li>
   </ul>
 </aside>
@@ -425,11 +427,104 @@ fairSharing:
 <h3>7.5 与前面的串联</h3>
 <p>整体链路至此闭环：webhook 挂起 Job → Workload 生成（投影出需求）→ 调度器拿需求做判定 → Decision 落地为“改 Workload 的 Admitted + 改 Job 的 suspend”。抢占和驱逐始终作用在 Workload 层，从不直接操作 Pod——这是 Kueue 整套设计的统一原则。</p>
 
-<!-- ============ 8 ============ -->
-<h2 id="c8">8. 动手实战：跑通第一个队列</h2>
+
+<!-- ============ 新增 8 ============ -->
+<h2 id="c8g">8. Gang Scheduling 与 all-or-nothing 实现</h2>
+<p>前面多次强调「所有 PodSet 一起准入」，这正是 Gang Scheduling（全有或全无调度）的核心。本章深入拆解两个常被问到的问题：一次调度操作的是 Pod 还是 PodSet？Gang 到底靠什么实现？</p>
+
+<h3>14.1 操作单位：整个 Workload，而非单个 Pod</h3>
+<p>Kueue 一次调度操作的是<strong>整个 Workload</strong>——它内部包含一组 PodSet，但从不逐 Pod 操作，也不把每个 PodSet 拆开单独准入。官方原话是：核心准入引擎 <code>evaluates all pod sets of a workload simultaneously</code>（同时评估一个 Workload 的所有 pod set）。</p>
+<div class="table-wrap"><table>
+<thead><tr><th>层级</th><th>谁负责</th><th>Kueue 是否操作</th></tr></thead>
+<tbody>
+<tr><td>Job / JobSet</td><td>用户提交</td><td>用 Webhook 挂起它</td></tr>
+<tr><td><strong>Workload</strong></td><td>reconciler 投影生成</td><td><strong>是，调度/准入的真正单位</strong></td></tr>
+<tr><td>PodSet（1..N 个）</td><td>Workload 内部按模板分组</td><td>是，作为整体的一部分被评估（算资源、分 flavor）</td></tr>
+<tr><td>Pod</td><td>Job Controller 创建、kube-scheduler 绑定</td><td>否，从不直接碰</td></tr>
+</tbody>
+</table></div>
+<p>PodSet 只是 Workload 内部「相同 Pod 模板 + count」的分组结构（比如 main×4、worker×8 各算一个 PodSet），用于计算资源和分配 flavor。Workload 准入后才 <code>suspend=false</code>，Job Controller 才创建出那些 Pod，交给 kube-scheduler 绑定——<strong>Pod 是「结果」而非「排队对象」</strong>。</p>
+<figure class="fig"><img src="assets/kueue-gang-impl.png" alt="图 7 Kueue Gang Scheduling 操作单位与实现"><figcaption>图 7 · Kueue Gang Scheduling 操作单位与实现（操作单位是整个 Workload，四道机制逐层收紧全有或全无）</figcaption></figure>
+
+<h3>14.2 四道互补机制，逐层收紧「全有或全无」</h3>
+<p>Gang 不是单一开关，而是官方总结的<strong>四道互补机制</strong>，从「总量」到「布局」再到「运行时」层层兜底：</p>
+<div class="table-wrap"><table>
+<thead><tr><th>机制</th><th>作用</th><th>状态</th></tr></thead>
+<tbody>
+<tr><td>配额准入 Quota-based Admission</td><td>所有 PodSet 配额能一次性同时预留才 unsuspend；默认不部分准入</td><td>基础，默认开启</td></tr>
+<tr><td>拓扑感知 TAS</td><td>准入前检查所有 Pod 能否真正放进目标拓扑域，消除「总量够但碎片化放不下」</td><td>强烈推荐</td></tr>
+<tr><td>waitForPodsReady</td><td>放行后监控所有 Pod 是否 Ready，超时未全 Ready → 撤销准入、驱逐重排</td><td>新版默认启用</td></tr>
+<tr><td>ProvisioningRequest</td><td>自动扩缩容场景等容量就绪后才准入</td><td>按需</td></tr>
+</tbody>
+</table></div>
+<div class="callout warn"><strong>为什么需要这么多层？</strong>因为配额只追踪「总量」，而实际调度依赖节点布局、物理可用性和碎片情况。官方文档的经典例子：集群总共空闲 8 张 GPU，但分散在两台各 4 卡的节点上，一个 8 卡 Pod 会因无法跨节点拆分而永远卡在 kube-scheduler——光看配额发现不了。TAS 和 waitForPodsReady 就是补这个洞的。</div>
+
+<h3>14.3 waitForPodsReady 的精确行为</h3>
+<p>这是 Gang 的兜底机制，官方明确它是<strong>启发式</strong>的——不阻止部分调度，但保证部分调度的作业不会永久占着资源：</p>
+<ul>
+  <li>Workload 准入放行（<code>suspend=false</code>）后，Kueue 持续监控，直到所有 Pod 就绪（已调度 + 运行中 + 通过可选就绪探针）。</li>
+  <li>若在 timeout 内未全部 Ready（Workload condition 保持 <code>PodsReady=False</code>）：撤销准入 → 对应 Job 重新 suspend → Workload 带 backoff 重新排队，配额释放。</li>
+</ul>
+<p><strong>关键参数</strong>：</p>
+<ul>
+  <li><code>timeout</code>：默认 5 分钟（较新版本为 1 小时）；</li>
+  <li><code>blockAdmission</code>：开启后串行放行 Workload，前一个的 Pod 没 Ready 前不放行下一个，防止两个半调度作业互相锁死；</li>
+  <li><code>recoveryTimeout</code>：运行中若有 Pod 变 NotReady（如节点故障）的恢复等待窗口，超时同样驱逐；</li>
+  <li><code>requeuingStrategy</code>：重新排队时时间戳取 Eviction 还是 Creation。</li>
+</ul>
+<div class="callout tip"><strong>一个例外</strong>：如果显式开启 Partial Admission，允许通过 <code>podSetUpdates/minCount</code> 缩减某些 PodSet，Kueue 才会部分准入——但这是主动声明可伸缩的作业，不是默认行为。</div>
+
+<!-- ============ 新增 9 ============ -->
+<h2 id="c9c">9. 排队排序与 Cohort 配额借用</h2>
+<p>前两章讲的是「单个 Workload 如何被判定与放行」，本章后退一步，看多个 Workload 之间如何排序、多个 ClusterQueue 之间如何共享资源——这是多租户公平性的核心。</p>
+
+<h3>13.1 Workload 整体入队与排序</h3>
+<p>排队和准入的单位都是 <strong>Workload 整体</strong>，不是一个 Pod 一个 Pod 排：</p>
+<ul>
+  <li>用户提交 Job → reconciler 投影成一个 Workload（内部含多个 PodSet），入队进 LocalQueue（命名空间入口），排队的始终是这一个 Workload 对象。</li>
+  <li>一个调度周期内，Scheduler 遍历所有 ClusterQueue，各取队头 Workload 尝试准入；一个周期可准入多个 Workload。</li>
+  <li>Workload 先进入 LocalQueue，但排序策略由它归属的 ClusterQueue 决定（跨该 CQ 下所有 LocalQueue 一起排）。</li>
+</ul>
+<p>排序策略 <code>queueingStrategy</code> 定义在 ClusterQueue 上，作用于 Workload 整体，按 priority（PriorityClass 解析值）再按 <code>metadata.creationTimestamp</code> 排序：</p>
+<div class="table-wrap"><table>
+<thead><tr><th>策略</th><th>行为</th></tr></thead>
+<tbody>
+<tr><td><code>StrictFIFO</code></td><td>队头装不下就阻塞后面所有，即使后面的更小也不放行</td></tr>
+<tr><td><code>BestEffortFIFO</code>（默认）</td><td>队头装不下就跳过它，放行能装下的新 Workload，保吞吐</td></tr>
+</tbody>
+</table></div>
+
+<h3>13.2 跨 ClusterQueue 借用：Cohort 机制</h3>
+<p>多个 ClusterQueue 可以相互借用，但必须属于同一个 Cohort（队列组）。Cohort 是一个「配额池联盟」：成员把自己没用的 nominalQuota 借给需要的成员，提升整体利用率。官方语义要点：</p>
+<div class="table-wrap"><table>
+<thead><tr><th>要点</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>前提</td><td>两个 CQ 的 <code>spec.cohort</code>（v1beta1）或 <code>spec.cohortName</code>（v1beta2）同名；为空则不能借</td></tr>
+<tr><td>借什么</td><td>借的是同组成员未使用的 nominalQuota，不是凭空多出的资源</td></tr>
+<tr><td>优先级</td><td>先用自己的 nominalQuota，用完后才借；优先保障各成员自身的 nominalQuota</td></tr>
+<tr><td><code>borrowingLimit</code></td><td>自己最多能借入多少；为空 = 可借到全 Cohort 闲置总和</td></tr>
+<tr><td><code>lendingLimit</code></td><td>自己最多能借出多少（v0.17 起 stable），保证至少留 <code>nominal − lendingLimit</code> 自用；为空 = 可全借出</td></tr>
+<tr><td>限制</td><td>只能借自己 CQ 定义过的 flavor；同一资源只能借一个 flavor</td></tr>
+<tr><td>会归还</td><td>借来的份额是临时的，原主人有 pending 作业时通过 <code>reclaimWithinCohort</code> 抢占策略收回</td></tr>
+</tbody>
+</table></div>
+<p>官方示例很直观：CQ-A（nominal 9）+ CQ-B（nominal 12）同属 cohort team-ab，当 B 没有已准入作业时，A 最多可用 9+12=21 核；但一旦 B 有 pending 作业，Kueue 会先满足 B，A 不能一直占着借来的份额。</p>
+<figure class="fig"><img src="assets/kueue-cohort.png" alt="图 8 Workload 排队排序与 Cohort 配额借用"><figcaption>图 8 · Workload 排队排序与 Cohort 配额借用（StrictFIFO/BestEffortFIFO 与跨 CQ 借用流程）</figcaption></figure>
+
+<h3>13.3 三章串联的完整闭环</h3>
+<div class="pipeline">
+  <div class="pnode"><div class="pn-t">排队排序（第 9 章）</div><div class="pn-d">Workload 整体按 priority+时间排序</div></div><div class="parrow">→</div>
+  <div class="pnode"><div class="pn-t">配额判定（第 7 章）</div><div class="pn-d">连同所有 PodSet 查配额，不够看 Cohort 借</div></div><div class="parrow">→</div>
+  <div class="pnode"><div class="pn-t">Gang 放行（第 8 章）</div><div class="pn-d">全满足才预留、解除 suspend，waitForPodsReady 兜底</div></div><div class="parrow">→</div>
+  <div class="pnode"><div class="pn-t">Pod 被创建</div><div class="pn-d">交给 kube-scheduler 绑定</div></div>
+</div>
+<div class="callout warn"><strong>版本差异要记住</strong>：<code>borrowingLimit</code> / <code>lendingLimit</code> 在 v1beta1 里是 alpha、默认功能门关闭，v0.17 起 <code>lendingLimit</code> 才 stable——查文档或面试时要注意版本。</div>
+
+<!-- ============ 10 ============ -->
+<h2 id="c8">10. 动手实战：跑通第一个队列</h2>
 <p>机制讲得再多，不如亲手跑一遍。下面是一套最小可复现流程：在一个已有 Kubernetes 集群（可用 kind 快速搭一个）上，安装 Kueue、建立配额体系、提交一个 GPU 作业并观察它被“挂起 → 放行”的全过程。纯 CPU 集群也能验证——准入逻辑与资源类型无关，用假的 <code>nvidia.com/gpu</code> 配额即可。</p>
 
-<h3>8.1 安装与开启集成</h3>
+<h3>14.1 安装与开启集成</h3>
 <pre><code># 安装最新稳定版（会创建 CRD、controller、webhook 与默认配置）
 kubectl apply -f https://github.com/kubernetes-sigs/kueue/releases/latest/download/manifests.yaml
 
@@ -440,7 +535,7 @@ kubectl get pods -n kueue-system
 # 查看当前配置
 kubectl get configmap -n kueue-system kueue-manager-config -o yaml</code></pre>
 
-<h3>8.2 建立配额体系（四件套）</h3>
+<h3>14.2 建立配额体系（四件套）</h3>
 <pre><code># 1) ResourceFlavor：定义一类节点的“风味”
 apiVersion: kueue.x-k8s.io/v1beta1
 kind: ResourceFlavor
@@ -475,7 +570,7 @@ metadata:
 spec:
   clusterQueue: team-a-cq</code></pre>
 
-<h3>8.3 提交 Job 并观察准入</h3>
+<h3>14.3 提交 Job 并观察准入</h3>
 <pre><code>apiVersion: batch/v1
 kind: Job
 metadata:
@@ -512,7 +607,7 @@ kubectl get workload -n default -o yaml | grep -A6 conditions
 # 配额耗尽时再提交一个，观察第二个 Workload 停在 Pending
 kubectl describe workload &lt;第二个-workload&gt; -n default</code></pre>
 
-<h3>8.4 观测与验证技巧</h3>
+<h3>10.4 观测与验证技巧</h3>
 <ul>
   <li>看 Workload conditions：<code>Evicted=True</code> 表示被抢占，<code>QuotaReserved</code>、<code>Admitted</code>、<code>Inadmissible</code> 各代表不同状态。</li>
   <li>找抢占者：<code>kubectl get workloads.kueue.x-k8s.io --selector=kueue.x-k8s.io/job-uid=&lt;JobUID&gt; --all-namespaces</code>。</li>
@@ -521,10 +616,10 @@ kubectl describe workload &lt;第二个-workload&gt; -n default</code></pre>
 <div class="callout tip">工作坊建议：把上面四件套 + Job 保存成一个 <code>.yaml</code>，配合 <code>watch -n1 kubectl get workload,cq,lq</code> 开一个终端实时观察状态跃迁，对理解“挂起 → 排队 → 准入 → 释放”极其直观。</div>
 
 <!-- ============ 9 ============ -->
-<h2 id="c9">9. 进阶特性全景</h2>
+<h2 id="c9">11. 进阶特性全景</h2>
 <p>Kueue 近两年演进很快，下面这些特性决定了它在 AI/ML 与多集群场景下的上限。按成熟度从高到低梳理，生产选型时请对照目标版本。</p>
 
-<h3>9.1 拓扑感知调度 TAS（Beta，v0.14 起默认开启）</h3>
+<h3>13.1 拓扑感知调度 TAS（Beta，v0.14 起默认开启）</h3>
 <p><strong>解决什么</strong>：AI/ML 训练中 Pod 间通信量巨大，同机架/同 block 的节点带宽远高于跨机架。TAS 让 Kueue 感知数据中心的层级拓扑（region → zone → rack → host），把一个 PodSet 尽量装进单一拓扑域，保障 all-reduce 效率。这与 Kubernetes 原生的 topology spread（尽量打散）语义相反——TAS 是<strong>聚拢</strong>。</p>
 <pre><code># 管理员：创建 Topology 对象描述层级
 apiVersion: kueue.x-k8s.io/v1beta1
@@ -555,13 +650,13 @@ spec:
 <p>注解分三档：<code>podset-required-topology</code>（必须同域，装不下就 Pending）、<code>podset-preferred-topology</code>（优先同域，逐级向上回退，最高层还装不下就分散准入）、<code>podset-unconstrained-topology</code>（要求 TAS 但不考虑拓扑，用于填缝减少碎片）。还有 <code>podset-group-name</code>（多个 PodSet 同域）、slice 切片注解（v0.19 多层拓扑 Beta）、<code>podset-topology-spreading</code>（v0.20 Alpha，跨 Workload 打散，面向推理服务）。</p>
 <div class="callout warn"><strong>隐式 TAS 陷阱</strong>：若 ClusterQueue 里所有 flavor 都设了 topologyName（TAS-only CQ），未注解的 PodSet 会隐式走 TAS；但只要混入了任何一个非 TAS flavor（哪怕配额为 0），隐式 TAS 就禁用——需要 TAS 的作业必须显式加注解，否则报 “Flavor supports only TopologyAwareScheduling”。</div>
 
-<h3>9.2 MultiKueue：多集群任务分发</h3>
+<h3>13.2 MultiKueue：多集群任务分发</h3>
 <p>把主集群作为“控制面”，Kueue 在多个 worker 集群寻找容量并卸载作业，适合跨集群削峰填谷与故障切换。通过在 ClusterQueue 上配置 <code>multiKueue</code> 与 <code>MultiKueueConfiguration</code>（worker 集群连接）启用；作业在管理集群只保留元数据，实际 Pod 运行在被选中的 worker 集群。多数主流集成（Job、JobSet、RayJob、Training 等）都支持 MultiKueue。</p>
 
-<h3>9.3 Fair Sharing（Stable since v0.7）</h3>
+<h3>13.3 Fair Sharing（Stable since v0.7）</h3>
 <p>见 7.3 节。要点：给 ClusterQueue 算 share 值（受 <code>.spec.fairSharing.weight</code> 加权），准入偏向 share 低者、抢占偏向 share 高者；值可在 <code>.status.fairSharing.weightedShare</code> 或 <code>kueue_cluster_queue_weighted_share</code> 指标查看。它用抢占来让 Cohort 内租户获得相等或按权重的共享份额。</p>
 
-<h3>9.4 弹性与混合负载</h3>
+<h3>13.4 弹性与混合负载</h3>
 <ul>
   <li><strong>Partial Admission</strong>：按可用配额以降低的 parallelism 运行作业（目前主要 Batch Job 支持）。</li>
   <li><strong>Dynamic Reclaim</strong>：作业中已完成的 Pod 释放的配额可被动态回收给排队作业。</li>
@@ -570,20 +665,20 @@ spec:
   <li><strong>DRA 设备配额（Alpha，v0.20）</strong>：对通过 Dynamic Resource Allocation / ResourceClaimTemplate 申请的 GPU 等设备做配额管理，含可切分设备；TAS 侧需要 <code>KueueDRADeviceFeasibility</code> gate。</li>
 </ul>
 
-<h3>9.5 AdmissionCheck 与自动扩容联动</h3>
+<h3>11.5 AdmissionCheck 与自动扩容联动</h3>
 <p>AdmissionCheck 允许内部或外部组件影响一个 Workload 能否准入。典型用法是通过 <code>ProvisioningRequest</code> 对接 cluster-autoscaler：流程为“预留配额 → 等待包括 Provisioning 在内的所有 AdmissionCheck 就绪 → 再做 TAS 拓扑分配”，从而实现“先扩容节点、再放行业务”，TAS 会考虑新置备的节点做拓扑分配。Kueue 也内置 pending workload 的 on-demand 可见性端点，便于监控排队作业。</p>
 
 <!-- ============ 10 ============ -->
-<h2 id="c10">10. 生产实践：可观测与排障</h2>
+<h2 id="c10">12. 生产实践：可观测与排障</h2>
 
-<h3>10.1 核心可观测信号</h3>
+<h3>14.1 核心可观测信号</h3>
 <ul>
   <li><strong>Prometheus 指标</strong>：Kueue 内置指标，重点关注 <code>kueue_cluster_queue_weighted_share</code>（Fair Sharing）、队列深度、准入/抢占次数等；可对接 Grafana 看板。</li>
   <li><strong>Workload 状态</strong>：这是排障第一入口。<code>Admitted=True</code> 已放行；<code>QuotaReserved</code> 已预留；<code>Inadmissible</code> 排队中；<code>Evicted=True</code> + <code>Preempted</code> 条件说明被抢占，并附带抢占者 UID / JobUID。</li>
   <li><strong>ClusterQueue status</strong>：查看 <code>status.usedQuotas</code>、<code>status.fairSharing.weightedShare</code> 判断配额占用与公平状态。</li>
 </ul>
 
-<h3>10.2 高频问题排查清单</h3>
+<h3>14.2 高频问题排查清单</h3>
 <table>
 <thead><tr><th>现象</th><th>排查方向</th></tr></thead>
 <tbody>
@@ -595,7 +690,7 @@ spec:
 </tbody>
 </table>
 
-<h3>10.3 生产落地建议</h3>
+<h3>14.3 生产落地建议</h3>
 <ul>
   <li><strong>默认不抢占是好事</strong>：先观察排队与配额是否够用，再按需逐项打开 withinClusterQueue / reclaimWithinCohort，避免一开始就激进抢占。</li>
   <li><strong>Gang 作业务必配 waitForPodsReady</strong>：否则部分 worker 启动、部分 Pending 会互占资源导致死锁。</li>
@@ -605,10 +700,10 @@ spec:
 </ul>
 
 <!-- ============ 11 ============ -->
-<h2 id="c11">11. 经典面试题</h2>
+<h2 id="c11">13. 经典面试题</h2>
 <div class="callout">说明：Kueue 是较新项目，目前几乎没有“纯 Kueue 的专门面试题库”，其题目基本嵌在 Kubernetes、AI 平台、MLOps 等综合面试题库中；另有大量高频考点直接来自官方文档。以下按这两类整理，均标注来源。</div>
 
-<h3>11.1 面试题库中真实出现的题目</h3>
+<h3>13.1 面试题库中真实出现的题目</h3>
 <table>
 <thead><tr><th>题目</th><th>考察要点</th><th>来源</th></tr></thead>
 <tbody>
@@ -624,7 +719,7 @@ spec:
 </tbody>
 </table>
 
-<h3>11.2 官方文档高频考点</h3>
+<h3>13.2 官方文档高频考点</h3>
 <table>
 <thead><tr><th>考点</th><th>关键答案</th><th>来源</th></tr></thead>
 <tbody>
@@ -639,7 +734,7 @@ spec:
 </tbody>
 </table>
 
-<h3>11.3 面试加分点：千万别这么说</h3>
+<h3>13.3 面试加分点：千万别这么说</h3>
 <ul>
   <li>不要说“Gang scheduling 在 1.37 已 GA”——是 beta、默认关。</li>
   <li>不要说“我设置 GangScheduling=true”——该门已并入 GenericWorkload 并在 1.37 移除。</li>
@@ -648,7 +743,7 @@ spec:
   <li>不要说“Kueue 默认就会抢占”——三个抢占开关默认都是 Never。</li>
 </ul>
 
-<h3>11.4 参考来源</h3>
+<h3>13.4 参考来源</h3>
 <ul>
   <li>Kueue 官方文档：Overview / ClusterQueue / Preemption / Topology-Aware Scheduling</li>
   <li>kubernetesinterviewquestions.com，《Gang Scheduling: PodGroup, Workload API and Kueue》</li>
@@ -659,19 +754,19 @@ spec:
 </ul>
 
 <!-- ============ 12 ============ -->
-<h2 id="c12">12. 学习地图与总结</h2>
-<h3>12.1 七大模块脉络</h3>
+<h2 id="c12">14. 学习地图与总结</h2>
+<h3>14.1 七大模块脉络</h3>
 <p>前面各章的问题与答案，可归纳为七大模块。这张学习地图整合了整体架构与七大模块，是一份可随时回顾的全景速查：</p>
 <figure class="fig"><img src="assets/fig6.png" alt="Kueue 学习地图"><figcaption>图 6 · Kueue 学习地图：七大模块全景速查</figcaption></figure>
 
-<h3>12.2 贯穿全程的三条主线</h3>
+<h3>14.2 贯穿全程的三条主线</h3>
 <ul>
   <li><strong>分层</strong>：LocalQueue → ClusterQueue → Cohort，配额自下而上汇聚。</li>
   <li><strong>抽象</strong>：Job → Workload 投影，差异由 <code>PodSets()</code> 抹平，调度只认统一结构。</li>
   <li><strong>边界</strong>：所有操作停在 Workload / suspend 层，Pod 生命周期交给下游控制器。</li>
 </ul>
 
-<h3>12.3 结语</h3>
+<h3>14.3 结语</h3>
 <p>Kueue 的设计哲学可以浓缩为一句话：<strong>把“调度之前的治理”产品化</strong>——先完成资源的准入与承诺，再做实际调度。理解这一点，就理解了为什么它反复强调 Workload 抽象、配额分层和 suspend 边界，也就能在看各种框架集成、抢占策略、拓扑调度时抓住主线而非迷失在细节里。当把 TAS、MultiKueue、Fair Sharing、DRA 这些新特性也放回这条主线时，它们不过是同一治理层向外延伸出的能力：决定谁先排队、谁有配额、放在哪、何时放行。</p>
 
 <h2 id="meta">元信息</h2>
@@ -681,7 +776,7 @@ spec:
 <tr><td>目标读者</td><td>中高级 Kubernetes 平台工程师、AI 基础设施工程师</td></tr>
 <tr><td>前置知识</td><td>Kubernetes Job / CRD / Admission Webhook、GPU 调度基础、批处理系统概念</td></tr>
 <tr><td>技术栈版本</td><td>Kueue v1beta1 / v1beta2，Kubernetes 1.29+；TAS 基于 v0.14+，Topology Spreading / DRA 基于 v0.20（Alpha）</td></tr>
-<tr><td>预计阅读时间</td><td>约 40 分钟</td></tr>
+<tr><td>预计阅读时间</td><td>约 50 分钟</td></tr>
 </tbody>
 </table>
 

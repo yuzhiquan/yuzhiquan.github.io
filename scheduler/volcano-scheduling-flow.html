@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html data-page-node-id="3RBQh3WoBWHheqHbNrb6uv" lang="zh-CN">
+<head data-page-node-id="NWyrzP8PzsLn46yMemSOYn">
+
+<meta data-page-node-id="hm4774V4kumASazCiOUEhd" charset="UTF-8">
+<meta data-page-node-id="jDdcRKBXauNRWsMW7XClQG" content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Volcano 完整调度流程图：从 Job 提交到调度完成｜小胖鱼@Think</title>
+<meta name="description" content="端到端拆解 Volcano 调度全链路：从 Job 提交、Controller 展开、Session 快照、插件扩展点、五大 Action、gang 全有全无、Statement 事务到异步 Bind/Evict 写回的 8 阶段完整流程图。">
+<style data-page-node-id="aKzCKyr3ZN7SdQWuOb0bUa" data-pnid-children="41KAZ62uflwAQOXCBe3L4d">
+:root{
+  --ind:#6366f1;--grn:#10b981;--amb:#f59e0b;--ros:#f43f5e;--cyn:#06b6d4;--pur:#a855f7;--slt:#64748b;
+  --ink:#1f2937;--sub:#6b7280;--line:#e5e7eb;--bg:#f5f6f8;--card:#ffffff;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink);background:var(--bg);line-height:1.65;font-size:14px;}
+.flow-wrap{max-width:1220px;margin:0 auto;padding:0 22px 90px;}
+
+/* 头部 */
+.hero{background:linear-gradient(135deg,#1e1b4b 0%,#4338ca 52%,#0e7490 100%);color:#fff;border-radius:0 0 26px 26px;padding:50px 44px 40px;box-shadow:0 12px 34px rgba(79,70,229,.28);}
+.hero .kicker{display:inline-block;font-size:12px;font-weight:700;letter-spacing:1.5px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:4px 15px;margin-bottom:16px;}
+.hero h1{font-size:34px;font-weight:800;letter-spacing:.5px;margin-bottom:10px;}
+.hero .lead{font-size:15px;opacity:.92;max-width:900px;}
+.hero .meta{margin-top:22px;display:flex;gap:30px;flex-wrap:wrap;font-size:12.5px;opacity:.85;}
+.hero .meta b{display:block;font-size:15px;opacity:1;font-weight:800;}
+
+/* 图例 */
+.legend{display:flex;gap:10px;flex-wrap:wrap;margin:26px 0 10px;}
+.lg{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--sub);background:var(--card);border:1px solid var(--line);border-radius:18px;padding:5px 12px;}
+.lg i{width:11px;height:11px;border-radius:3px;display:inline-block;}
+
+/* 阶段 */
+.phase{position:relative;border:1px solid var(--line);border-radius:16px;background:var(--card);margin-top:10px;overflow:hidden;box-shadow:0 3px 16px rgba(0,0,0,.045);}
+.phase-hd{display:flex;align-items:center;gap:15px;padding:14px 22px;color:#fff;}
+.phase-badge{width:46px;height:46px;flex:none;border-radius:50%;background:rgba(255,255,255,.18);border:2px solid rgba(255,255,255,.7);display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:800;}
+.phase-hd .pt{font-size:18px;font-weight:800;letter-spacing:.3px;}
+.phase-hd .ps{font-size:12px;opacity:.85;margin-top:2px;}
+.phase-hd .pn{margin-left:auto;font-size:11px;font-weight:700;letter-spacing:1px;background:rgba(255,255,255,.18);padding:4px 12px;border-radius:14px;}
+.phase-body{padding:18px 22px 20px;}
+
+/* 连接箭头 */
+.arrow{display:flex;flex-direction:column;align-items:center;margin:4px 0;color:var(--slt);}
+.arrow .bar{width:3px;height:20px;background:linear-gradient(currentColor,currentColor);border-radius:2px;}
+.arrow .tri{width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-top:11px solid currentColor;margin-top:-1px;}
+.arrow .lbl{font-size:11px;color:var(--sub);margin-top:3px;font-weight:600;}
+
+/* 通用步骤块 */
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}
+.step{border:1px solid var(--line);border-radius:11px;padding:12px 14px;background:var(--card);position:relative;}
+.step .st{font-size:13.5px;font-weight:800;display:flex;align-items:center;gap:7px;margin-bottom:6px;}
+.step .st .ic{font-size:15px;}
+.step p{font-size:12.3px;color:var(--ink);margin:3px 0;}
+.step .sub{font-size:11.5px;color:var(--sub);margin-top:5px;}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:#eef2ff;color:#4338ca;padding:1px 5px;border-radius:4px;font-size:11.5px;}
+.tag{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:11px;margin:2px 4px 2px 0;}
+.t-ind{background:#eef2ff;color:#4338ca;}.t-grn{background:#ecfdf5;color:#047857;}.t-amb{background:#fffbeb;color:#b45309;}
+.t-ros{background:#fff1f2;color:#be123c;}.t-cyn{background:#ecfeff;color:#0e7490;}.t-pur{background:#faf5ff;color:#7e22ce;}.t-slt{background:#f1f5f9;color:#475569;}
+
+/* 代码 */
+pre{background:#0f172a;color:#e2e8f0;border-radius:9px;padding:12px 14px;font-size:11.3px;line-height:1.6;overflow-x:auto;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;margin-top:8px;}
+pre .cm{color:#64748b;}pre .kw{color:#c084fc;}pre .vl{color:#7dd3fc;}pre .gr{color:#4ade80;}
+
+/* 横向流水线 */
+.pipe{display:flex;align-items:stretch;gap:0;flex-wrap:wrap;}
+.pipe .node{flex:1 1 0;min-width:120px;border:1px solid var(--line);border-radius:10px;padding:10px 11px;background:var(--card);position:relative;}
+.pipe .node .nt{font-size:12.5px;font-weight:800;margin-bottom:3px;}
+.pipe .node .nd{font-size:11px;color:var(--sub);}
+.pipe .par{display:flex;align-items:center;justify-content:center;padding:0 6px;color:var(--slt);font-size:20px;font-weight:800;flex:0 0 auto;}
+
+/* 判定框 */
+.decision{border:2px dashed var(--ros);background:#fff1f2;border-radius:12px;padding:11px 15px;text-align:center;font-weight:800;color:#be123c;font-size:13px;}
+.branch{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px;}
+.branch .bb{border-radius:11px;padding:11px 14px;border:1px solid var(--line);}
+.bb.ok{background:#ecfdf5;border-color:#a7f3d0;}.bb.no{background:#fff1f2;border-color:#fecdd3;}
+.bb .bt{font-weight:800;font-size:12.5px;margin-bottom:4px;}
+
+/* 异步边界 */
+.async-boundary{border-top:2px dashed var(--amb);position:relative;margin:14px 0 4px;padding-top:14px;}
+.async-boundary .ab-tag{position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--amb);color:#fff;font-size:10.5px;font-weight:800;letter-spacing:1px;padding:2px 14px;border-radius:12px;white-space:nowrap;}
+
+/* 分叉 */
+.forkline{display:flex;justify-content:center;margin:2px 0;}
+.forkline span{font-size:13px;font-weight:800;color:var(--sub);letter-spacing:6px;}
+
+/* 表格 */
+table{width:100%;border-collapse:collapse;margin-top:8px;font-size:11.8px;}
+th,td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top;}
+th{background:#f8fafc;font-weight:800;color:var(--ink);}
+tr:nth-child(even) td{background:#fbfcfe;}
+
+/* 附录 */
+.appendix{margin-top:28px;}
+.acc{border:1px solid var(--line);border-radius:14px;background:var(--card);margin-bottom:14px;overflow:hidden;}
+.acc-hd{padding:12px 18px;color:#fff;font-weight:800;font-size:15px;display:flex;align-items:center;gap:9px;}
+.acc-body{padding:16px 18px;}
+.note{background:#f8fafc;border-left:3px solid var(--slt);border-radius:0 8px 8px 0;padding:9px 13px;font-size:11.8px;color:var(--sub);margin-top:10px;}
+.bottom-banner{margin-top:24px;background:linear-gradient(135deg,#0f172a,#334155);color:#fff;border-radius:16px;padding:22px 28px;font-size:14px;}
+.bottom-banner b{color:#7dd3fc;}
+.foot{text-align:center;color:var(--sub);font-size:11.5px;margin-top:26px;}
+
+@media(max-width:820px){
+  .grid2,.grid3,.branch{grid-template-columns:1fr;}
+  .hero h1{font-size:25px;}
+  .pipe{flex-direction:column;}.pipe .par{padding:4px 0;transform:rotate(90deg);}
+}
+@media print{
+  body{background:#fff;}
+  .phase,.acc,.step{box-shadow:none;break-inside:avoid;}
+  .hero{border-radius:0;}
+  .arrow .bar{height:14px;}
+}
+</style>
+</head>
+<body data-page-node-id="KSnqZUazIOIJGWXaCz2bfq">
+
+<div style="background:#0f172a;color:#e2e8f0;font-size:14px">
+  <div style="max-width:1240px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;gap:18px;flex-wrap:wrap">
+    <a href="/" style="color:#fff;font-weight:700;text-decoration:none">小胖鱼@Think</a><span>·</span>
+    <a href="/scheduler/" style="color:#93c5fd;text-decoration:none">调度器系列</a>
+    <span style="margin-left:auto"><a href="/" style="color:#93c5fd;text-decoration:none">博客首页</a></span>
+  </div>
+</div>
+
+<div data-page-node-id="LGDzf2FfFmTIAgimwqxjNR" class="flow-wrap">
+
+  <!--pnid:cpYSr93wRRtPcM8AoMKblK--><!-- 头部 -->
+  <header data-page-node-id="IJNEATMn3kkEnUYon3JQ0z" class="hero">
+    <div data-page-node-id="AaHx0kVwGH8gh7Jx9jeWRK" class="kicker"><!--pnid:uoXF3gqQGhJdZQfsTYxsgO-->END-TO-END SCHEDULING FLOW</div>
+    <h1 data-page-node-id="twaqUQIaeO1ukHoFRW4Pyd"><!--pnid:0pzfMpwa2hFA9gsPc7dU8d-->Volcano 完整调度流程图</h1>
+    <div data-page-node-id="eTsF8EuzoI5C5WCduEg1OA" class="lead"><!--pnid:A9fHOMEs1dM93dxzFQeDqw-->从用户提交 Job Manifest 开始，到 Pod 真正 Running 于目标节点为止 —— 覆盖对象模型、Session 快照、插件扩展点、五大 Action、 gang 全有全无、Statement 事务、异步 Bind / Evict 写回的完整链路。基于 Volcano master 分支源码核实整理。</div>
+    <div data-page-node-id="AE9ZuB9w9gJZsnfjfVUJF0" class="meta">
+      <div data-page-node-id="DG0ajsQJjppmtjhPEuyzuC"><b data-page-node-id="MMeUjmrQoGEBwc8zBvfJnY"><!--pnid:q5yDMLdKFZo0m6oA6uQHvx-->8</b><!--pnid:m8wLfQYvGySCh2ZDzU0iox-->个主阶段</div>
+      <div data-page-node-id="pNhiAwlxau59Z7iFFJ0mTi"><b data-page-node-id="yhH4KVA5muBRThdl3YzXRT"><!--pnid:UNH8U09G3b2bqJIeE6RQqA-->5</b><!--pnid:iBpvia5jds9JxWxm5vreSu-->个调度 Action</div>
+      <div data-page-node-id="KzpUiQNqkwjf9R04gkL4SA"><b data-page-node-id="Hve1ExMl3yZd0gbKDddmMU"><!--pnid:Eg0I8ifuWrckFg1amu56Ls-->20+</b><!--pnid:1lfh9QC6dmzwonKd5JOs3l-->扩展点</div>
+      <div data-page-node-id="azbck6gKaO9vQqzpteJ0vu"><b data-page-node-id="J2SmI2bIiHMY9H4zU3jXAJ"><!--pnid:EUdAOzQUKtM2of7Wd4wjd8-->2</b><!--pnid:gn02pnSEeE0QNKnQpv18eq-->条写回路径</div>
+      <div data-page-node-id="ObmyYLO29AGWfTjmkPiF6J"><b data-page-node-id="zZ0zEnkhsRwPYw5vucz6ox"><!--pnid:gUXCqVIuV4Peg8vljiNOsz-->1s</b><!--pnid:wgznG8htKMgB1lsceDEcth-->默认调度周期</div>
+    </div>
+  </header>
+
+  <!--pnid:5cTDNusYrjqciUoLeHnB1V--><!-- 图例 -->
+  <div data-page-node-id="IAyLgx8F580DpCB1yXX3Lq" class="legend">
+    <div data-page-node-id="3fUqE4dcE98rqQvIZ7QvDa" class="lg"><i data-page-node-id="wHNlTDw6Sj9yxa4AiTsPxm" style="background:var(--ind)"></i><!--pnid:MBnrguMVWwldVsd3dyk1Gx-->提交 / 控制层</div>
+    <div data-page-node-id="JPoohqnC7AyhbBomwlsugp" class="lg"><i data-page-node-id="jAxn5wqgJdBhNcSpylZ95Z" style="background:var(--cyn)"></i><!--pnid:UbA0pVX5KQDdvOhkqKhJvA-->Controller 展开</div>
+    <div data-page-node-id="XhcVNFM7B1Ey7YJYzbm63z" class="lg"><i data-page-node-id="ElPM4xpoJvuSeut8u1soun" style="background:var(--grn)"></i><!--pnid:WpB0lViz2ABBwM2SAyZ9ry-->快照 / 主循环</div>
+    <div data-page-node-id="f7mZd6jExwnjyCoUWaa8eW" class="lg"><i data-page-node-id="6y9v1uHHsvB47dDTRMjLTo" style="background:var(--pur)"></i><!--pnid:fnUfWZ0oHlp7cSCeM4D3Hr-->Session / 插件</div>
+    <div data-page-node-id="11yjTt8ZEBkIZqpLPI5tYU" class="lg"><i data-page-node-id="2Gu9IwrH82BZpXX7IlBkQ4" style="background:var(--ros)"></i><!--pnid:UZq7zIJ2No51GTBN3id0gd-->Actions / Gang / 驱逐</div>
+    <div data-page-node-id="IZ7xIxeD8JEOEXLjIFVdyD" class="lg"><i data-page-node-id="WVuq3xRVM8nG8zeVF1fX0B" style="background:var(--amb)"></i><!--pnid:mvsUxp4kvWsarvLKvIXWP7-->提交 / 异步写回</div>
+    <div data-page-node-id="5O7SVlfxY1Q0s2U7v8Oev8" class="lg"><i data-page-node-id="npuujR7gwdIGre5AUfCNST" style="background:var(--slt)"></i><!--pnid:bB8vk1kS7bEaZPbCxP2uUD-->贯穿机制</div>
+  </div>
+
+  <!--pnid:p8f0gbmivroStCTwj0vStc--><!-- ============ PHASE 0 ============ -->
+  <section data-page-node-id="2UUskpthtewShPVGx086Dl" class="phase">
+    <div data-page-node-id="5ZKOd107sDAylEMyy2DsGR" class="phase-hd" style="background:linear-gradient(90deg,#4338ca,#6366f1)">
+      <div data-page-node-id="YAQkIyztnNMMg2CURrcWK0" class="phase-badge"><!--pnid:Kcyhx44XQNI2PqTIaq1MqS-->0</div>
+      <div data-page-node-id="qH4edPVWGQyZj8VZBqR22I"><div data-page-node-id="MtL0pcofMWZn5BKjNLPral" class="pt"><!--pnid:Hc6N2dzkCrlBhkHtbZkzRD-->提交层 · Manifest</div><div data-page-node-id="4YzOuVonHWSF47fRPH0F07" class="ps"><!--pnid:ca4fS9d3ON2r3fliAx6qtl-->管理员建队列与打标，用户提交作业声明</div></div>
+      <div data-page-node-id="GyIiG5undSMb8tfbxzyJsg" class="pn"><!--pnid:Way0jb45aCEVzHc45F78Q8-->SUBMIT</div>
+    </div>
+    <div data-page-node-id="ILtTIhMg1CoWEv6Pvq4y7V" class="phase-body">
+      <div data-page-node-id="IZJMT5f5AUjd1ntOzu92vj" class="grid2">
+        <div data-page-node-id="aZXaglzN0QgpOsxDL77EJ9" class="step">
+          <div data-page-node-id="PTwVjCUJREJ3vM0T6OHeeX" class="st"><span data-page-node-id="xo4VN3yAc6QoENMfHUFZpv" class="ic"><!--pnid:kSceAU7K4c5FY0EC6ONzbg-->🗂️</span><!--pnid:eAtKrHDjpcYnlWQVO8CDln-->0.1 管理员预建 Queue（CRD）</div>
+          <p data-page-node-id="B63V2Ik5XMpaMeHqekOm0S"><!--pnid:ELFIAO4p4NKOrlR14MugWU-->安装后内置 <b data-page-node-id="lFWa5v593dzPpbRgQI87cx"><!--pnid:Ov7YLW5YKeCgibvowU38gV-->root</b><!--pnid:UEt7Z5TSMChdPdsEsVZQUW-->（根队列）与 <b data-page-node-id="SEiMjK2oCStlS474MPYxQO"><!--pnid:VtBYthhSGDpmktYE9ZDvpO-->default</b><!--pnid:cWcWkzSYkqNSiB8hHJYfmU-->（默认队列，weight=1），均不可删改。其余按业务自建。核心是<b data-page-node-id="WgwH6vNOy0nAAbTikGSc3q"><!--pnid:g97UIEeuj52V0HJiR1l78M-->三级配额模型</b><!--pnid:pYhbFZs5pgwbcEFkaUvcU2-->：<code data-page-node-id="iKCNT7PfnbHCIjHPAhVK8m" data-pnid-children="gO4TFpPyP6zdn8d7e4Bc56">guarantee ≤ deserved/weight ≤ capability</code><!--pnid:mfTQlkGAsL4Z74ZbjRJnl5-->。</p>
+<pre data-page-node-id="qKDLRCL4ziVWwQ6QRZXgLG"><span data-page-node-id="2V5HazqF3cYk7V46TGc8x9" class="cm"><!--pnid:CXsKXfGYywrUj69mSvmtD6--># scheduling.volcano.sh/v1beta1</span><!--pnid:WvfxIu0m7SriQwz20DzfOQ-->
+apiVersion: scheduling.volcano.sh/v1beta1
+kind: Queue
+metadata: {name: training}
+spec:
+  deserved:            <span data-page-node-id="60CppKXyBsuSNvXbOFApyU" class="cm"><!--pnid:e4yjaloavaEJbKKErmnGfm--># 软基准（capacity 插件用）</span><!--pnid:Gi80X7oSyL9YjJiGDmaLvv-->
+    cpu: "16"; nvidia.com/gpu: "8"
+  guarantee:           <span data-page-node-id="bvApaP9OSxAVoVkU1XdX1v" class="cm"><!--pnid:cuzOsTMsG0mbdhzvayKmsc--># 硬下限，独占预留</span><!--pnid:GgjvLDJhtgxYHO3C0r5Vit-->
+    resource: {cpu: "8", nvidia.com/gpu: "2"}
+  capability:          <span data-page-node-id="tkSPVkomnU2wfh1rYnV5aa" class="cm"><!--pnid:GGiT0E1wQ1QqHXFDcGptzh--># 硬上限，绝对封顶</span><!--pnid:N0ZnZXWzpLPIEC9adBfGlX-->
+    cpu: "32"; nvidia.com/gpu: "16"
+  weight: 1            <span data-page-node-id="gHhMfNMklbcnA56lljlb7I" class="cm"><!--pnid:WmG5pRrCid2GIrGehIesq0--># 比例权重（proportion 插件用）</span><!--pnid:8xuSZHhk9sQybjyQbvCvkA-->
+  priority: 100
+  reclaimable: true
+  state: Open</pre>
+          <div data-page-node-id="UVWL9QztmVvtAKdrogNgum" class="sub"><b data-page-node-id="350d1axPCLch2umSSXJcKL"><!--pnid:XuInIWKu85NV4cdlPCNdSr-->注意</b><!--pnid:ZPvX5znqYQrxuB3ath01Fz-->：<code data-page-node-id="Yw3WjsFfKuSyUK1NLCiT0Q" data-pnid-children="vVaJR6gVzNILryWI0HWCJd">capacity</code><!--pnid:KCAQH5dwursIbn8GdGeX7z-->（配 deserved）与 <code data-page-node-id="l3iIj3DE4gETi5WVT3eNOs" data-pnid-children="N7PewoQuOdIDYBUsyiuuE3">proportion</code><!--pnid:WGW5jy3uIcqGLbmRzGMGU7-->（配 weight）<b data-page-node-id="evCTM9SgzkwKE2wpFEyF8v"><!--pnid:589M0tDKK221XyTs5wyZmw-->二选一</b><!--pnid:Af0eivY7jb4KRpYm3OCPc4-->，不能同时用；只有 state=Open 才能接收任务。</div>
+        </div>
+        <div data-page-node-id="JOm5Q1JNdPQHoN3vAMnYhp" class="step">
+          <div data-page-node-id="hpXXrYja7ourcHNPviZkXQ" class="st"><span data-page-node-id="6SEDFtBYcoExUQwgaExaSF" class="ic"><!--pnid:IqwesZinO8mYTJS30wKZVf-->📦</span><!--pnid:TlQgeVWlj5mcBCgecri74L-->0.2 用户提交 VCJob（作业，不是散装 Pod）</div>
+          <p data-page-node-id="rmH3fgmJEGk0BRjU18lPf7"><!--pnid:L5xqSA5fw9nZfMfLW2SO7r-->提交类型是<b data-page-node-id="RU6tMs9QxbHuc4C4CX2K85"><!--pnid:9XU0LnJYhZCnNu4IHBrs3c-->作业 Job</b><!--pnid:tL6ZCie6SRtddETllqeswq-->，层级在提交时就定义好。顶层 <code data-page-node-id="tEIJoHYemeGVrLnM3LwMMN" data-pnid-children="Zi1MXzsrnlpWpmsAw5VTNO">spec.queue</code><!--pnid:ztcrYHWl0v01RZRUOFll7d--> 声明归属（不写则进 default）。</p>
+<pre data-page-node-id="qj1FrCSnQNo6RU3YhgiktS"><span data-page-node-id="glar2F5yPI7X3Jk5uAtccU" class="cm"><!--pnid:GAhHNRXNxYt5S07z1vX7OH--># batch.volcano.sh/v1alpha1</span><!--pnid:eLIT24TQy4PHqEcEhHanUw-->
+apiVersion: batch.volcano.sh/v1alpha1
+kind: Job
+metadata: {name: pytorch-ddp}
+spec:
+  queue: training        <span data-page-node-id="UXGEvpNkJEK6IkGh6bB8t3" class="cm"><!--pnid:swQjHixjq97W98aZ5x3iXk--># ← 归属队列（声明式）</span><!--pnid:GpEopxvYbb3bv2TMVEQnoa-->
+  minAvailable: 4        <span data-page-node-id="CmhA3n7PPl2tfLFYt7M2Ba" class="cm"><!--pnid:vEOA4KW9io8ruNpg92giS8--># ← gang 门槛 → PodGroup.MinMember</span><!--pnid:qSUiL2CWLsxycerZAgpe6Y-->
+  tasks:
+    - name: worker
+      replicas: 4        <span data-page-node-id="U43hptmQ6TGBhcOM8xmHzK" class="cm"><!--pnid:hkJYCeiP0X0GmPg0R6xoMH--># ← 生成 4 个 Pod</span><!--pnid:sieGimwV0FrYtHARQqJ8Nx-->
+      template:
+        spec:
+          schedulerName: volcano   <span data-page-node-id="Xt2K82s2CMA6Mcfeq2Fpxb" class="cm"><!--pnid:iHszIC82w3uWEvvuzUaOw4--># ← 交给 volcano</span><!--pnid:xjMopcX77JZcGzkZpqFCnr-->
+          containers: [...]</pre>
+          <div data-page-node-id="2nILeH9O4sIyLKXh0kJcnx" class="sub"><!--pnid:JZkRQPIDlYF2JMooDcp2X6-->其他框架（PyTorchJob / MPIJob 等）无 <code data-page-node-id="uvwj0KztDrcImYdDQJHeyd" data-pnid-children="gMmSZtKk2n4TQPGlMWdhMB">spec.queue</code><!--pnid:yNE2JzK5kUQXGSmhcGL68n-->，改用注解：
+          <code data-page-node-id="BPMAClY1IB0ENM86oAkDhE" data-pnid-children="pE0DpgxqpnQFSc1vKJMVXy">metadata.annotations.scheduling.volcano.sh/queue-name: training</code><!--pnid:2zQiGJKU8dIlq3u5gqOKwq--> + <code data-page-node-id="XLUL80Is5vGrXI9FL6XqgY" data-pnid-children="PEcCIcrrlGVzic7RFowMV3">spec.schedulingPolicy.{queue,minAvailable}</code><!--pnid:w5lBLfcl1NVAHoxbnaCQ0F-->。</div>
+        </div>
+        <div data-page-node-id="bol5yGHsZXCU7Rb7vsBEVn" class="step">
+          <div data-page-node-id="Nox4xCPBcjWS54bvFrI6Iq" class="st"><span data-page-node-id="zaak2Ma4Vk3RrOeEXhvc0S" class="ic"><!--pnid:ATmwrVEAcBaia7aer9WhTe-->🏷️</span><!--pnid:7eUthxuGA97vKIg2h7WFIj-->0.3 节点硬件打标（插件数据基础）</div>
+          <p data-page-node-id="s6NgjxML1hMbB68w9wfOfQ"><!--pnid:JoHKkjgenjYTIspdPV0L9y-->机柜 / 电源等硬件信息先落到 Node 的 label / annotation，自定义插件才能在 <code data-page-node-id="UCVPdjEfwc5dBjqXH2kSFD" data-pnid-children="6PZQ0bvJwhbwFE5lPMOM7h">NodeInfo.Node</code><!--pnid:XAE862rQwlL8gZ4YCBPV3J--> 上读到。</p>
+<pre data-page-node-id="y2X0OEJngZF5rjqepRY1Hq" data-pnid-children="LUJQWCsCaO54e6e0lsq0Xi">kubectl label node node-01 \
+  topology.kubernetes.io/rack=rack-A-01
+kubectl annotate node node-01 \
+  hardware.example.com/power-capacity-watts=8000
+kubectl annotate node node-01 \
+  hardware.example.com/power-feed=dual
+kubectl label node node-01 \
+  hardware.example.com/cooling-tier=high</pre>
+        </div>
+        <div data-page-node-id="YBkqG13z7PMsQ1sGgjwmoV" class="step">
+          <div data-page-node-id="h5shvimgMW8bLjzNIKQLG0" class="st"><span data-page-node-id="wpu2tU9NldGuuIjHlG4X0G" class="ic"><!--pnid:8MvNgY43uaVaG2UlgXbgqi-->⚙️</span><!--pnid:wZtl5C83wa2iV6yOsn0om1-->0.4 调度器配置（ConfigMap）</div>
+          <p data-page-node-id="LdQupoQxYoVXF2B34z52bB"><!--pnid:G9eegIg5vib5slHboAIj8v-->定义 Action 执行顺序与插件分层（tier）。同一扩展点被多插件注册时，靠 tier 顺序组合结果。</p>
+<pre data-page-node-id="ugDaiB319n1ogVDSItYYGr"><!--pnid:rd5tBVUsWdQr7aGkyXUiBy-->actions: "enqueue, allocate, preempt, reclaim, backfill"
+tiers:
+  - plugins:            <span data-page-node-id="CKgusvy0qX03pj3ah9BEeq" class="cm"><!--pnid:CK9zep2LgJouOxnwDGieKZ--># 第一层：排序 / 准入</span><!--pnid:ThSS2wirvr2eIx2KUlldBY-->
+      - {name: priority}
+      - {name: gang}
+      - {name: hwtopology}   <span data-page-node-id="YlMo1OkfHmPdRH8vCpaACf" class="cm"><!--pnid:dNvuWvHanbi8lkH8YkoOev--># 自定义硬件插件</span><!--pnid:CJB0RsrEHN1pyd4iHkU10Q-->
+  - plugins:            <span data-page-node-id="s2hqBiep7MZfyqfo9gbski" class="cm"><!--pnid:HcwrkkIyuFC3KqQE8WGzvM--># 第二层：过滤 / 打分</span><!--pnid:WWESuWhovLzbAKfmQcw3Jf-->
+      - {name: drf}
+      - {name: predicates}
+      - {name: nodeorder}
+      - {name: binpack}</pre>
+          <div data-page-node-id="UuEFQDKF4OaTUnWKGGYi7J" class="sub"><!--pnid:UabnKtLjg34LzSiSSwWbFz-->默认配置常为 <code data-page-node-id="h5MmEs6akxIILtgdLsYtE7" data-pnid-children="iRIg5QkVLLmTgu07MEoL4l">enqueue,allocate,backfill</code><!--pnid:a3uHJwqT8X6arqxeAA9rlw-->；<code data-page-node-id="1QF04aflfygoK4NVsYOqr4" data-pnid-children="mTjfqQHbpPMoDERfLxqkDw">enqueue</code><!--pnid:3hLMztoM4QHeLHeFdxYGAu--> 与 <code data-page-node-id="8b2H0AZes0DZUMWZQxmcUs" data-pnid-children="M3OZDVV1ANjx2Mj9wiMnS0">preempt/reclaim</code><!--pnid:USVT5CiNF8uGvMjzRzN574--> 通常不同时启用（见阶段 4）。</div>
+        </div>
+      </div>
+      <div data-page-node-id="JrnCqgEjW0Xd0UY9YTgTZj" class="note"><!--pnid:Wk0ug7Mpr72TJ95f9A7Lhm-->✅ 准入校验：提交后准入组件检查队列是否存在、state 是否 Open；启用分层队列时还要求是叶子节点。校验不过直接拒绝。</div>
+    </div>
+  </section>
+
+  <div data-page-node-id="btTaYtPxRYxqmqjlDhLNbS" class="arrow"><div data-page-node-id="MgIslFTOSAkhE566fPuK1S" class="bar"></div><div data-page-node-id="XT5rFCDXtxNwphAVuJuMlK" class="tri"></div><div data-page-node-id="gUVxyr7SDztVLN6bTGEMSd" class="lbl"><!--pnid:IhhBLMXbkNsiIP96RPo3v6-->API Server 持久化对象，触发 Controller reconcile</div></div>
+
+  <!--pnid:7RYGhEqWJldpy5LlBq3xvU--><!-- ============ PHASE 1 ============ -->
+  <section data-page-node-id="7k4XfxwytjhfidxnbO4McQ" class="phase">
+    <div data-page-node-id="NM9ypsHj6IZ0jrqe9pwkBh" class="phase-hd" style="background:linear-gradient(90deg,#0e7490,#06b6d4)">
+      <div data-page-node-id="xDJ8X5YCW6gUtu1CCBjUgi" class="phase-badge"><!--pnid:6zeBomg05SqnMFo48dJSbj-->1</div>
+      <div data-page-node-id="6vl9xVnzkEmzd30P1uzKQk"><div data-page-node-id="cSgVtbFQr6DNONLmtkajuu" class="pt"><!--pnid:aLRgB5DmguubutBgSieRl9-->Controller 展开 · 对象模型</div><div data-page-node-id="1BspqehMCS0hhyAmuIvENI" class="ps"><!--pnid:a7gVbaRIBpv7Vzt2mB3iR9-->vc-controller 把 Job 展开成 PodGroup + N 个 Pod</div></div>
+      <div data-page-node-id="N4M8wFh6PwtzTQADMGKDa6" class="pn"><!--pnid:plu09XLkzgY6TYgOiB9GNY-->EXPAND</div>
+    </div>
+    <div data-page-node-id="E7OgDpHOCj06XsBzsDEbGF" class="phase-body">
+      <div data-page-node-id="3a7BD3PS64JsQioQcHsflQ" class="pipe">
+        <div data-page-node-id="3XwV6zuuxgsg4S85L7DxU5" class="node"><div data-page-node-id="xOtcstTZRlGpr1HYmLf9P4" class="nt" style="color:var(--ind)"><!--pnid:L7o3zyqyfXy08Kd9tEsFvL-->① VCJob</div><div data-page-node-id="hZAq7DZ0jr6W0M7YuyEaky" class="nd"><!--pnid:Ucol3Qrr8tDUPOKnuJoRdb-->用户提交的作业对象</div></div>
+        <div data-page-node-id="wya1oM07r67NSdHQ3yuoHC" class="par"><!--pnid:aIZvleBpwmalNCn3jZrD0I-->→</div>
+        <div data-page-node-id="C1dyP1yXanaeNumMvlgXyL" class="node"><div data-page-node-id="OMeEDPro1HQEFcnYVoIGII" class="nt" style="color:var(--ros)"><!--pnid:OTpWBeiwDMqOOMGgJ7GrDp-->② PodGroup</div><div data-page-node-id="LpcCMOgPs2Pnviw9bnxHkx" class="nd"><!--pnid:L3VB4MJKdhK2Ao9Yr9aqRQ-->MinMember = minAvailable<br data-page-node-id="TQEiavKQ5MeAz6zufXDR2X"><!--pnid:aAAVIjsPj1g1jGFIhd2A8k-->gang 全有全无的载体</div></div>
+        <div data-page-node-id="C2HRUSuqPuW4ScRsHMyD5V" class="par"><!--pnid:aypBq84Yvmddt7C9o0wiRG-->→</div>
+        <div data-page-node-id="uvRXpyQlsy5UJybMBAcxrs" class="node"><div data-page-node-id="jek22VxIxjspWMmFsuYyLn" class="nt" style="color:var(--cyn)"><!--pnid:uxMJPPh68JnTR2YMH8YM2W-->③ N 个 Pod</div><div data-page-node-id="S8lpb04sF6xcXil0nfG67p" class="nd"><!--pnid:Ijof6IXdnDtH4G0Mp4DKmB-->按 replicas 展开<br data-page-node-id="lHDcGPp7Kupl7j47wQQhXH"><!--pnid:vFOm2lqUY3HUi2uvQjprwO-->Pending，nodeName 空</div></div>
+        <div data-page-node-id="maXQsTCGWhfxzlYMFmQODh" class="par"><!--pnid:xmQI8JlqY4gtkX8NQ0Qw02-->→</div>
+        <div data-page-node-id="1bTTWhWFEUJCSjBl1akxsC" class="node"><div data-page-node-id="lVxrMFmzeLvOrhRr4qwlsT" class="nt" style="color:var(--slt)"><!--pnid:8WpFYrLMjVB6j4kYPOHfGi-->④ 打 annotation</div><div data-page-node-id="OwtFWV0DInXG80nPK20W1u" class="nd"><!--pnid:W1EGtTkqXwBQtHAvjQYsK3-->group-name / queue-name<br data-page-node-id="zjSRdUcy7tLIiekJd8Tuqw"><!--pnid:BPcEegNPr4QrVRGkdlPxyk-->三层关联写死</div></div>
+      </div>
+      <div data-page-node-id="5PNHLIRIle5V7QFZczNH6r" class="grid3" style="margin-top:12px">
+        <div data-page-node-id="9xxd9hwBYqcBZyOfGMdlxw" class="step"><div data-page-node-id="7Tyzct9asSZRS8O9r9GDCd" class="st"><span data-page-node-id="WkcchPKEtxo42OwdHZgEBj" class="ic"><!--pnid:lBIj1gzX38RCKe49jwmOHm-->🔗</span><!--pnid:GsNtkbfQiqJnADS8M53lgz-->三层是"定义"的，不是"聚合"的</div>
+          <p data-page-node-id="lFAz0FIXzuj3eCprG8lzkr"><!--pnid:f7i7bY3LbBfNPvMZMLDuTH-->正确因果：<b data-page-node-id="FFlFDmBKHCmBiN0A3rDsQh"><!--pnid:wTQgYyYoz0pLRToiHDIKys-->提交 Job（声明 queue/replicas/minAvailable）→ controller 按 replicas 展开成 N 个 Pod，并建 PodGroup 绑成 gang 单元</b><!--pnid:SaZukLi3x3I28Fl5QibYj7-->。不是"提交散装 Pod 再由调度器聚合"。</p></div>
+        <div data-page-node-id="6lbqPFFguAPyvfe2nUwiFo" class="step"><div data-page-node-id="1UFzxIis6EYlk7gqp1uHy3" class="st"><span data-page-node-id="0dQRw0zdVjtJnLFJyi9aYE" class="ic"><!--pnid:nQZKC6hCw8Jbrb1yA6uqLV-->🏷️</span><!--pnid:eaSvTHMcqY2W7wiMTrAcC7-->关联写进每个 Pod</div>
+          <p data-page-node-id="pSfJ7kuRyuXKc9vfGDqJGS"><code data-page-node-id="5s5Cw7oFx6NRebB7orbBD5" data-pnid-children="Drp1eYnaBhEI6z8ED6ki6f">createJobPod</code><!--pnid:eUJNHG01dP7MJEntb89BdE--> 给每个 Pod 打上指向 PodGroup 与 Queue 的 annotation。这三层的关联在 Pod 创建那一刻就固定了。</p></div>
+        <div data-page-node-id="8LRV5rARrW2IhUexoz8VgC" class="step"><div data-page-node-id="IWVP5ZJr1tizmHepQE1dhP" class="st"><span data-page-node-id="WWsR4Dy89M4vx3iFMYacc2" class="ic"><!--pnid:EQy736C2bCxkpRTi6Dz6DR-->✂️</span><!--pnid:Y996zNDPzxJiOigQYmGDfF-->scheduler / controller 分离</div>
+          <p data-page-node-id="zgcTBp1Uh3OI7vbnc94c8X"><b data-page-node-id="5fVwODRLEr5guNaL3aevyo"><!--pnid:y8OjjWrFPSvRxEz3yITDJU-->volcano-scheduler 从不创建 workload</b><!--pnid:SjsH2OfNOYWwVCopdm0FBq-->。它的全部职责是给这些已存在的 Pending Pod 挑节点并绑定。</p></div>
+      </div>
+      <table data-page-node-id="BSnqAXz7o2NJx4rKrGvJ7S">
+        <tr data-page-node-id="7ssF7q43EYrm0WtuSIQdBL"><th data-page-node-id="Y0t13vY525k2bUbtrWYGAT"><!--pnid:ZYuh1G2Wwdn5xCiKjQJlM0-->层级</th><th data-page-node-id="a2DCfTbNYAx2jDXe5FhAzU"><!--pnid:f4FuVWEA4AsfnklVeGoRVj-->K8s 对象</th><th data-page-node-id="Uu4dMhlbl8QoBGsu4SmocG"><!--pnid:syVnaDy1g5oW9mCe48NOKO-->谁创建</th><th data-page-node-id="s0LTVMA41yzVnpBk4ERqgQ"><!--pnid:mA4QzKn5Yok8EZrWwVGr13-->提交里如何指定</th></tr>
+        <tr data-page-node-id="OHjvPvNLqhLKNTmCZgF8xp"><td data-page-node-id="66LrYwXSQxSunEwvaGv9UU"><b data-page-node-id="CdRFyF8hbBlOs4PJJEDGnl"><!--pnid:YABhOeO5J8C3tPOqtgpeNK-->队列 Queue</b></td><td data-page-node-id="38AJJpsynMNIkxJqjk3u8h"><!--pnid:vtpmItbmKWxTvaPs3DctU4-->Queue CRD</td><td data-page-node-id="W9a6LsBIEUOvyev1b34ICB"><!--pnid:LZyQRDjqbBhIKhxnBKTHj4-->管理员预建</td><td data-page-node-id="S9H0WhiBIDUCtXqjrnxuTI"><code data-page-node-id="2H74QGus1miPwRe30kMxB3" data-pnid-children="dxPxUHnrAoR2yU9eIbb5Bq">spec.queue: training</code><!--pnid:t706T8d5AN2RwqHjfZb5N1-->（声明归属）</td></tr>
+        <tr data-page-node-id="HXbhwxM0JZiKmhRHnOd5xP"><td data-page-node-id="E29gYLfp3lxd0RJ0HOcazp"><b data-page-node-id="d5y5TtUS8wTokDbf7jG7Qm"><!--pnid:3fxmaxSkthZaJr7watCToT-->作业 Job</b></td><td data-page-node-id="nyVMjq2nNgqbAil6L5AROK"><!--pnid:2fBScnlhosICbtAht3Rgp9-->VCJob + PodGroup</td><td data-page-node-id="Ja3bK25chVfHauoQ99qLJC"><!--pnid:Qhgqb7cBCnBGJF1JLBB5P8-->用户提交 Job；controller 造 PodGroup</td><td data-page-node-id="wcSlFVxUnu1EOhhH1eAybQ"><code data-page-node-id="szSGzkl1En0pLIH5TGkIrt" data-pnid-children="SqR2veetytf4YWiZF04gRh">minAvailable: 4</code><!--pnid:vZsZnWeUYX1fA0uH6eVreY--> → PodGroup.MinMember</td></tr>
+        <tr data-page-node-id="hEORUJsJpDXv6J4aLVOu6g"><td data-page-node-id="nG075thanoWAhdKg7CjefS"><b data-page-node-id="WBWoR0OoMJ3xQoCjUYGVYC"><!--pnid:I85GJZgftUcjfMMs5jbFXB-->任务 Task</b></td><td data-page-node-id="jxJXrjqhrJFYjEOq9OKdlv"><!--pnid:XrVo5JljCfiOsuVQ8mFf2A-->Pod</td><td data-page-node-id="AipBpv6f1bQzfduVpvvgtC"><!--pnid:JzdywHdjG09eGd3Vy0PPDW-->controller 按 replicas 展开</td><td data-page-node-id="baCJO1hvboMEYCp50iMYFH"><code data-page-node-id="46sxIMfYJ52goF3khusRY9" data-pnid-children="hT8rwPhx83UpFUeaGtKjpV">replicas: 4</code><!--pnid:FXPQULhd7sDEmTktY7ibuI--> → 生成 4 个 Pod</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <div data-page-node-id="FwMQSOhVZrKCKrviRZdhD6" class="arrow"><div data-page-node-id="G7k7w8mqDn06RMMDgqWVgm" class="bar"></div><div data-page-node-id="dSIb2woImGjuqQpFmjHoYn" class="tri"></div><div data-page-node-id="T2dbukLgKjRroqj5Se0kdc" class="lbl"><!--pnid:Doow6EWyYjI9Gs2p5LhpEq-->informer watch 到新 Pod，进入调度器待调度队列</div></div>
+
+  <!--pnid:sQVhZKFg1t6lIOTZoPpUm8--><!-- ============ PHASE 2 ============ -->
+  <section data-page-node-id="rXAE44IMIo6VDpdjmgoqpW" class="phase">
+    <div data-page-node-id="1c3H4LH0oq5GXerWGPWwHn" class="phase-hd" style="background:linear-gradient(90deg,#047857,#10b981)">
+      <div data-page-node-id="MVeYT7JLh7qNAhT74GW2Ei" class="phase-badge"><!--pnid:AR7DjZRCGou3AoQuvaTQZN-->2</div>
+      <div data-page-node-id="J2RLDWyeuJcLdx9wUFxo6z"><div data-page-node-id="NZ3UPANHRdzmnQZtWh2SWz" class="pt"><!--pnid:16VKN5agLRKSLAkmbWpObD-->调度主循环 · 周期驱动</div><div data-page-node-id="3GOwWowBzpj4dn3mdO0WxZ" class="ps"><!--pnid:FxHSHbQzoqsAOKSJem7ZvF-->单 goroutine 串行，默认 1 秒一个周期</div></div>
+      <div data-page-node-id="w4W5aBzIseNtUtfwdnHzsK" class="pn"><!--pnid:fWhbfvvFEU2Q1pcFlIOtbO-->LOOP</div>
+    </div>
+    <div data-page-node-id="OTtFWu5JAAdO1ObW7Vymyl" class="phase-body">
+      <pre data-page-node-id="umNVm1uCq0Tx15uITb5Yrp" style="margin-top:0"><!--pnid:q9llU7MawWbHEO3uieGUpW-->go wait.Until(pc.runOnce, pc.schedulePeriod, stopCh)
+<span data-page-node-id="qpeVtsVcqpQ0Gfl5NLYqZw" class="cm"><!--pnid:hJedsgzXsGvOfqwY7uzAnx-->// defaultSchedulerPeriod = time.Second   →   --schedule-period=1s</span></pre>
+      <div data-page-node-id="I12mNztyg7nIbFJgXbP5nR" class="grid2" style="margin-top:12px">
+        <div data-page-node-id="jVNJK0zQIBZV2ye9nJ7gUJ" class="step"><div data-page-node-id="qqYOxRuYSaIMXk277wpl6E" class="st"><span data-page-node-id="jTUyS4NupNlyOsWJHBvJlO" class="ic"><!--pnid:FwW9gQc2eIrlMVyKJVLIW4-->🚦</span><!--pnid:gH6ger85xhRYiRyV2na3pp-->严格串行</div>
+          <p data-page-node-id="VtARTb7MkjNLozPehmkYqh"><code data-page-node-id="TQyjjOuYHixrJfMJ1hBCzK" data-pnid-children="73ONiT3uEW3Mg1l3awdOLv">wait.Until</code><!--pnid:6irBlNwAyOpm1wNyaCzkD4--> 在<b data-page-node-id="CdoQ8ahN9eQdx9Lyf3eHqP"><!--pnid:mfYk4hDjxmMdXoGIhUEFdZ-->单个 goroutine</b><!--pnid:27cVRFGwUhDcn1qroVI7rA--> 同步调用 <code data-page-node-id="xo012CBtUobsL4DP0NLaBW" data-pnid-children="QfyIrV0QQuVLEmWAhfs2eI">runOnce</code><!--pnid:Zm0sPpBCuVs6S3uTk23Hnq-->：<b data-page-node-id="h0Ebmef7YjFkgkzi5xjTqu"><!--pnid:MLKnFeyvTz329CIZCDKUNH-->不会有两个 Session 并发</b><!--pnid:8r42U6RiAdOVy6p3RgVLw6-->。Session 内部也是串行执行各 Action，全程共用同一个 <code data-page-node-id="rs9Y7Leo0QPNMd2OhDIxQr" data-pnid-children="iecHQnTdExAKCxiIcRb4Hf">ssn</code><!--pnid:PJmmRDU66Wy0Nz8IexG1eY-->。</p></div>
+        <div data-page-node-id="nA3YxPsH4xJyopudxCEkcc" class="step"><div data-page-node-id="NuTtZmaitvHz86TMlsF9QF" class="st"><span data-page-node-id="Vr0aAEAEokNSMHzQBP4LPt" class="ic"><!--pnid:bImrJ5MdM8Mj5SrAQoh32j-->⏱️</span><!--pnid:StRegG6qJzCpvNxqLK2nF9-->跑完再等 1 秒（sliding）</div>
+          <p data-page-node-id="uOzea1NbPwmM83b2VTmge6"><!--pnid:hspSUkFm28oDr8Vgk3zNlk-->计时从 <code data-page-node-id="inPV0uksC9gs9D9WMHGJrn" data-pnid-children="nP0lPJWmAwKGdWoAT6owlP">runOnce</code> <b data-page-node-id="UX4fpJGhceEHpjooGvuiIO"><!--pnid:uipcpxd2pw3RE8WOwmlnvy-->执行完之后</b><!--pnid:cuvehWiTKFs2ZAHrak82gk-->才开始。真实周期 ≈ 本轮调度耗时 + 1s。调度慢了不追赶、不并发补跑，周期自然拉长。</p></div>
+        <div data-page-node-id="gC3dF1fa9g8dBORqmvriUM" class="step"><div data-page-node-id="3hvMB6DWau76ZwnlypyuRH" class="st"><span data-page-node-id="doCSg0vECHzAPzgu3xiATX" class="ic"><!--pnid:lKcN5WEm5aNAwL3zTJNofy-->👑</span><!--pnid:GatzODAsMaGeXfHwzjFTZ4-->全局单实例</div>
+          <p data-page-node-id="1NN1hn0JDsFPMGO76VGlm9"><!--pnid:31T5ButlPvEW8ReTj8WNmf-->生产部署通过 <b data-page-node-id="tNMKpJcBrXzSLrQGhXz8HE"><!--pnid:ODAXk65oyF6kJBuweC4MZn-->leader election</b><!--pnid:pjjcJNp9MbKBBcjPNYMBBM--> 选主，多副本只有一个 active 实例在调度，避免重复分配。</p></div>
+        <div data-page-node-id="lfeJrGO9JeUk5C2E73fd0d" class="step"><div data-page-node-id="cqTuLH6Qxq8eCjxRns4odw" class="st"><span data-page-node-id="iBF5ODFPS0VwnkPlvYBfbZ" class="ic"><!--pnid:AZ9QDpjDmAncqWUTMb3Pwn-->🔀</span><!--pnid:isiqzKWO5O18l2o9xPPPfr-->数据同步是并发的</div>
+          <p data-page-node-id="WCqK1oVi0rRmjZhOjF9HeL"><!--pnid:EeLC16z56o1myIPU0LAl4T-->Cache 的 informer、<code data-page-node-id="wCNpArXqZ2nOXlgt1BTaXm" data-pnid-children="9eWzBdc4n7bjR33xRRo7H8">NodeWorkerThreads=20</code><!--pnid:NC8UArwxUZJnlL5VysmA7q-->、<code data-page-node-id="yOR4PUMACUBuLmhdBRpYvC" data-pnid-children="zYaioh8ZfmzCt9OstvWrOR">JobUpdaterWorker=16</code><!--pnid:4AW39QggBGItWQJKgqB3Ig--> 都并发，但它们<b data-page-node-id="Wv1di5Crgu6BdnD5orzwEp"><!--pnid:JeAo0PrQ5odl4wubHQzleC-->只更新快照，不参与调度决策</b><!--pnid:zA9hMwh5GPiSMRBi2jVFRf-->。</p></div>
+      </div>
+      <div data-page-node-id="c3kBj9uetCEWiUFgEYrwQw" class="note"><!--pnid:nvIXGTkrb1ktIgXTNQiKfe-->每一轮 <code data-page-node-id="fNSDywDMVp76w7OEURLbjn" data-pnid-children="QN68o3smQVuLdZrOBd81q0">runOnce</code><!--pnid:asG45iveoO8gklMpZqcu1N--> = <b data-page-node-id="ZeddhaGPOUXcLxTE8odNGq"><!--pnid:aByXfa5KQTdLov30e933dH-->openSession → 依次执行 Actions → closeSession</b><!--pnid:i1d3JKgthACvdcHlviE4vJ-->。上一轮在 CloseSession 统一提交后，下一轮快照才看得到结果 —— 这是"一致性"的保证。</div>
+    </div>
+  </section>
+
+  <div data-page-node-id="R7rosU3Xg8hGfmkLbAWiuW" class="arrow"><div data-page-node-id="FayG3InA6PxJkQlAfENAyT" class="bar"></div><div data-page-node-id="TtJhBn5w58S2di7IKuy7Rv" class="tri"></div><div data-page-node-id="plOEM0dJaYrQXuiii0R3qM" class="lbl"><!--pnid:GKfDnNMNvnzIiGONW0KjpF-->runOnce 开始：openSession()</div></div>
+
+  <!--pnid:8DYJt1baLiJZv1b2QCYg5c--><!-- ============ PHASE 3 ============ -->
+  <section data-page-node-id="oWPZLDEQZmEbd0neLphEr1" class="phase">
+    <div data-page-node-id="iwirzZrcJCgLBlCzeidRce" class="phase-hd" style="background:linear-gradient(90deg,#7e22ce,#a855f7)">
+      <div data-page-node-id="KSop1rScSPXxuDeFOvK4Hh" class="phase-badge"><!--pnid:URWSz8vejc2dsWkQMJCmQM-->3</div>
+      <div data-page-node-id="EdJkvAv2CAr4gmD3TDVm3A"><div data-page-node-id="6tyLVIry96ciVEns8QiYKE" class="pt"><!--pnid:gHsEYQAB1HQZmRlSLjoiIp-->Session 快照 + 插件注册</div><div data-page-node-id="zQlHuZDGBZKdJkysCaNSAv" class="ps"><!--pnid:ydCFcN2EQoghdUnD0rrGzw-->拍一份全量一致性快照，插件挂载决策算法</div></div>
+      <div data-page-node-id="PAYrl59BvJkrFZP7LTsXXc" class="pn"><!--pnid:7tzIoaUSaPMKSV8KRAE677-->SESSION</div>
+    </div>
+    <div data-page-node-id="xIYTUUjZBw7AF0aMdXZWyT" class="phase-body">
+      <div data-page-node-id="ztetJl54n1w28dHlgEaHzR" class="grid2">
+        <div data-page-node-id="gNVhKkdVLHJzVlQaoNTf8Q" class="step"><div data-page-node-id="H1mcSbHKsYBG9S4ZvAn2vQ" class="st"><span data-page-node-id="pWN708lTi3DEMX0Z1uPphT" class="ic"><!--pnid:3YNPaBtcCP3gLyjAcYD1fv-->📸</span><!--pnid:VPUUIG8tal6lhocHoeGKpT-->3.1 openSession：schedulerCache.Snapshot()</div>
+          <p data-page-node-id="IClPHwBI84DsuFbyxdxxwv"><!--pnid:QX8oibyUxom8lUvE6Kp1rf-->拍一份集群快照整体赋值给 Session，大多<b data-page-node-id="GHLIyqLO2zDOCu7acrgwbI"><!--pnid:wrn5LF2rz4hpQbJlSBpLtO-->是引用而非深拷贝</b><!--pnid:EMA0o5YnfdwQtrvPlLtlvh-->；周期内<b data-page-node-id="eCLXwX6YizISItOhRbVqIY"><!--pnid:fCxIoDfNqQB2gvxZQ3w0fq-->不再刷新</b><!--pnid:BxNtpixhw0tB7P6SDp9WBX--> —— 调度中新来的 Pod 这轮不考虑，等下个周期。</p>
+          <div data-page-node-id="JLKxs8YsqS49qreuIX9ZAd">
+            <span data-page-node-id="xtSTX513kunIVGjmVHpDAD" class="tag t-pur"><!--pnid:qE834Xu0yUwgPAnxk8Pk6L-->Jobs</span><span data-page-node-id="si9jWueSsQOwSD2bzd46N1" class="tag t-pur"><!--pnid:i3y1rkRopDLsNYcsNjmTIl-->Nodes</span><span data-page-node-id="gn2VmGWWzGEp4Hqk7ArqAf" class="tag t-pur"><!--pnid:BmjZ8GX6Tq7OjoXsLqhYH9-->Queues</span>
+            <span data-page-node-id="3EleifCSl64GGxJK7AMaCK" class="tag t-pur"><!--pnid:RdpYPCCeQ8EG1Zcs4wwbVG-->HyperNodes</span><span data-page-node-id="DBlfYQxX5q2bYuzPbqM0o1" class="tag t-pur"><!--pnid:blxRrRPMbTR002q1pEbLpl-->NamespaceInfo</span><span data-page-node-id="GHi3mc5l6bOLZQyTJwbWiS" class="tag t-pur"><!--pnid:dknjZL62U5C5QjCC4QR92w-->TotalResource</span>
+          </div>
+          <div data-page-node-id="m3MQxWruVVzvcdZNv6dX1i" class="sub"><!--pnid:xM4YGePyb4BgwLpoApry6E-->⚠️ <b data-page-node-id="tzXbFCipgfMUC0hbNDySSD"><!--pnid:9wqar8ekF2BKif35m632uH-->Session 没有独立 Tasks 字段</b><!--pnid:D7UMVdmaQ05f0DIwvztzKP--> —— Task 嵌在 JobInfo（<code data-page-node-id="ZcOVXl6sRjmDvsOMEogiEW" data-pnid-children="NFFjdTxkiLQLe7YMDv64jO">job.Tasks</code><!--pnid:ARgO4dHpv8lwrhCUCPtqmJ-->）里，从数据结构上说明"任务从属于作业"。<br data-page-node-id="KopcnC9WUr5Fwc2obRWCQn"><!--pnid:kHwvwKsaTokUbvmf3q7auZ-->另含客户端与状态：<code data-page-node-id="Q9FFej8sOnQS5HqoLWJ4OE" data-pnid-children="xBGtn7IbL8V1V9IsYa37W0">kubeClient / vcClient / cache / recorder / DirtyJobs</code><!--pnid:3cWhMRoHlgsn6Q4Gwam3HK-->。</div>
+        </div>
+        <div data-page-node-id="btCQhfajXXjJm3LcdyBc6B" class="step"><div data-page-node-id="JWU9Sdb7gwebcRKg4Vpd4D" class="st"><span data-page-node-id="0p3SPppoM1O2Voia9AsqfU" class="ic"><!--pnid:PLPlxgi3gwGaAcdN9j4q2o-->🧩</span><!--pnid:abuAHQIodUV2HRewHFbOjw-->3.2 插件 OnSessionOpen 注册算法</div>
+          <p data-page-node-id="mxdSB7Ug0OPzSPXyofAJAw"><!--pnid:gVNJaUBsJ3L3l8Tawsb9Hy-->插件接口三方法：<code data-page-node-id="5qyqGuDZEu2tfvsiaeLilz" data-pnid-children="R6MXZWTLsgrtxMtr2GWFbI">Name()</code><!--pnid:6jUiV6cQdDVtcpZUDXCzc8-->、<code data-page-node-id="933zKtA6umShYFvJ50sOGf" data-pnid-children="Y5XyoQL481VXD0ono7oNia">OnSessionOpen(ssn)</code><!--pnid:oWvXBK2k7TarSwmpCclXgK-->、<code data-page-node-id="LarJnYkFkVBh5y6vDWmDdW" data-pnid-children="VGbEqHXv5WSAhGbEd2QBeO">OnSessionClose(ssn)</code><!--pnid:yPvxi02Ez53i2CAOJNyCJG-->。插件在 Open 时通过 <code data-page-node-id="qsyW342fhi5D3JS3CSk74H" data-pnid-children="N9CaMIIMCl0j87FiQNOdT8">AddXxxFn</code><!--pnid:xZCIcppWPfm8uHzMPlrRdO--> 把函数注册进 Session 内部的 30+ 个 Fn map，Action 执行时统一回调。</p>
+          <div data-page-node-id="gFNz81ijvL2WfBzJmpS4OX">
+            <span data-page-node-id="bXitnXIHI88x0vY6FjGRem" class="tag t-ind"><!--pnid:u4JpB3Wn3jJP7K4G04oW93-->queueOrderFns</span><span data-page-node-id="9vWMgugg2b9ffb0ZVDoAUd" class="tag t-ind"><!--pnid:iBad4UbdS8abbEDe3L0HBc-->jobOrderFns</span><span data-page-node-id="qg6SFHYeTccS481UvwpMjh" class="tag t-ind"><!--pnid:mEEpcCLTyZfrC5OmuokVlK-->predicateFns</span><span data-page-node-id="PsYZvHblliRIPWsGLsyh1G" class="tag t-ind"><!--pnid:rtPoImFEOqyTJI0W1mbS3z-->jobReadyFns</span><span data-page-node-id="KdEWegFRQ9m0muWUwCpQz3" class="tag t-ind"><!--pnid:Q6T6qPpjVqvg95oqazSq4c-->…30+</span>
+          </div>
+          <div data-page-node-id="qUo76P9OxUICS57lhn3uVx" class="sub"><!--pnid:q4k5TGl5Ij1yRwlI2OtbsV-->同一扩展点可被多插件注册，依 tier 分层决定组合顺序。自定义插件用 <code data-page-node-id="saPHRsObq06jt2Cq8cYQs3" data-pnid-children="AzRA4CnyUrbMLo1nwc02UN">RegisterPluginBuilder</code><!--pnid:5aVw60jK4vLgcXYblgIqj5--> 注册后<b data-page-node-id="qvPG0IzXhR0l4jsQM9FCUt"><!--pnid:WNhujv8xiANtJvWKy6WqG7-->编译进调度器</b><!--pnid:7m1camVpPY7svwecpar1YD-->。</div>
+        </div>
+      </div>
+      <div data-page-node-id="usHdUuJ3idL5BC8221NRE2" class="note"><!--pnid:sXutSBVpBLDMYsXL4qHLqT-->本轮所有 Action 都基于这<b data-page-node-id="6d63aue8SxkTCGSDGl5jcc"><!--pnid:cX04T2GL6AQfRaZb4d3buD-->同一份快照</b><!--pnid:Eu0nOQqHHYiU1WAJRt58rz-->、在这些内存对象上顺序操作、状态逐层累积 —— 这就是"全量快照 + 逐层决策"模型。</div>
+    </div>
+  </section>
+
+  <div data-page-node-id="CHZcoWO5oIglyJvCSnAPH9" class="arrow"><div data-page-node-id="E9RSCoYSLPG7xRLJJAQ5ZB" class="bar"></div><div data-page-node-id="Oe8FwaODFAn4S1VKk8b79O" class="tri"></div><div data-page-node-id="CE5YO3ZBNdhGsf0EZSSvrq" class="lbl"><!--pnid:3QiSVqrdeeGRVVXizBpLic-->进入 Actions 执行（详见附录 A 扩展点清单）</div></div>
+
+  <!--pnid:CLevlVhOK2LinEfH5X8WWD--><!-- ============ PHASE 4 ============ -->
+  <section data-page-node-id="eF2JCPpSXEzhI7CaHAf1Ft" class="phase">
+    <div data-page-node-id="szhAdXANggIblTct4lfd89" class="phase-hd" style="background:linear-gradient(90deg,#be123c,#f43f5e)">
+      <div data-page-node-id="hMcbnfXOOkZaZxVvpz5Ve8" class="phase-badge"><!--pnid:RidbEuuN8smUrCjPnzQhjW-->4</div>
+      <div data-page-node-id="A2EsDS6LUJB0qcauPrORg5"><div data-page-node-id="ybpP4zaceZ5iS6ElEFUgon" class="pt"><!--pnid:5w0DH553ZgKBFefVaBWHAb-->Actions 流水线 · 核心决策</div><div data-page-node-id="mEhOdc5bd4yqsFFK5mFJ1S" class="ps"><!--pnid:cqIx9sdd4p4R1SrXKyilLM-->代价递增：能温和就不激进，最后兜底</div></div>
+      <div data-page-node-id="rUJhQLxUkldTeqUf85e7Bw" class="pn"><!--pnid:37OOvObn8hK7o7gSPpfSDL-->ACTIONS</div>
+    </div>
+    <div data-page-node-id="LJwlLtaIMIlNN68R5WXUCU" class="phase-body">
+      <div data-page-node-id="l9sy36twLO4XeZ0rXBR26C" class="pipe">
+        <div data-page-node-id="WbZtFdjI8JLHfvjxQj7opU" class="node" style="border-top:3px solid var(--grn)"><div data-page-node-id="gEEHJvkvLQYtqL6cmbf2E2" class="nt" style="color:var(--grn)"><!--pnid:19ywEurtuln6Wah65BJIrB-->enqueue</div><div data-page-node-id="fmEfFn6oUZIFgrehtalJaX" class="nd"><!--pnid:dLgqFqcXC1Ole3CXCPEAes-->配额准入<br data-page-node-id="Tc2K2UTmUihBOKeT9n0dIR"><!--pnid:jHRhTyj1GrdfAbTm7t5gMZ-->pending→inqueue</div></div>
+        <div data-page-node-id="Jjno6v3kedNgE03SvU0o80" class="par"><!--pnid:KOAqEXS4q5QEz1cZeODpTq-->→</div>
+        <div data-page-node-id="TjL2Cia0rnT29lF2glLDgy" class="node" style="border-top:3px solid var(--pur)"><div data-page-node-id="wobrHECPwaEqxoy2uQqnKa" class="nt" style="color:var(--pur)"><!--pnid:Z66UKCYSHJB5VgOBA9SjNn-->allocate</div><div data-page-node-id="t9vWl75vCTtUrlnDn6kJH6" class="nd"><!--pnid:Q98fCzXqNnzHhhkDghhLKZ-->空闲资源分配<br data-page-node-id="aThNhSUvLJP23SGBPQJw70"><!--pnid:mg6vgnJrXrWcnynqwhoXVy-->gang 全有全无</div></div>
+        <div data-page-node-id="yKgC8Oo4qDkABve0H3ypoA" class="par"><!--pnid:uCwIsYDlgxC7C5CmSchtGj-->→</div>
+        <div data-page-node-id="VRNsRK3IxthJLIl9WcbCY5" class="node" style="border-top:3px solid var(--amb)"><div data-page-node-id="muVxWha0jI5Bwbr36Vz8jI" class="nt" style="color:var(--amb)"><!--pnid:45Nmm7ezTtfx8odPKtnr8u-->preempt</div><div data-page-node-id="KtIuGQbTTAzMb7BKkBl87h" class="nd"><!--pnid:tBE6kkJALC8VLrxOcWVbBf-->同队列<br data-page-node-id="hSDJhz7P1PVSpGfjkc8kr9"><!--pnid:0QpYb93f5gY0C0KWGYkIRW-->高抢低</div></div>
+        <div data-page-node-id="tRNUFxYG0BgvAWQ1BvwlyU" class="par"><!--pnid:pRD3G0TAmebYSaVmRzmNBJ-->→</div>
+        <div data-page-node-id="YeOabE4BTzgLRv3BDpvYCH" class="node" style="border-top:3px solid var(--amb)"><div data-page-node-id="LyxxgeHSj4f1WhVWE1uRde" class="nt" style="color:var(--amb)"><!--pnid:P8nhDanyW7NjYF7t0x6YIS-->reclaim</div><div data-page-node-id="bsmDkAuQX5CzfNewl5FxL0" class="nd"><!--pnid:jLYnBUNx5it8ZqVlJPZjOu-->跨队列<br data-page-node-id="kY1zmrbaO1WhvRZ7B6S8xK"><!--pnid:b51TLnncYGENnirAdJVUtd-->按权重回收</div></div>
+        <div data-page-node-id="zAd1OgnwL7HRs24JJHlsL9" class="par"><!--pnid:MGt4xZBuHlpyBCtflphdVp-->→</div>
+        <div data-page-node-id="x49XUxVHZEMe4WOR4bDk4Z" class="node" style="border-top:3px solid var(--slt)"><div data-page-node-id="w2FH7t0jsQTFD3yR5rCdpQ" class="nt" style="color:var(--slt)"><!--pnid:vZTE92EVM9xdNTHyj882Qx-->backfill</div><div data-page-node-id="P8N9OVvWvd3No0wrY79g5v" class="nd"><!--pnid:32WOkNSqmOVCYwovMQZybj-->碎片填缝<br data-page-node-id="4ylLkpwziJyYHZhl3J0rRh"><!--pnid:PkAnvBmMvjfN1g7VzLUdqx-->兜底</div></div>
+      </div>
+      <div data-page-node-id="JwYfmM1IrMiH9rXi1WYgL1" class="note" style="margin-top:10px"><!--pnid:c3UlNPqSFhwBwJiTqLmYPq-->顺序按配置中 <code data-page-node-id="B9Z4YWkyn9kFrsuhSuyb9S" data-pnid-children="rRvgp4BJNDiH1zt7aciiLN">actions</code><!--pnid:2IgoPqyvLdfyE5Uh3JTbIy--> 字段执行，<b data-page-node-id="k0OXP0ZnZGOLTWKd8V15Pu"><!--pnid:J9463RHwoZp09OxwrMSyZI-->Volcano 自身不校验顺序合理性</b><!--pnid:hcJeDXI2XreKNewylEoYrD-->。默认只有 <code data-page-node-id="wHjVE77aB62HpZer3dHfoQ" data-pnid-children="rXRTyiAxehRtHSwS2engJ7">enqueue,allocate,backfill</code><!--pnid:mSZf4fwhlpJdGLdCx55lPp-->；<code data-page-node-id="wtmTEMav5MWVbJQVhEQpLj" data-pnid-children="UK0xILeX0WoB0vi5r6XVxO">enqueue</code><!--pnid:dMqmsNlnbUBENYFXt7EaQH--> 若判定 Job 达不到最小资源就不让它入队、不建 Pending Pod，则 preempt/reclaim 无可抢占对象 —— 这就是二者冲突的原因。</div>
+
+      <!--pnid:EDP52wPrmO3HxS8bDlaW9N--><!-- 4.1 enqueue -->
+      <div data-page-node-id="ODo2b7wTQ5aRWNK5fYOXEL" class="grid3" style="margin-top:14px">
+        <div data-page-node-id="U5Jv5MOzulbZ3t7pYzCMft" class="step"><div data-page-node-id="s2QLQk9h3p7GJMPNUEyI2F" class="st"><span data-page-node-id="XXBu605lB1rB5ldrKHwIeZ" class="ic"><!--pnid:03AgScIkw4KL1ZSpzQ1dK9-->🚪</span><!--pnid:dLtmhs8QPKQHHODYNKiJs0-->4.1 enqueue 入队</div>
+          <p data-page-node-id="lqqFY9vW6kVKdVDrz14Exw"><!--pnid:GUb5gE4ShZnobIIZBGdPxD-->过滤任务，状态 pending → inqueue。用 <code data-page-node-id="QK8NHrFfttc2j9p5YUA5y4" data-pnid-children="46gK7WZEhkDhLW8qgmHiT8">jobEnqueueableFn</code><!--pnid:sI7Pq72rGmXamvReFN3SLZ--> 检查队列配额与 gang 最小资源，不满足的 Job 不生成 Pending Pod。</p></div>
+        <div data-page-node-id="wwQjedGZnVDhN8VgP9oUjR" class="step"><div data-page-node-id="I7UAS9PX8HboFvsiAHlZJl" class="st"><span data-page-node-id="gksDLwracYOIZKhStplm07" class="ic"><!--pnid:fpmkDcDnjvZCL4TTRqsHoa-->⚡</span><!--pnid:ORKtjvEWNN0qa2vkAHhOUW-->4.3 preempt 抢占</div>
+          <p data-page-node-id="fg4j8YSnpnwHKj8FRR57i1"><!--pnid:uK1jKhEZ00POD36c7ZtZkp-->输入 = allocate 后仍<b data-page-node-id="SAGxPd7oYueIAPyE72GJqa"><!--pnid:m0mA7e0Q1dqdWBrIMdhYgG-->饥饿</b><!--pnid:CsyknIC6mxFJfqjoRKKR6Z-->的 Job（<code data-page-node-id="dZYqgrxjrPQ5V1LBSPv1BG" data-pnid-children="Adtmv5gL4q1Yciv6i0Nk44">JobStarving</code><!--pnid:2R9u9pQ8qk19xWQb8cbVce-->）。限定<b data-page-node-id="0jqN0NmYJ7IXtFjDV88LoZ"><!--pnid:6jUi2FeVAUMhsGnl8bz9iE-->同队列</b><!--pnid:48ISvftuqgmdQ0cgK4Gwq3-->内选低优先级 victim，<code data-page-node-id="ZWQbdNS0gNOuY85KtOe6PQ" data-pnid-children="xwqGULrAcEdYsnNK4VQWBO">Evict + Pipeline</code><!--pnid:WimVA5y7WQfbbtMDLlWBkN--> 放同一 Statement 事务，达到 <code data-page-node-id="FA00ivgMbgoBuONvYJ6GZE" data-pnid-children="TvS7MtRG9gwEbcXYNy3H5p">JobPipelined</code><!--pnid:bSqM4qCNiNoBhkJ6pwGymM--> 才整体 Commit。</p></div>
+        <div data-page-node-id="X1GWzwgTKFmS9AcOjg71Fv" class="step"><div data-page-node-id="nU2jBdUfJhbGLw5MnaUgkO" class="st"><span data-page-node-id="A2cfgSqGsyg4yNW2x5UzKh" class="ic"><!--pnid:FAJYYsh1zSF0PwEfZhRZxV-->🔄</span><!--pnid:jkdDUxkB4GMskFBSdNGIlo-->4.4 reclaim 回收</div>
+          <p data-page-node-id="UUlqHK1llPkBNszWnggiAL"><!--pnid:7duRLyZGO4rGej3UnMoAPi-->与 preempt 同构，区别在于 victim 来自<b data-page-node-id="IWeMkTzU8izbPIH8qGAL7I"><!--pnid:u0NQ3q0Kmbj8xvbbbudjAb-->其他队列</b><!--pnid:zhYkFSaG6ACfSkmfGcLG22-->（按权重收回借出的份额），涉及租户边界，是更重的操作故后置。</p></div>
+      </div>
+
+      <!--pnid:5SOHXku4AMvbcjWpJKbuh0--><!-- 4.2 allocate 大展开 -->
+      <div data-page-node-id="5sEcvxvX3oXiYvhjW2z4Fy" class="step" style="margin-top:14px; border:2px solid var(--pur); background:#faf5ff">
+        <div data-page-node-id="kxnTf3ADDUR1sdvhEKAO82" class="st" style="color:var(--pur); font-size:15px"><span data-page-node-id="agJJbdMwCzYwwXnO3IjLpm" class="ic"><!--pnid:bpjiuQHb2a9k91ypgbt9C7-->🧠</span><!--pnid:phxl9e90N6weamkAtTi4yq-->4.2 allocate —— 核心中的核心（展开）</div>
+        <p data-page-node-id="jISaYjxtAMbh25Tuw5W7BP"><b data-page-node-id="7yhecW30EyJMf5TMcadp9g"><!--pnid:zoAda3ZwcfQxVs56QdFast-->用空闲资源、按「队列 → 作业 → 任务」层级做预选 + 优选，gang 满足才 Commit，否则整体 Discard —— 全程不驱逐任何 Pod。</b></p>
+
+        <div data-page-node-id="nzniiF5g0hRGcDJP91iicf" style="margin-top:10px; font-weight:800; font-size:12.5px; color:var(--pur)"><!--pnid:TtdpJj4IvSIfkbY1YgQ3m0-->① 准备：buildAllocateContext（筛选谁有资格）</div>
+        <p data-page-node-id="OQ1bvY2Y4EUW6SGct3B9q0" class="sub"><!--pnid:SZD8dSghKe5crmekWcJnHl-->跳过 pending / JobValid 不通过 / 被 unschedulable 抑制 / 队列不存在的 Job；<code data-page-node-id="XwG10O3VbD1T0OxoUTIrnF" data-pnid-children="KdJUEKCuNQSJWmtnthrfOI">organizeJobWorksheet</code><!--pnid:9VmWmyMCrw22yAX1SBao5d--> 分 nominated（上轮抢占锁定）与 regular 两阶段；<b data-page-node-id="fRLeDUc4YzfpbpeSRGwMTx"><!--pnid:tgT72fIFqf9zXOimJQJboP-->无资源请求的 task 直接跳过，留给 backfill</b><!--pnid:9Kw7sZpEIS0TBZvnAnyrMN-->。</p>
+
+        <div data-page-node-id="3Q4HMHND3yESmvpm53HGuS" style="margin-top:11px; font-weight:800; font-size:12.5px; color:var(--pur)"><!--pnid:s4Dy9WC8OOGwuc6hObHOl7-->② 三层决策循环（从粗到细逐层 Pop）</div>
+        <div data-page-node-id="3car24Zv2EKNSuXxCpxtBF" class="pipe" style="margin-top:6px">
+          <div data-page-node-id="RwJHIFunrGcmyfbDq8UocP" class="node"><div data-page-node-id="3yxnUYqiHFDpF9V5dkiS6R" class="nt" style="color:var(--ind)"><!--pnid:I8EbhJvTRiqxRKxoAP64IY-->L1 队列 Queue</div><div data-page-node-id="dxqVSY7pqqMy4HVsxKS3yA" class="nd"><code data-page-node-id="EJKQ3kcyR2rqbf2dvrgkYI" data-pnid-children="pkfBH5fraPPBUXh4S0F2Gr">QueueOrderFn</code><br data-page-node-id="tHnEhZEdnYya1O2PoJjotj"><!--pnid:qezdj4lVodrcGOCd1mGNsy-->查 Overused（配额）<br data-page-node-id="Pc8a0gKDzIh2NPTYbyevL8"><b data-page-node-id="rSLd0OxJAYCzvKfPHSutWS"><!--pnid:5vDD7WQs5iQ8U7HFgTlKBU-->租户公平</b></div></div>
+          <div data-page-node-id="n40FbvrZw2R12HfcC0SdVh" class="par"><!--pnid:PSjXwf2J6xi6fFp6Au2BBK-->→</div>
+          <div data-page-node-id="25Xa4bvPhwJaeI8wyBzHqm" class="node"><div data-page-node-id="TSSO57EbuQAmEvyAbRnEzN" class="nt" style="color:var(--ros)"><!--pnid:iORz0v3IYyaBTIHWQdQRKW-->L2 作业 Job</div><div data-page-node-id="fiRjyssxzu9MMoMWctQ9k5" class="nd"><code data-page-node-id="0WPL7UjXAp3bVDOCnjw3sY" data-pnid-children="5nskpyjDIWpL50tPJyakri">JobOrderFn</code><br data-page-node-id="4MZV5IE2iimDNz1c5iIXfl"><code data-page-node-id="8Wuxmqu8nQgOVxIPuWOhVC" data-pnid-children="9mK7pBkjBVCgQSyQ7SLIqq">JobReady(minAvail)</code><br data-page-node-id="XzXfBQff26gVmMmDNvPtW8"><b data-page-node-id="EyoaOnPbZUNyhZSa3eRMuR"><!--pnid:6z1anniOeNij3ZJ9Y7CfjP-->gang 原子性</b></div></div>
+          <div data-page-node-id="xB0s8xcDUkcXpyk0nHsIKb" class="par"><!--pnid:ty2t7cEriHGPVGDRiWrL0a-->→</div>
+          <div data-page-node-id="UuNk0w6gQVvr5ZHwpc06N6" class="node"><div data-page-node-id="BYGyx6tiPGF5TIvNy2j0wH" class="nt" style="color:var(--grn)"><!--pnid:wd5GQ1uIy8L3gdunxCp6nt-->L3 任务 Task</div><div data-page-node-id="2ft3E0r20jKecI5jSVk6L6" class="nd"><code data-page-node-id="2EkzUQsdTw0jMP19waeSTE" data-pnid-children="CRKHDlndMpBgsRUM05Uuku">TaskOrderFn</code><br data-page-node-id="QnCC7Hju8k1n7lMQ7vSFEv"><!--pnid:OmHLnGcZRukBhp0uEdSRqj-->predicate + nodeOrder<br data-page-node-id="a8Op2w1nzGJYTr9n9kk2f8"><b data-page-node-id="xH02tZHVirFf0pgE8yoVds"><!--pnid:pzTt2yy5cjO0B0z953MJBD-->放置效率</b></div></div>
+        </div>
+
+        <div data-page-node-id="rZB7CYlV6y0qZrFMR5D3Ls" style="margin-top:11px; font-weight:800; font-size:12.5px; color:var(--pur)"><!--pnid:4VGeyeYxP4uNIrAmf28fRV-->③ 单个 task 六步流水线</div>
+        <pre data-page-node-id="d2GH1akMwxxhPBFGIuaWyt" data-pnid-children="lTOSeJGog8uWhheWtWZO7B" style="margin-top:5px">选队列 QueueOrderFn → 选作业 JobOrderFn → 选任务 TaskOrderFn
+   → predicate 预选（resourcefit + predicates：亲和性/污点/端口）
+   → nodeOrderFn 优选（prioritizeNodes：两梯度打分）
+   → Allocate / Pipeline 落决策到 Statement</pre>
+        <p data-page-node-id="JKes1wjcxMsGcAg1rEaRoe" class="sub"><!--pnid:HmdI6YpkptfFmozAnwwtoo-->优选两梯度：<b data-page-node-id="6loFZR1bcJPFUsz6XtexTp"><!--pnid:PLaZtI0dyZrbOiS9oi3q8P-->① Idle 就够用的节点</b><!--pnid:ly5csesRwKPruxqooPfEvx-->优先打分，有结果就不看第二梯度；<b data-page-node-id="20TmUemX4bpiZ07apZu9js"><!--pnid:FYArkieT7OPmUlzpFpYsu7-->② FutureIdle（Idle+Releasing−Pipelined）才够用</b><!--pnid:dv2UvQOxvoNdI8WJcxS6cj-->的节点作为后备。<br data-page-node-id="UpOGMoSdwludxBXOGl8ecG"><!--pnid:tb4EDsQNfreMkRtO15KrBp-->空闲够 → <code data-page-node-id="Ny7f4POfnjZzdV9lzhh29w" data-pnid-children="QyPSWf4wD3PrwqXok7efYF">stmt.Allocate()</code><!--pnid:h0VMnoZaoaNAeQvSXf9pZY-->（可绑定）；只有 FutureIdle 够 → <code data-page-node-id="A20Bl9ydT8w4lxLNsPyprZ" data-pnid-children="UZeehcZeh9s8mqM8hqZn61">stmt.Pipeline()</code><!--pnid:pVjW179nQJG0HAbD95YWrt-->（占坑，等资源释放再绑）。</p>
+
+        <div data-page-node-id="MCQeLfVNCwqg7rwySsEoQ7" class="grid2" style="margin-top:11px">
+          <div data-page-node-id="KopGMQ5lB2b1c9dSEOrPSS" class="step" style="background:#fff"><div data-page-node-id="nMy6X1JIhrjHvWyiToEB8E" class="st" style="color:var(--slt)"><span data-page-node-id="FXCEdrbl3rXCSs32vITuRP" class="ic"><!--pnid:FQKv1OMozB1kXecp3JZzXa-->💾</span><!--pnid:xmb8N5eCBZIZQrPq6O0S7r-->扣资源 ≈ Reserve（但非扩展点）</div>
+            <p data-page-node-id="tfgUNBEfobhRyawE1FxJ29"><code data-page-node-id="PHcH5N0npsEkLEfxrgE0QU" data-pnid-children="4B9rS9IooNwLKjLaKb1b1l">node.AddTask()</code><!--pnid:VmxSV6rwlA9BC3tJboYHog--> 改 NodeInfo 记账：<code data-page-node-id="hFXDTzuD6YpzAAjwX9lHYg" data-pnid-children="6Ap2ZCMKuhmYOsx4gRCBjL">Idle.sub()</code><!--pnid:nd03S8F445KPzNoyGKMKp8--> / <code data-page-node-id="GqKnabUh4RF871IJHw4FGm" data-pnid-children="VvFhtXXiPD3XwZ6xloPEpm">Used.Add()</code><!--pnid:YMx7zdk54ev1RROM2N5ShG-->；Pipeline 则加 <code data-page-node-id="rk4ZHYvlF1bvu45QEgYLYR" data-pnid-children="Pw4MOuh480nv4L2NQQ9F5R">Pipelined</code><!--pnid:xcp5tdoGUgJCYlgytXDQIU--> 使 FutureIdle 变小。<b data-page-node-id="OmzzVcpC5v6HXfOsHtVr5y"><!--pnid:jcSd8GkGeBnWTTtGdSMb4l-->仅内存记账</b><!--pnid:ielGy4pW1CKU3scp1tO8DG-->，防本轮重复占用，Session 结束即丢弃；gang 不过则 <code data-page-node-id="tw0L7y8akiGDwaoL9NmJP2" data-pnid-children="MhOxQRq7VHxPqdtQVlfqIA">Discard</code><!--pnid:E7F2ihT3p3ktabZmQV0E4d--> 反向回滚。K8s 的 Reserve 是独立 stage，Volcano 直接改字段更内聚。</p></div>
+          <div data-page-node-id="ASv551sqr3JZ0I9P73uEXN" class="step" style="background:#fff"><div data-page-node-id="OyRNoBxgcqCce64QAIRoCl" class="st" style="color:var(--ros)"><span data-page-node-id="Z2dw8cpk6vjAhNsYnBI0iW" class="ic"><!--pnid:yX7DfRagODch3SwnfCKeXw-->🎯</span><!--pnid:INZtcrR23Uf4tQigJsh16c-->决策单位 = PodGroup</div>
+            <p data-page-node-id="yRqhOi6BOgrR6cjTGuLY1p"><!--pnid:LXuopZvGMkSIX4HPZvKZCf-->一轮 allocate <b data-page-node-id="WJ5TMnvaHIRkaWivf9l2IM"><!--pnid:YAt0d4xjP5sbW20o7oi5m3-->处理多个 PodGroup</b><!--pnid:CRACHzavbhnVi75x3e36KB-->（training 的 A、B，default 的 C…逐个），但<b data-page-node-id="HtsXGLJUKlL7OBPqysWCtm"><!--pnid:1GXymvWgg7SwGW0Mll33Wh-->每次决策的单位是一个组</b><!--pnid:Ap38K4nE2btV2cI4U4iNC9-->：组内逐个 Pod 选节点（执行单位）却不立即绑定，整组记入同一 Statement，整组 Commit / Discard。<b data-page-node-id="sG7emsBvpXh3JnTJlxORrT"><!--pnid:3rgtgnIZmPzuKCV06P1USs-->整体判定保 gang，逐 task 记账保执行粒度。</b></p></div>
+        </div>
+
+        <div data-page-node-id="0rC29HYCAHKrRsVQl98mUy" class="decision" style="margin-top:12px"><!--pnid:gw1EMmWNIyroOoYchWWzO0-->◆ 判定：ssn.JobReady(job) ？ 该 Job 是否满足 minAvailable（全有 or 全无）</div>
+        <div data-page-node-id="4shg5c6OMQLqvE9pU3N2Ou" class="branch">
+          <div data-page-node-id="HtSFdnOa6hmPW1broImziL" class="bb ok"><div data-page-node-id="DHpv9IpmactugSpeFIMqeS" class="bt" style="color:#047857"><!--pnid:sD4rNNL0u0m1danhYPKiyo-->✅ 满足 → stmt.Commit()</div>
+            <p data-page-node-id="JmuEkMHUCGFAXL43YFwvzU"><!--pnid:fJd9Jt6In6rd7ZLFKYyYs0-->整组 Operation 一起提交 → 进入阶段 5 转为 BindTask。<b data-page-node-id="AZFM5awJxhTk2a1JjSLygZ"><!--pnid:DAkb4zT7C3RHxZ6btmH6U8-->8 个 Pod 全部分配</b><!--pnid:hHPI8rqLCKwSRIZuyVfHBH-->。</p></div>
+          <div data-page-node-id="7OZ3xz4PS6HwQEuHoG4FVp" class="bb no"><div data-page-node-id="RwN2juSSgtsc2OyOy0DG6c" class="bt" style="color:#be123c"><!--pnid:6ArpVceFxAmiBFOxJG3Lvo-->❌ 不满足 → Discard</div>
+            <p data-page-node-id="QXNokPkbGKKBb763mgL3d0"><!--pnid:pTr3W53BZC6ODUEg51oYZG-->整组回滚，<b data-page-node-id="erUL28FAhIVgLzd1XVRpm8"><!--pnid:Jic92Is7eZufgXPyHLimCl-->一个都不占</b><!--pnid:scn32857w5VToESF9YulWg--> —— 这正是 Gang 死锁不再发生的机制。饥饿 Job 留给 preempt/reclaim。</p></div>
+        </div>
+        <div data-page-node-id="OzAmTPDlW9JSxkSNkBxt9Y" class="note"><!--pnid:XL8TbAUiGEoCnqBu5Xz8WJ-->allocate <b data-page-node-id="IQjqrad5hGNt8kGnelfB2z"><!--pnid:qm8zB33jWaGNWIzBIawWJ0-->不做什么</b><!--pnid:v7z8ssTUJxGeFui3iyoJtN-->同样重要：不写 API Server（只内存决策 + 记账）；<b data-page-node-id="Ae6MXsmBADB4EiTnOvHSt6"><!--pnid:OjwE7PYdOJmz9sK20pds0q-->不驱逐任何 Pod</b><!--pnid:2qNDcj8c6L3PWiRr7L26f6-->（Statement 只有 Pipeline/Allocate）。高级细节：NominatedNodeName 优先、HyperNode 拓扑、shard 分片、FitErrors 追踪。</div>
+      </div>
+
+      <!--pnid:NBVZA1A1eFy1iVcPPwtzL9--><!-- 4.5 backfill -->
+      <div data-page-node-id="L3KvGtCaRmWKjVQksYPicD" class="step" style="margin-top:12px; border-left:4px solid var(--slt)">
+        <div data-page-node-id="xgaHFCdBjgIPF7ASvcu7pe" class="st"><span data-page-node-id="DEyMOSeOPeO49e6gKSqHpH" class="ic"><!--pnid:GGtTiN09qVlLus5PhK2gxA-->🧩</span><!--pnid:Bk78cawxWNLs54tGIa4prZ-->4.5 backfill 回填（必须垫底）</div>
+        <p data-page-node-id="ab1W4Ac5z1gupPR8pMDFZw"><code data-page-node-id="I2oQizjRR8tOzJpTyTB0rP" data-pnid-children="No82pQaZt95cPBRkGdN7TQ">pickUpPendingTasks()</code><!--pnid:WwIOWwnRKjJcHroFmECCxC--> 多重过滤：<code data-page-node-id="xHOE2PL3jnLHevq9JAXUho" data-pnid-children="7sUpqYAFrsl1oacJ9NSrio">if job.IsPending() continue</code><!--pnid:PjKFCya2kAcb8RxVyonrS8--> / <code data-page-node-id="h9llZX1OaukF1hE2CFEOKg" data-pnid-children="iNCW9JL8mFc6dnsFmNgtEx">JobValid</code><!--pnid:fGd2TaZiXTkXeDSbemsbHp--> 不通过跳过 / <code data-page-node-id="MYX3xSpqu7KEJUhjn2q863" data-pnid-children="93HyzrGlviCCHupnbscWfH">if task.HasSchedulingResourceRequests() continue</code><!--pnid:4uRWhGJMr2YMyKo7KfUrfU-->（<b data-page-node-id="iM2YAN1hSF01bmiech5uQV"><!--pnid:KWN9Gf81y7cHcFK2qKXV64-->只留无资源请求的 BestEffort</b><!--pnid:aSuCmwZScdlwHeGg0vKdoh-->）/ scheduling gate 跳过。它用的是<b data-page-node-id="wNZW9TVbWPauKfjcg3kVFf"><!--pnid:rsD4NOPzAEVIb1ZuvczNGZ-->前面 Action 更新后的剩余碎片资源</b><!--pnid:EE9jd4FiW5adHN2s0DQ8oW-->。</p>
+        <div data-page-node-id="lF3cprb4u7acgIthDm7pBv" class="sub"><b data-page-node-id="N8FcTpHUEjjtMIisZAhcO8"><!--pnid:9J6dOASjEq5SJQFKrYcZHx-->为什么垫底</b><!--pnid:hzAtkyF5NOVFRPrpAowYva-->：它跳过 gang 与配额核算，若放前面会先占住节点、把正经作业挤掉，破坏公平与 gang 整体性。放最后才能"只利用别人不要的边角料"。</div>
+      </div>
+    </div>
+  </section>
+
+  <div data-page-node-id="LGQgGrxWx25jVTKoMOpDJG" class="arrow"><div data-page-node-id="XXyqf2hV6xOyWEp1tlZxyu" class="bar"></div><div data-page-node-id="ISv54jiZhRMfak1VbEgSnu" class="tri"></div><div data-page-node-id="Jb2Gwg9qowOV4cOzHOX7jq" class="lbl"><!--pnid:2Oiu70k7FC9XsCPxWuUhZK-->Actions 全部执行完 → closeSession() 提交决策</div></div>
+
+  <!--pnid:sVst8bnT8YUCkBtQAMeG4K--><!-- ============ PHASE 5 ============ -->
+  <section data-page-node-id="JiCvZEvt9L8c4Y1pVeSK6e" class="phase">
+    <div data-page-node-id="Xofijk99tnVaNqNx6rL68f" class="phase-hd" style="background:linear-gradient(90deg,#b45309,#f59e0b)">
+      <div data-page-node-id="H9BWdo1XR2LSl2y5CDEhm2" class="phase-badge"><!--pnid:3TIV8Plb5xlZYo8VKLvtTL-->5</div>
+      <div data-page-node-id="guLU6NTplQ8yYAOfGSc3wt"><div data-page-node-id="uRgRSrEJ4u7fbgtk7hiFah" class="pt"><!--pnid:w9bxTyvCOfTyUzNfEiNFip-->Statement 提交 · 决策转请求</div><div data-page-node-id="3yXrM46KzDnFfP3ps5lUZk" class="ps"><!--pnid:ngsPNTbaGpGMhi4OMJEVym-->Commit 把每条操作转成入队请求，Session 到此结束</div></div>
+      <div data-page-node-id="S9XhEG98q8oU6i5K33Szht" class="pn"><!--pnid:UtPXyNPnGIP4x16ojMsAu3-->COMMIT</div>
+    </div>
+    <div data-page-node-id="w0LDWTY9nivz0YCS6roq4B" class="phase-body">
+      <div data-page-node-id="8bKfPk7cM1L8GDaad1evOf" class="pipe">
+        <div data-page-node-id="88gjtOmVGNrODNOphJwvar" class="node"><div data-page-node-id="hJHSovyR5YvGKFsFsC9aXS" class="nt"><!--pnid:59xoFnIsmYXuca0dxJaTdW-->Statement.Commit()</div><div data-page-node-id="n4uzVXCOIAl203bhL5xBRM" class="nd"><!--pnid:AundiDBSkCvQWafXLJl1np-->遍历 operations[]<br data-page-node-id="tfo95vR8jezxNJLW6MC1et"><!--pnid:52vvV4oyU1xNpLNBuXwf5h-->每条 = {name, task}</div></div>
+        <div data-page-node-id="xDxhLrOOUy7Cv8l2uiEoX1" class="par"><!--pnid:gWxMLvxYswMk9vQEcv948p-->→</div>
+        <div data-page-node-id="b4jLjBP0UnPxu712gv3DMS" class="node"><div data-page-node-id="C9mIDVvazRYXr4HvydK3Iw" class="nt" style="color:var(--ind)"><!--pnid:Y6YaGEafuJ6w4IknOgcD9X-->case Allocate</div><div data-page-node-id="HxMsiYs4GrL9NS0fZziIi9" class="nd"><!--pnid:bDarY7ykjJFXzvGROjS6Dy-->ssn.allocate(task)<br data-page-node-id="g1mlOHtTwWm8MBPxuGSJnd"><!--pnid:0CYYGG86G9t9qLsNOmAx3H-->CreateBindContext<br data-page-node-id="EC2z9VCNcOIn85H1nF9Gd7"><!--pnid:DlxWpVOqdMsETZup4IPJyG-->状态 → Binding</div></div>
+        <div data-page-node-id="vJRLW0dQqf8QT5HL6e0t16" class="par"><!--pnid:DzuHXJJo045kesB6VFRZgD-->→</div>
+        <div data-page-node-id="7mPqWed5nwfrYF41xsGjjH" class="node"><div data-page-node-id="y0UHS0tOOD8kFqaNSooDTR" class="nt" style="color:var(--amb)"><!--pnid:vCZTdByAm20EWre0tuWYTs-->cache.AddBindTask</div><div data-page-node-id="5zZPzrrYZSna1oecrxXuS8" class="nd"><!--pnid:F2tmp1LsTxcObrgxU3oWDL-->丢进 BindFlowChannel<br data-page-node-id="QqEJol36CTAoTVeKKNKtP2"><!--pnid:Cx09q5dQCTBXV7JArgyU6m-->（容量 5000）</div></div>
+      </div>
+      <div data-page-node-id="HPvJD36Wc2EuJyny6vQ9YN" class="grid2" style="margin-top:12px">
+        <div data-page-node-id="V4Sp1YBWKxdqO6iUZX4NDS" class="step"><div data-page-node-id="IfUz4ylx4PVCsAPYhPY9oR" class="st"><span data-page-node-id="4ESgKMPMYIa2B03ATadzej" class="ic"><!--pnid:IYWzmgqw0u6YnZ6ozzCp9u-->📝</span><!--pnid:DbCxvKNty1XiUnDgjJyPBS-->operations 三种操作，单位都是单个 task</div>
+          <p data-page-node-id="TwtTcNVbOIm2Rp5s9UCcWX"><code data-page-node-id="4w2QiMlc7gwhGGOgl7Ae8e" data-pnid-children="N0tOWIblO04azTZ8B8L5Zx">Evict</code><!--pnid:LsEYXugygAxZhFj0LMi9YS--> / <code data-page-node-id="SstzuRm9JewGgtt9JknPGP" data-pnid-children="u6RgsxWc8RHPugbun7BtxI">Pipeline</code><!--pnid:NKuOGif9J8G56kR6SWJFIn--> / <code data-page-node-id="uFxAwzDKhdqm7FLP6kA8pi" data-pnid-children="UZ4yjvzIHi780CK5zJH82W">Allocate</code><!--pnid:Xx4BldvZ8Udc37mYtZDWW7-->。<code data-page-node-id="HztvqpLw0EnV7AYavNpH37" data-pnid-children="zmEYu4XdVw1bwFdjvM1NMq">Commit()</code><!--pnid:dQDzDA36XRxEMrmzjD4xCY--> 逐条遍历：Allocate 转 BindTask 入队；Evict 走 <code data-page-node-id="Mn6EsF4Pj6XJKOAUcuURCZ" data-pnid-children="XKcNjyxhGPTEcwGmHwAb7e">cache.Evict()</code><!--pnid:Jnf6OYnWqtiq8JvNGgTJZt-->（改 Releasing 记账 + 起 goroutine）。</p></div>
+        <div data-page-node-id="CxQeQbtMDoVGOgmVWHUKYU" class="step"><div data-page-node-id="EV8knnxvrXOzHONVfBHNGc" class="st"><span data-page-node-id="L8zGDpZeu66YQojGv1cV0U" class="ic"><!--pnid:bU7CKgrys2LamBSFJ5Co9T-->🚧</span><!--pnid:pDjhX2VWhZKXnrhoiydPg8-->此刻仍未碰 API Server</div>
+          <p data-page-node-id="hbTJHTWABo9g0J6w8FFlw4"><!--pnid:nEd79XDuV3wYC8xh638ZEt-->Session 内设的 <code data-page-node-id="hNDvMGjotyOepW6afxFDFk" data-pnid-children="89vw24vT15FPNh3mpxEzfl">Pod.Spec.NodeName</code><!--pnid:mKKaTse7sguAKYc1PYv8z1--> 只是内存对象。Commit 只是<b data-page-node-id="B7jmaNVK0mO9f5GagS4RKH"><!--pnid:XsEYQwzXBUC6EqYVug1ZHN-->把绑定请求入队</b><!--pnid:mqCRUJuKzTWk3mdjQMhtjT--> —— 真正的 API 调用在下一个阶段的后台 goroutine 里完成。</p></div>
+      </div>
+      <div data-page-node-id="8Qx0H47GbFS8o1KcGj2ZZS" class="note"><!--pnid:5cN0IjboMBTMZtPiqdGFKf-->这样设计的好处：bind 这种慢 I/O <b data-page-node-id="qtuMTa9DViR6jna1FKTzYl"><!--pnid:O71YCK09lHDVwaDSCYGI0j-->不阻塞调度主循环</b><!--pnid:hGqIVLgUShJOG649nb6OqA-->（还记得 1 秒一个周期吗），并支持批量（<code data-page-node-id="sD27IJWPqrwzbmA7I3IISO" data-pnid-children="UcMSlhxbys78cyn2YDfjo9">BATCH_BIND_NUM</code><!--pnid:lQrDupPOwhCh11nczeKvSa--> 默认 1）。</div>
+    </div>
+  </section>
+
+  <!--pnid:QYAu2bGu2nG32Oe7i4l1Rs--><!-- 异步边界 -->
+  <div data-page-node-id="2Lzn8O3qGI9aCXR0v5xvm9" class="async-boundary"><div data-page-node-id="naD7OsegL3Je5Z16roMjO9" class="ab-tag"><!--pnid:oB6ejcLPPEjz7QaZNVpSLi-->⚡ 异步边界 · 以下由 Cache 后台 goroutine 执行，已不在 Session 内</div></div>
+
+  <!--pnid:xQYc4DlKIYPLvqiCuWJFlV--><!-- ============ PHASE 6 ============ -->
+  <section data-page-node-id="EMAQW8sOIJPsorKNMNZ6qO" class="phase" style="margin-top:18px">
+    <div data-page-node-id="LJGzRgULC3ZJjqgOKOJc4Z" class="phase-hd" style="background:linear-gradient(90deg,#be123c,#e1652b)">
+      <div data-page-node-id="BYlGPBkw4e8PYDA4VSGZks" class="phase-badge"><!--pnid:rL8O5UY3blYnwZcCIexq60-->6</div>
+      <div data-page-node-id="k2i0tng6mo5tggqZd1okt3"><div data-page-node-id="EA1kzF1PbOPNyNiJdTBC76" class="pt"><!--pnid:r4kEb2l7c7r8icy5yY3LIs-->异步写回 · 两条路径</div><div data-page-node-id="3FO8I59q1DHxaeUdjy86mr" class="ps"><!--pnid:RI8ZHLoBJWUDqG4V2hCWYN-->绑定创建 Binding 对象 / 驱逐 Delete Pod</div></div>
+      <div data-page-node-id="2uqdx8MotqjB5tDj7eRrA3" class="pn"><!--pnid:p4qqMAxnTh56PLHUCCSWMN-->WRITEBACK</div>
+    </div>
+    <div data-page-node-id="DbiyeL3sPWwS1aCJCB4ci5" class="phase-body">
+      <div data-page-node-id="kk978OeejUlokeVVJUVraQ" class="forkline"><span data-page-node-id="VLgYld1E3vFMCcDelkmWoO"><!--pnid:PnY6nXZY5ogC3u572D5ZQc-->┌──────────┴──────────┐</span></div>
+      <div data-page-node-id="Q8YyVPmqM4AXr0ZAAZFvDG" class="branch" style="margin-top:0">
+        <div data-page-node-id="trfUwe7SEJOszfbFeKql8h" class="bb ok" style="border-top:4px solid var(--grn)">
+          <div data-page-node-id="4b5ves4Xvf1JzAOHuP4mNh" class="bt" style="color:#047857"><!--pnid:RuqfbJuUhBGkbbfOKm3Smf-->🟢 路径 A · 绑定（正常调度成功）</div>
+          <div data-page-node-id="XrlzQy2AMFuxlg0Gem5alz" class="pipe" style="flex-direction:column; gap:5px; margin-top:8px">
+            <div data-page-node-id="Wlq7s2aT9xAdEuEQZyZV0O" class="node"><div data-page-node-id="DrNh5iMz7vsN48ujv20IFu" class="nd"><code data-page-node-id="LVeBTPAhQxRhVOgQOTT2If" data-pnid-children="kXEWIU3iQRRjaOmbsoBM14">processBindTask()</code><!--pnid:h8IRoiNxo6IVAZoJCOdDQq--> 后台每 20ms 消费一次</div></div>
+            <div data-page-node-id="4xGZ5ykgD81MTpSELkN6ii" class="node"><div data-page-node-id="NR7zNUpyu8sJljgrhdAATl" class="nd"><!--pnid:xBZUDL3zYuCjYDntcON1bW-->BindTask → <b data-page-node-id="ziyTLwluJdhnV4po5fFVJp"><!--pnid:7tqebuNMgj9OxC4Lc2DimX-->PreBind 插件</b><!--pnid:5ULwcgtkUlVwUmlpoKq2Du--> → Binder.Bind()</div></div>
+            <div data-page-node-id="5UFGwCI5wCIqSsva0RG8VL" class="node" style="border-color:var(--grn); background:#ecfdf5"><div data-page-node-id="4DKa0J6Sx3gzyALQgoZCDr" class="nd"><!--pnid:WzwEyR6rFsCExzSDh8cVIo-->核心：<code data-page-node-id="cSCm9bsQK6XNy4xxwsjOKR" data-pnid-children="OL1HvNnQBoJ97VJJ3R9WYi">Pods(ns).Bind(&amp;v1.Binding{...})</code><br data-page-node-id="D9KspCRlENw2n65y1beQod"><b data-page-node-id="9Y3fYw7xPQ48d764ZDQEir"><!--pnid:QPu5NNbsAp7axAI0YKoZES-->创建 Binding 子资源对象</b><!--pnid:UHGLLTxpyTMP7hPj37rUOF-->（非 Update nodeName）</div></div>
+          </div>
+          <p data-page-node-id="jNIZDwhDOWRH9YDUJgleGn" class="sub" style="margin-top:8px"><!--pnid:DqhB2rVK38xGBmBVT2oPzk-->与 kube-scheduler 做法一致：API Server 收到 Binding 后才把 nodeName 落到 Pod。Bind 失败会回滚 PreBind 并重新入队重调。</p>
+        </div>
+        <div data-page-node-id="JtTnBhkrJMHNz1Zs3ZjpjM" class="bb no" style="border-top:4px solid var(--ros)">
+          <div data-page-node-id="yVJbIkET3eC5yzc1x1oO4d" class="bt" style="color:#be123c"><!--pnid:NkJE6qbnmHLDbj4TJezt77-->🔴 路径 B · 驱逐（preempt / reclaim 的 victim）</div>
+          <div data-page-node-id="CF2wrcarNfAU5EeMOh7pZ8" class="pipe" style="flex-direction:column; gap:5px; margin-top:8px">
+            <div data-page-node-id="m7yC5OqROlFgO1v1krzVzh" class="node"><div data-page-node-id="790Xq0HQOo9lvLAFTHj6jH" class="nd"><code data-page-node-id="HihCe2wKzVmz6tPe1b3qkh" data-pnid-children="fPPQmbfrOsdgJ4kHvzpGeB">go sc.Evictor.Evict(p, reason)</code></div></div>
+            <div data-page-node-id="xxbfPFZNjGMG01loPF4iXM" class="node"><div data-page-node-id="YiNu0c7ZRHbqPZmTgnLcF1" class="nd"><!--pnid:QEdVna6Hdj23Tr5o1XSGH1-->defaultEvictor 先 <code data-page-node-id="mf7rWt6PpDGcyfHUI5zyxn" data-pnid-children="ZBZ9vuYVjqiMYErtTrbsXF">UpdateStatus</code><!--pnid:yELZaXswvWhlc1DLSjWIjX-->：<br data-page-node-id="55m6ZvhLansCEtqY0koHGT"><!--pnid:9bIlzk4In2t3sDCJH0rK7M-->PodReady=False/Evict · DisruptionTarget=True/PreemptionByScheduler</div></div>
+            <div data-page-node-id="kshwrI34q6p3bbY0cyic9p" class="node" style="border-color:var(--ros); background:#fff1f2"><div data-page-node-id="tdd5p2Mq36SVCsyspfj0gR" class="nd"><!--pnid:SA9d2gWeDm0Tk4S6pPYQUK-->核心：<code data-page-node-id="NW4OFdTCRM9iTbf85o6q6S" data-pnid-children="afRzu16lAUpiUkTkcYFyQV">Pods().Delete(p.Name)</code><br data-page-node-id="7Poku77IuZyPTQVJgdJgFa"><b data-page-node-id="EfoTkIdAqRYNovdKj6ubFJ"><!--pnid:2dMpjEimVY3ul0fbhp7sz9-->真正删除集群里的 Pod</b><!--pnid:OhLdZU1MaW9dXRHlSQ39Ut-->（直接删，不过 PDB）</div></div>
+          </div>
+          <p data-page-node-id="w8aiYT5eUuYObflnKN7lYT" class="sub" style="margin-top:8px"><!--pnid:vCGQAJwTKhsVpvUBMRGCcM-->改 cache 的 Releasing 只是内部记账（保证本轮决策一致）；这次 Delete 才是让驱逐落到真实集群的动作。失败会 <code data-page-node-id="OmmhqSyQPfAV8FRi4hYTSk" data-pnid-children="TD9YULjnz6w2B8FLlSm1xh">resyncTask</code><!--pnid:5QfivpoOfe6pqdpkPra3vM--> 重新入队。</p>
+        </div>
+      </div>
+      <div data-page-node-id="ESzxJ1oSyWTOBH3EeonzcE" class="note"><!--pnid:y3ayzRsmkEZY4G42flzIDD-->⚠️ 两个易错点：① Pod <b data-page-node-id="V8zAzdqJsTq0kInnQ4ueUB"><!--pnid:aGxfpdgm6wpuOUu9SqXMy9-->不是 Volcano 创建的</b><!--pnid:qEZ4aDAO03VNYI85QKJi7K-->，写回是对已存在的 Pod 创建 Binding；② 默认 evictor 是直接 Delete，<b data-page-node-id="JWcpRBqLCDCrXTEL66Wzxr"><!--pnid:C1AnEfgBKb3GyAmFqhqPZT-->没有走 policy/v1 的 Eviction subresource</b><!--pnid:wm18rNZfLmyjeYphW865gs-->，所以不做 PodDisruptionBudget 校验。</div>
+    </div>
+  </section>
+
+  <div data-page-node-id="QDQaMga9WzTuOd1ok1K5yS" class="arrow"><div data-page-node-id="ssZgfHCqSGKwgbNixm8xed" class="bar"></div><div data-page-node-id="VJWjeQ6B6uQzHu0njA3ggU" class="tri"></div><div data-page-node-id="AiE63b2FvCXq2Jg0wdcIFX" class="lbl"><!--pnid:2xchm3SqjKz8fg2B4J4cxA-->API Server 持久化变更，kubelet / controller watch 到</div></div>
+
+  <!--pnid:XieWOckSUyj3d0juqO0XyS--><!-- ============ PHASE 7 ============ -->
+  <section data-page-node-id="Y8UOhsBfmubfasdhIaKaIo" class="phase">
+    <div data-page-node-id="LIJjFMF0T3I2Gnj3AXGU5m" class="phase-hd" style="background:linear-gradient(90deg,#047857,#10b981)">
+      <div data-page-node-id="gzhrkp1BR4j1F6nTJgb1oM" class="phase-badge"><!--pnid:IfHhpZVi6wUhF9ZL2g6zRo-->7</div>
+      <div data-page-node-id="DcrBBNc6csaKi8twYaUqX5"><div data-page-node-id="eYa02xG9KWrXoIjQd9cAIt" class="pt"><!--pnid:l4uRir2xUrd1hCU1TbgJ5g-->落地与闭环 · Pod Running</div><div data-page-node-id="bh9k3mWfURDyEzE5EFgt9w" class="ps"><!--pnid:PZmuhPY5NnfPk5NIefS4Fg-->真实 Pod 起来，资源占用持久化，进入下一周期</div></div>
+      <div data-page-node-id="8TqUXr4VYrMVLrzDgvnP0P" class="pn"><!--pnid:IBRqiWUeOkJn9PccFmtUiM-->DONE</div>
+    </div>
+    <div data-page-node-id="5zxrWc8mV5daLsjHdbqvbV" class="phase-body">
+      <div data-page-node-id="fIl9SzgUwSEbaH065waTNH" class="grid2">
+        <div data-page-node-id="KvS7D7jt1ois7YUL3De6on" class="step" style="border-top:3px solid var(--grn)"><div data-page-node-id="0XxwHFpg0UV6lrqmdWQAh6" class="st"><span data-page-node-id="sNvpRkEP3JGCiCNprcCeEJ" class="ic"><!--pnid:eX6zZLHddO2FwdR30TuZgm-->🚀</span><!--pnid:x2lo9kqmFgVJVrZ2u9Uj5i-->绑定路径落地</div>
+          <p data-page-node-id="IktUCHCXJXP5TwfUUefEpb"><!--pnid:oMTwb0qALubsICOjObZ7iT-->API Server 把 nodeName 写入 Pod → <b data-page-node-id="1XbZ2Ttv1qdZDbOve0E1Rv"><!--pnid:bHcsVTqVRwjlVUubq0Cfs3-->kubelet watch 到 nodeName</b><!--pnid:I2zqAoztTSgDJCMfRqpdKJ--> → 拉取镜像、启动容器 → <b data-page-node-id="cUs3GficBEdDOQejNGHJai"><!--pnid:uciNikVrZxOnWNFfT02Lu0-->Pod Running</b><!--pnid:meSDUHJVJIHrf4pX0bzIMj-->。资源占用从此持久化，下一轮 Session 快照能从 Cache 看到它。</p></div>
+        <div data-page-node-id="6r6J0mMFw8Cy4LyfFZOB7b" class="step" style="border-top:3px solid var(--ros)"><div data-page-node-id="fbKDjqqB8K6m1iwyceBMgE" class="st"><span data-page-node-id="Ax5hjSDtK7r7PopYohFWiA" class="ic"><!--pnid:ouL6JYMNOE1XGQzMTlunwd-->♻️</span><!--pnid:lJq4Tzp1f70xFgbtAVlvr7-->驱逐路径落地</div>
+          <p data-page-node-id="r7oi9QPQJi4mYUqyYWD5jc"><!--pnid:cMdQKJlgy6wGkIC515Sy9h-->被驱逐的 victim Pod 被删 → <b data-page-node-id="9AdQc8KgddUSdmoUmAWzmC"><!--pnid:xnfZzi1W85oc8oXq8RYE2f-->ReplicaSet / vc-controller 发现副本不足 → 重建新 Pod</b><!--pnid:PLSPay9GMiUjFb3hXPVWqE--> → 新 Pod Pending → <b data-page-node-id="TgUxpISY5Ns1845M9jpS64"><!--pnid:WnbSDZLzIi8Qkj3YJA6zZc-->下一轮 Session 重新调度</b><!--pnid:tklun50hzSGmLhFveeEKXj-->，此时资源已被高优先级任务占用。Volcano 自己不重建 Pod。</p></div>
+      </div>
+      <div data-page-node-id="x90p7xGNQE7Z6M844w35BQ" class="bottom-banner" style="margin-top:14px"><!--pnid:Qh6LEZQ9RgYZVbSW5K76b2-->
+        🔁 <b data-page-node-id="JSZLk8bkZnVwU1XFaEwK1C"><!--pnid:lXX9sm7MOX6Y0cV51dFihn-->闭环</b><!--pnid:jZjGPpNXGkGV5jg4kTXz9x-->：CloseSession 收尾（更新 PodGroup status / DirtyJobs flush）→ 本份快照丢弃 → <code data-page-node-id="YvxYdCQ4ED4xDav8YiK6Rx" data-pnid-children="1250Mv3EVlAcrcLSVJGE7A">wait.Until</code><!--pnid:67rZ7F4X7ZETeitTQYtgAC--> 跑完等 1 秒 → <b data-page-node-id="n0NkIcndbpuYXyEWDTm0RN"><!--pnid:brMKUx7C6el9yIyyHzWbVj-->回到阶段 2</b><!--pnid:ltH3wbbmy1eLahKd8B1miz-->，开启下一个调度周期。整条链路：<b data-page-node-id="mGzSUDxXoH9H64mDhPffo8"><!--pnid:1mSZLYHNX0j98Ih5NKpz7M-->提交 Job → Controller 展开 → 周期快照 → 插件注册 → 五大 Action gang 决策 → Statement 提交 → 异步 Bind/Evict 写回 → kubelet 落地</b><!--pnid:uz12gAh4SoUoQE5ruLhv2R-->。
+      </div>
+    </div>
+  </section>
+
+  <!--pnid:8aYlEUKUAeMREQmZBPdvl1--><!-- ============ 附录 ============ -->
+  <div data-page-node-id="st0TBUjNBJTdtD2ioQcHm4" class="appendix">
+    <div data-page-node-id="PfuLgLiR2Itlcb3LCpHlkd" class="acc">
+      <div data-page-node-id="QvSL6KeA332XBNk0uV7elh" class="acc-hd" style="background:linear-gradient(90deg,#4338ca,#6366f1)"><span data-page-node-id="N2UsnfZcZQU5ryrsJgybLI" class="ic"><!--pnid:M7vGKsI3BYua74OGbOi2OX-->🧩</span><!--pnid:l5TOmI78lYnyeF33sLrPr0-->附录 A · 扩展点四大类与内置插件</div>
+      <div data-page-node-id="IwyaKREQ4jpsi53JeBEHiw" class="acc-body">
+        <div data-page-node-id="JFYwZzRHOqJUrzcQIoxkFc" class="grid2">
+          <div data-page-node-id="sWrBbQTYym7HYRLb8ckHgL" class="step"><div data-page-node-id="EjkspBhCILfXg3mF9NrQOJ" class="st" style="color:var(--ind)"><!--pnid:Ofe5yssSaEzG8DTrEZOJoa-->① 排序类 Ordering</div><p data-page-node-id="NOwrz3Th1mLHq2MKAEUjGw"><code data-page-node-id="A1fmUJUynh222M8oODE713" data-pnid-children="lscw7Dfgr1DRTRpMhNmrPu">queueOrderFn</code><!--pnid:lfdqyGsw7jiw2KatokfVLM--> · <code data-page-node-id="ILfpXLIcAN0EMnmH2Iz29Q" data-pnid-children="rIwnheTLOwluq48ITfKuZ6">jobOrderFn</code><!--pnid:CEbXcHfFIaGZOe2b8jQUNq--> · <code data-page-node-id="p6vfnhSnUnbNRR5lnJhaQz" data-pnid-children="2i6LK3uKfhjx2iqINnpRKH">taskOrderFn</code><!--pnid:s7uXvRlvsIfVBbCsXcEcLY--> · <code data-page-node-id="ehSeHbkeKMnFsez5dUjwKu" data-pnid-children="Yw5Or16mBmm9eewYMjsCXB">nodeOrderFn</code><!--pnid:AmmvIDaYjzS9rmgP642W4f--> · <code data-page-node-id="lSXe2BhLZNIpTe0at7DIQC" data-pnid-children="gXWuhuA2lLdeR1vP8vxPd6">batchNodeOrderFn</code><!--pnid:COfzU6nBk86guACmHPsgpZ--> · <code data-page-node-id="IEIidBUXR8EiD4ewNMjvti" data-pnid-children="AyqhK2DKkAXpAOgqur9dyW">namespaceOrderFn</code></p><div data-page-node-id="5ebjYxq16eNVCQAljXCYLh" class="sub"><!--pnid:8w8ioKpHBlhhBHMJ7czrQ2-->代表插件：drf / gang / priority / nodeorder / binpack</div></div>
+          <div data-page-node-id="EBhUoPEWC8oxKCAi06dSCZ" class="step"><div data-page-node-id="wnr14TmoxhSzI6uFapEY7Y" class="st" style="color:var(--ros)"><!--pnid:te5Fq4Tr1lXw2Q0rUa0nDY-->② 过滤与准入 Validation</div><p data-page-node-id="s5e6zACr2dugGtaY6YNTbw"><code data-page-node-id="VQscpxs69VfClgaj2gjJ9n" data-pnid-children="gZgIWV6OysYdAZ1MIL2b5E">predicateFn</code><!--pnid:iBdfd739LcAmuD2zA5srGN--> · <code data-page-node-id="QvpnGgZVlbobE8LwNe7J0E" data-pnid-children="AnsikzQ7UqPa9CzQKAPn6f">jobValidFn</code><!--pnid:amQhgqZqfiE0qmj6N8ngpM--> · <code data-page-node-id="XMHtqlKy79H2B0UdszMPru" data-pnid-children="1fA6UGuiIhOXLXLoREYBGV">jobReadyFn</code><!--pnid:OOwDNNqw6M0s1ec2HBFfnh--> · <code data-page-node-id="W8GdKzgyuNI2BDUogrrdfG" data-pnid-children="KBBHpPJ1mVGdihJ5cG9C24">jobStarvingFn</code><!--pnid:xAld6JgETmF9z71BRTCUdJ--> · <code data-page-node-id="V2b4ve65N3HNGxcMAZAfUC" data-pnid-children="6PlJdBk9i69qY5HIUvkqmN">jobEnqueueableFn</code><!--pnid:1gW0vQzQhg9nlfcn6gogzd--> · <code data-page-node-id="KZfOeyUfI8LBPUCn3cpdVh" data-pnid-children="nci0FFNpKdTVOeUjp9VZVZ">jobEnqueuedFn</code></p><div data-page-node-id="4JMpWpJgd1BYZfP3OEXsdX" class="sub"><!--pnid:dhprf9f6LcHIiviI2hWExJ-->代表插件：gang（jobValid/Ready/Starving 近乎专属）/ predicates / proportion / extender</div></div>
+          <div data-page-node-id="dprYM4f9tAPHLKRCdGfdex" class="step"><div data-page-node-id="vCxk6FH7UsFZ2Z1ohwwkmf" class="st" style="color:var(--amb)"><!--pnid:yx4EtOuCUYKhKQzEck69zf-->③ 抢占与回收 Preempt / Reclaim</div><p data-page-node-id="C3zQmLls91Pu6OfJ0Oyul5"><code data-page-node-id="BaTBg3y0bEayGv1oY5xIdG" data-pnid-children="VuOS5c9bc6AuGKMqPafbjs">preemptableFn</code><!--pnid:8GniJFN50kcjJ8GFn5YI0j-->（被 5 插件注册）· <code data-page-node-id="alBGUcFZBbn5lMcQyMMzQn" data-pnid-children="gUFw5Q9bdEW6paGEXt7M3o">reclaimableFn</code><!--pnid:Ku4ZCYx98ltSa5rGi3Z2io--> · <code data-page-node-id="QM0CSox6d39ScwWsIhWnVD" data-pnid-children="Fgn0scBnAKvYtJgrOnmZqM">overusedFn</code><!--pnid:PPLh96hzM6Wk0bKwtJrT7B--> · <code data-page-node-id="sHiOrzFjB1VWrX3Dto1iVL" data-pnid-children="OfiDErWlpSxWgyBhr8QjUK">allocatableFn</code><!--pnid:xDA0D2LUACTRR8hs5DSf5l--> · <code data-page-node-id="14R5x59OY1hDTf5YIfogzO" data-pnid-children="wEiElXAIJGKt6m1T7meHgN">reclaimFn</code></p><div data-page-node-id="xFuI3VvqlW8oNYRe2LXSP3" class="sub"><!--pnid:2UXMGujKgBQaqKDs0QY4uU-->代表插件：priority / conformance / drf / proportion / extender</div></div>
+          <div data-page-node-id="xqXeaKb5uVeIVTPc4IkHlM" class="step"><div data-page-node-id="r9XVN9kHdyFCLZgpEVFmWe" class="st" style="color:var(--grn)"><!--pnid:qKBH9koE8qtIjYujbLa3Cb-->④ 状态与预留 State / Reserve</div><p data-page-node-id="AFBKi7NO6hVQEGlzI87rsh"><code data-page-node-id="PMHZyDTmEe2xwoZX5BkDgO" data-pnid-children="O1nRhufVbBuw6aE3R1kcSl">targetJobFn</code><!--pnid:dzQnaM0BwgdbIpFvNxARnS--> · <code data-page-node-id="NJLQSvwGup6y5QAuRnv981" data-pnid-children="vJMB4svR1Qi3kYXlDhq9HU">reservedNodesFn</code><!--pnid:bBabGB84M3ZVW1FCzJAwvv--> · <code data-page-node-id="czjatVKNaL1dXlCA5biwtP" data-pnid-children="RbqTakGvQeyCWEFFY9fvkX">jobPipelineFn</code></p><div data-page-node-id="p64WnXXcDdSevItPtslVyy" class="sub"><!--pnid:k52etTOHdrAOEH755cITZd-->代表插件：reservation / gang</div></div>
+        </div>
+        <div data-page-node-id="Ec21A8NXegMnflctIzRVkf" class="note"><b data-page-node-id="fMzzAkiEB1xZgLxx1WGZRQ"><!--pnid:2Xcz4z7Csq9TclhbjiAZOA-->三种扩展方式</b><!--pnid:P7QfaiPJwnTPxVKpBaATwR-->：① 零代码——配置内置插件（gang/drf/proportion/capacity/priority/conformance/predicates/nodeorder/binpack/numaaware/overcommit/reservation/extender）；② 免重编译——<b data-page-node-id="yY82bOvdsGIq4fXTVtIrPv"><!--pnid:tE7Pe4ha1oMYJxzRz7QNmw-->extender</b><!--pnid:jUXv6iR9WGtuO7meEik7dJ--> 用 HTTP 回调外部服务，覆盖过滤/打分/抢占/回收全套钩子；③ 深度定制——实现 Plugin 接口 + <code data-page-node-id="5UtMlAkfjvaRMBixT7ThZU" data-pnid-children="SPwDflqoh0210EOHVE4SYO">RegisterPluginBuilder</code><!--pnid:9dCX3wXpHJKFyiJjZn5YUS--> 后重编译。</div>
+      </div>
+    </div>
+
+    <div data-page-node-id="w4tw8QbjryUgywrTohANrS" class="acc">
+      <div data-page-node-id="WmFpADnYm6lbaXEOn2Z52w" class="acc-hd" style="background:linear-gradient(90deg,#0369a1,#0ea5e9)"><span data-page-node-id="bPyyTAQsCTeleDTZEkMmT1" class="ic"><!--pnid:f0TCSNGC80fXlyfN98TvZO-->⚖️</span><!--pnid:0sNxk3vIkUjRW0v9YhyP8U-->附录 B · 与 K8s 官方调度器对比</div>
+      <div data-page-node-id="2AHhRIhvKeCCkNwPPHIlvv" class="acc-body">
+        <table data-page-node-id="uvoe8ZSqe7mKSpU8GnjVAB">
+          <tr data-page-node-id="dGVO6tLrmhM7H0q0j408kK"><th data-page-node-id="YyUU1QnrkmscrImSGGMphm"><!--pnid:LWKIM6oBO0hiFSmTCssYDc-->维度</th><th data-page-node-id="qUTCDVWqzX8GJ28vujUH1h"><!--pnid:MPqdbfft6LCCSniQvRyE6T-->Kube-scheduler（线性流水线）</th><th data-page-node-id="K9pcWAIksB99YCv0QRggwP"><!--pnid:VbgQZTnOfzZ16EqA2FFtTp-->Volcano（多级决策回调）</th></tr>
+          <tr data-page-node-id="WUqE1fpjzi6dYE6PIWNZuu"><td data-page-node-id="rME2dJChJmG7qgGOVu9owj"><!--pnid:29qSNy49ytdAkY0u2Hcc1Z-->扩展点数量</td><td data-page-node-id="RIwozXwX2J8vJTnZOLIHUv"><!--pnid:M2Y4E1Wg1orn9YdfuFjCML-->约 12~13 个（PreEnqueue→QueueSort→…→Bind→PostBind）</td><td data-page-node-id="kiB4IaXmguvVWH6ZjAfcKN"><!--pnid:GIH3Dyvcun01QxruAI5z2T-->20+ 个 Fn</td></tr>
+          <tr data-page-node-id="K2x4GH4eMidarDTnweEZdh"><td data-page-node-id="OIJl6cf8ZGzjOCweFwCma7"><!--pnid:D0vLkHm15deZMUt7Lt4Net-->调度对象</td><td data-page-node-id="J1lchDAPtE8qdgeDSz27PG"><!--pnid:s3A8iocX9pBDIuSmm2LW1q-->一次一个 Pod</td><td data-page-node-id="Oez5eXEMwgRQsx74CMbNZQ"><!--pnid:Vr1seOfrLWi353p4bUU7ek-->一次一整个 Job / 队列</td></tr>
+          <tr data-page-node-id="n64XVruNiVTPyKb0bdCt40"><td data-page-node-id="Op4kLOTyLtcxSYnKHbZF0u"><!--pnid:gIji7hc5laCJqI8YbEDZdG-->对象层级</td><td data-page-node-id="vtYvX7fbfQbREwi9LS8Vw8"><!--pnid:67FJNftCwikydvOkeGA6bL-->只围绕 Pod 一层</td><td data-page-node-id="kchc9mCZvgvb58I1xlzyxs"><!--pnid:jo2gI7yjVd4Ehk2sMd1VXr-->Queue → Job → Task → Node 四层</td></tr>
+          <tr data-page-node-id="ekkfI2suAF1UqJgFOlMNtv"><td data-page-node-id="ZnqqM0KNQ0w7nY2VWhNhBe"><!--pnid:VGQSqw5n55ri46zHAzztfS-->对应关系</td><td data-page-node-id="f3INrHBm5V8fl7QDvbVxlB" colspan="2"><!--pnid:Q6bAHCQYIJ0GCCegAorVN4-->Filter↔predicateFn · Score↔nodeOrderFn · Permit(gang)↔jobReadyFn · PostFilter↔preemptableFn · QueueingHint↔eventHandler</td></tr>
+        </table>
+        <div data-page-node-id="mbwumnfU2V4nyo9c8PuCuF" class="note"><b data-page-node-id="sQ4ZdztJCqifeMjrlOZ3bq"><!--pnid:YqBArWpIJs6g5n9WZeHaSo-->为什么扩展点多</b><!--pnid:Fo1wM7gtVwMn1OyKNPe7Hu-->：① 对象层级不同（一个 QueueSort 拆成 jobOrder/queueOrder/taskOrder）；② 模型粒度不同（阶段卡槽 vs 决策回调）；③ 内建范围不同（gang/DRF/配额/抢占回收都是 Volcano 原生，各需专属钩子）。一句话：<b data-page-node-id="WRHiknB3sPSs6ZLrgw4ulx"><!--pnid:B1fLy6I0WPZeDNue5kBSFV-->K8s 用少而固定的阶段换简洁，Volcano 用多而细的回调换批处理可控性</b><!--pnid:ZgqK8JdQuMkdjGIsXfNeUf-->。</div>
+      </div>
+    </div>
+
+    <div data-page-node-id="c4FCYGemhcgZ98MjzywzPq" class="acc">
+      <div data-page-node-id="9LGvsw93E5J6wpwb372KeB" class="acc-hd" style="background:linear-gradient(90deg,#0e7490,#06b6d4)"><span data-page-node-id="RtHBPQf7hoG6TlvYYLcpoY" class="ic"><!--pnid:lkcN3mSB5luwtIiqVpLDcP-->🍽️</span><!--pnid:gPPt7ZnQnVQocAo5Q0r9SR-->附录 C · Gang 通俗理解与决策单位小结</div>
+      <div data-page-node-id="wzgjPTFAgXgt2lU2DYRWeN" class="acc-body">
+        <div data-page-node-id="OPsnitcPUFKQsPIfiDhyXz" class="grid2">
+          <div data-page-node-id="eyXzWep2632J070aJLj6E2" class="step"><div data-page-node-id="2mBHw5wlspuBPGXbz8geI9" class="st"><!--pnid:Yb7abKVdAKN5kMQ0UaD5Tb-->Gang 三招（"8 人聚餐订位"）</div>
+            <p data-page-node-id="408EGEbjP7wJi54Liygv5V"><b data-page-node-id="AjtIDiifycHY5vN3pgb1ZD"><!--pnid:v3E1YjO8vjD0pyys1R2rA6-->① 绑成一单</b><!--pnid:sxF7nOOL74UsqIsPPBXmNh-->：PodGroup + <code data-page-node-id="NKEdZ0X6EAXFbSrKsJxe31" data-pnid-children="VEpZq2QTUm3QVVI5TGf2hG">minAvailable:8</code><!--pnid:kPDE7PWIkFepSlRpqueqTP-->，调度器眼里是一个整体。<br data-page-node-id="TrTw5i4Wq6vujYEC4C3V3P"><b data-page-node-id="W4SlgvHnaxcBAtOVTaSUtI"><!--pnid:4gByeX3de3D0VqMXRKmRrD-->② 先看全貌</b><!--pnid:xWF1SWIqDS85fsFmahBGbW-->：拍资源快照，看清总共剩几张卡。<br data-page-node-id="IGTqMELAmhvqYfIKhqvQZF"><b data-page-node-id="BBLAgUL3YVoDG7rL0yaFqI"><!--pnid:snrSbDtCURKyz1lgz7yBKP-->③ 凑不齐全撤回</b><!--pnid:Gz9VILrQcSZ84ZP4hqpY0N-->：内存试算，<code data-page-node-id="RsqQW8gwBjpjP3NU2S7VGu" data-pnid-children="SkMhiyj24zKowiwySYeof8">JobReady</code><!--pnid:MKJ2JAt5nAZEm7LdhNJSax--> 通过才 Commit；不够 Discard 全撤回，一个不占。因在内存里，撤回不留痕迹。</p>
+            <div data-page-node-id="vfcilxyLijhRo6THDpvazR" class="sub"><!--pnid:pnmIImaOmF8srpmCMsxzRb-->对比 K8s：先起的 4 个占卡死等同伴 → 后 4 个永远起不来 → 全体卡死、GPU 白占。Volcano 从根上杜绝"半组卡死"。</div></div>
+          <div data-page-node-id="iLaErlYkEd8O8ykKVnDiMg" class="step"><div data-page-node-id="QHbbMBGWRdWqlTGF2lbIaL" class="st"><!--pnid:ZHkTZvhSMlQ7c9TA2FIxt4-->allocate 决策单位 = PodGroup</div>
+            <p data-page-node-id="BAFmnwM6jSRKhMsE3AV1cZ"><!--pnid:ctoxqSKEbsmSJFUo0wfHKl-->一轮 allocate 会处理<b data-page-node-id="wAORGfwPeYR8WqZc8YesdE"><!--pnid:eGiFdHnfZFJHGKfw4RL0tu-->多个</b><!--pnid:EXNMfp1e1kXsK1vDSm911J--> PodGroup，但每次拿出来决策的<b data-page-node-id="EJrxDYN3BrIYW5aMBixX5L"><!--pnid:EzrkxBlCjuYeyBJpGYXFbk-->单位是一个组</b><!--pnid:5GCa33owpsODFcwHeAmxez-->：<br data-page-node-id="gugKzlY5BwUdgq41KQHK1L"><!--pnid:Ob71NXyI8I710wLEZ8cJPN-->• 决策判定 → 一个 PodGroup（JobReady）<br data-page-node-id="8S1PdE7Dba8EdML7XgdYPW"><!--pnid:t8tR7QkeDV8dtdaKPQRFIL-->• 节点选点 → 单个 Pod（predicate + nodeOrder）<br data-page-node-id="oadlXtdggDOIoOrncK0FNA"><!--pnid:7TWEeuh4MBBHxE8ysKGVhT-->• 结果提交 → 一个 PodGroup（同一 Statement 一起提交）</p>
+            <div data-page-node-id="StJExRujbW2TiZPyT9WVK9" class="sub"><!--pnid:W3zPwh8OyNOjrricZLBRNz-->"一次遍历多组、逐个组决策" —— 组 A 凑不齐就回滚 A，不影响组 B。</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!--pnid:y80WXoyHUEN9X0Gv24aiYy--><!-- 附录 D：一次调度全景 -->
+    <div data-page-node-id="ly9Ppb7a8i5ydiavL8MAJh" class="acc">
+      <div data-page-node-id="xZDrxL0bizHH5TO0jqWWSJ" class="acc-hd" style="background:linear-gradient(90deg,#0e7490,#06b6d4)"><span data-page-node-id="Z8E2lNLQfOF91q5dbD2blO" class="ic"><!--pnid:swggKl15MiS8ETpp3wT9Xi-->🔄</span><!--pnid:MCHz9PgAGzxSzQMOUbvl8v-->附录 D · 一次调度全景（纵向流程 + 横向泳道）</div>
+      <div data-page-node-id="zWpJiMrq4iZtutggmLsFnL" class="acc-body">
+        <p data-page-node-id="8SwZNiDiZQezIioppGAe6t" style="font-size:12px; color:var(--sub); margin-bottom:12px"><!--pnid:3PxuNYqclpB6dkTmIBtiAi-->以「3 队列 / 6 作业」为背景，展示<b data-page-node-id="PHb35OSBqThhLX7K8E3q6V"><!--pnid:3DXkKEwyTwmfXBsbPqHP2M-->一次 Session 内部</b><!--pnid:RCBAqObAIjOd1e0IkGjU5H-->如何完成调度。上面 8 阶段讲「从提交到落地的生命周期」，这里两张图讲「单次调度内部怎么转」。</p>
+
+        <!--pnid:e3TtGpioiDfyb6IrSNHORu--><!-- 纵向流程 -->
+        <div data-page-node-id="VgIgVd7NNBix36STfbLMuA" class="fig-label" style="color:var(--cyn); font-size:13px; font-weight:800; margin:6px 0 8px"><!--pnid:w6mMfLaXjg8m7cPLKXAjyk-->附图 D-1 · 纵向流程：多队列多作业下的一次 Session</div>
+        <div data-page-node-id="baqUCMv5NGNxiSUju1hGz6" style="display:grid; grid-template-columns:repeat(3,1fr); gap:9px">
+          <div data-page-node-id="f79RUnXSvd2BUhIB2Itv3T" style="border:1px solid var(--line); border-top:4px solid var(--ind); border-radius:10px; overflow:hidden; background:var(--card)">
+            <div data-page-node-id="yoCYwwGNGbOkMURXjugyad" style="background:#eef2ff; padding:6px 10px; font-weight:800; font-size:12px; color:var(--ind); display:flex; justify-content:space-between"><!--pnid:F84N4QWX8llRvd3Zh7kfaF-->training <span data-page-node-id="RYw7QTq3Z5SR13XoU3VYU9" style="font-size:9.5px; color:#4338ca"><!--pnid:6X1muq1KHLPxZB1dfrUkYL-->weight=5 · 未超用</span></div>
+            <div data-page-node-id="0sy2Y1u79O03yQFjJ6Rmks" style="padding:6px 10px; border-top:1px dashed var(--line); font-size:10.5px; display:flex; justify-content:space-between"><b data-page-node-id="AK3cBKzoHyqprczA4KCgP4"><!--pnid:zZdUrspRWcc6rwOzuaawcW-->job-A</b><span data-page-node-id="cXnDK4vLjNMCPCAsllrYTe"><!--pnid:zbLFnkb9GZUYT1t9LD3RKk-->8 Pod · minAvail=8</span></div>
+            <div data-page-node-id="ZaVQZVNGSCWqJToHVmXwFX" style="padding:6px 10px; border-top:1px dashed var(--line); font-size:10.5px; display:flex; justify-content:space-between"><b data-page-node-id="VNsIX5ZxmUH1IO0nMIC7gV"><!--pnid:d7on3bE2Uf132XOGBmm2bE-->job-B</b><span data-page-node-id="XvJMfWRorQkab7Kt2cxlL6"><!--pnid:ZTYxn39pjdXwIatQn8rAiA-->4 Pod · minAvail=4</span></div>
+          </div>
+          <div data-page-node-id="A98nnamDw2Pm5Nkghf0Lci" style="border:1px solid var(--line); border-top:4px solid var(--grn); border-radius:10px; overflow:hidden; background:var(--card)">
+            <div data-page-node-id="yJJBAqhswP3WZQpktx5O7V" style="background:#ecfdf5; padding:6px 10px; font-weight:800; font-size:12px; color:#047857; display:flex; justify-content:space-between"><!--pnid:1uc5je11iREJitZmFzoJwU-->default <span data-page-node-id="vEqyoIOBwZit5Hqa9NQFsV" style="font-size:9.5px; color:#047857"><!--pnid:c1gCT34RkwlAcCx59GRM1P-->weight=1 · 未超用</span></div>
+            <div data-page-node-id="SZtoeZAD7vtBGbFQXpTC2L" style="padding:6px 10px; border-top:1px dashed var(--line); font-size:10.5px; display:flex; justify-content:space-between"><b data-page-node-id="71svMcF404R31wf9FrCFTK"><!--pnid:ztxleHYqcYpMn7bWlOnAjc-->job-C</b><span data-page-node-id="aE0eDN5ICXnyU8vr2pBSvW"><!--pnid:8BmN7R6V82MtE80JKZ8LcT-->2 Pod · minAvail=2</span></div>
+            <div data-page-node-id="UTS2qdETD7eS5fEBj8RZvT" style="padding:6px 10px; border-top:1px dashed var(--line); font-size:10.5px; display:flex; justify-content:space-between"><b data-page-node-id="JqLZlvicITP8498fHZHWN2"><!--pnid:HXlO2pmSKZCrJouiuBm4aF-->job-D</b><span data-page-node-id="X12YhTts2D29GjRkhJMOno"><!--pnid:KrbyafjtuK5TGJvMRYpPfy-->1 Pod · 无资源请求</span></div>
+          </div>
+          <div data-page-node-id="Ns6LPYXz49GLiJqQvDXo17" style="border:1px solid var(--line); border-top:4px solid var(--ros); border-radius:10px; overflow:hidden; background:var(--card)">
+            <div data-page-node-id="bH0BvM3YXYrgLSpwf2kAt0" style="background:#fff1f2; padding:6px 10px; font-weight:800; font-size:12px; color:#be123c; display:flex; justify-content:space-between"><!--pnid:ZmIW4VGXOZJNbOF3pZBVuJ-->research <span data-page-node-id="2goZvYLoQEUCqrOnBFr1Kj" style="font-size:9.5px; color:#be123c"><!--pnid:Sff2M2CMtraTxEtphbhCZJ-->weight=2 · 已超用</span></div>
+            <div data-page-node-id="KjT9kP5eYMwxhz46gXWnOK" style="padding:6px 10px; border-top:1px dashed var(--line); font-size:10.5px; display:flex; justify-content:space-between"><b data-page-node-id="oZsunBOtwkk70NmgqbWn6G"><!--pnid:GR78Hzsid8DuRYbFBAEYJl-->job-E</b><span data-page-node-id="i60anahDe3j9n41ke64OG6"><!--pnid:Bt9BxAsBS5bEpQFbJbn9kc-->4 Pod · 超配额</span></div>
+            <div data-page-node-id="vB4LizHx2iIZ2A9Ab9KbpD" style="padding:6px 10px; border-top:1px dashed var(--line); font-size:10.5px; display:flex; justify-content:space-between"><b data-page-node-id="nt4u5zx6w5tM4YwakRriKQ"><!--pnid:RJEZPYIKJBcsvdlyc5zoY2-->job-F</b><span data-page-node-id="RnemUaIZUdDg08oGukWQ0n"><!--pnid:Bpg6hlu9u05tLjLvF8ZyhU-->2 Pod · 饥饿</span></div>
+          </div>
+        </div>
+        <div data-page-node-id="K54dYHOVZM1Kie8NVpSk60" style="text-align:center; color:var(--sub); font-size:10px; margin:6px 0"><!--pnid:MlBnp3B0TtRtmPONCCwLD4-->↓ openSession 快照 → enqueue 准入 → allocate（放大如下）→ preempt → reclaim → backfill ↓</div>
+
+        <div data-page-node-id="Ki6hhBRxPPgZvkIwZGkB9Q" style="border:2px solid var(--pur); border-radius:13px; background:#faf5ff; padding:14px 14px 10px; position:relative">
+          <div data-page-node-id="oaAPA5zkWqyWR3a5cn97kV" style="position:absolute; top:-11px; left:16px; background:var(--pur); color:#fff; font-size:10.5px; font-weight:800; padding:3px 11px; border-radius:11px"><!--pnid:IEf3pprBGKwIH4XPZekaf8-->allocate · while 循环（逐层 Pop，一轮处理多个 Queue / Job）</div>
+          <div data-page-node-id="1vUlzCcnr5aTqzRViKf6j8" style="border:1px solid var(--line); border-radius:8px; padding:8px 11px; background:var(--card); margin-bottom:5px; font-size:10.5px"><b data-page-node-id="VSjExoEQfNm4i4aKwFLWRR"><!--pnid:4wDzzSDNwe0OUimuHHfEXa-->① <span data-page-node-id="5CI3aDVru6kargTLM1dV32" style="color:var(--pur)"><!--pnid:QW9Fb8Pwq1VkHbp4bMt8kU-->queues.Pop()</span></b><!--pnid:4HPRQxkcNArp9FUw47bWtG--> 选队列（QueueOrderFn / Overused）→ 本轮 Pop <b data-page-node-id="gvM0zBAViQSrAhgg4JBurI"><!--pnid:vd0znrd6nu6okfMsxVGXBi-->training</b></div>
+          <div data-page-node-id="qDE88azsjN59NjeNRGd1oB" style="text-align:center; color:var(--slt); margin:1px 0"><!--pnid:QCYcr84PsEzuYQpNw0Tub1-->↓</div>
+          <div data-page-node-id="T1FVsEq6yZyh19fbUUTtHZ" style="border:1px solid var(--line); border-radius:8px; padding:8px 11px; background:var(--card); margin-bottom:5px; font-size:10.5px"><b data-page-node-id="qEqjN24m3xZua8sq9kPEBC"><!--pnid:H5yfnV242wzyMBs0P0efB3-->② <span data-page-node-id="WuHRRBVu1Uzr4vMR3mmnl8" style="color:var(--pur)"><!--pnid:rk8149MmxHqTV9esXnK2RJ-->jobs.Pop()</span></b><!--pnid:WTootxnO37jU8EevOVonPn--> 选作业（JobOrderFn）→ 本轮 Pop <b data-page-node-id="dN3o58r6zRsU0wmuW8hG9K"><!--pnid:WLTg2MCFYEGBCWk2ssqa5q-->job-A</b><!--pnid:QtFZU6gF8FMzUIeATRGOAA-->（gang，minAvailable=8）</div>
+          <div data-page-node-id="aYfA0msd3smd6w4wKHTroG" style="text-align:center; color:var(--slt); margin:1px 0"><!--pnid:WTPMdvk3shdJyMbwy0MdgO-->↓</div>
+          <div data-page-node-id="hYLzfaDQnGF6OBF6r4Iqqq" style="border:1px solid var(--line); border-radius:8px; padding:8px 11px; background:var(--card); margin-bottom:5px; font-size:10.5px"><b data-page-node-id="rFPzV1ZNvPFjIxEfzrR7mP"><!--pnid:sn4eYtlEmfu5PPco7fteHm-->③ 遍历 8 个 task</b><!--pnid:0d7iBXzAzX175GsWuS9KBZ-->：PrePredicate → predicate 预选 → nodeOrder 优选 → Allocate/Pipeline → AddTask 扣资源（Idle−/Used+）</div>
+          <div data-page-node-id="Y03zfDeDieBwNv8fXeQhY4" style="text-align:center; color:var(--slt); margin:1px 0"><!--pnid:Yxux4vIPG2U2xIO0FpiPz7-->↓</div>
+          <div data-page-node-id="qZAsWFfzNPnn4E9ZkSw7pc" style="text-align:center; font-weight:800; font-size:11px; color:#be123c; border:2px dashed var(--ros); background:#fff1f2; border-radius:9px; padding:8px"><!--pnid:IwDXs7Je0Ne9EXy6jinqDs-->◆ ④ ssn.JobReady(job-A) ？凑齐 8 个了吗（gang 全有 or 全无）</div>
+          <div data-page-node-id="5Sazpelu1YW97yIHcsduWk" style="display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-top:6px">
+            <div data-page-node-id="t8pNhNvFWmNzCFuxlM9U8f" style="border-radius:8px; padding:7px 10px; font-size:10px; background:#ecfdf5; border:1px solid #a7f3d0"><b data-page-node-id="aZxAmQY1qSD736loFdn0nR" style="color:var(--grn)"><!--pnid:NldViY1sdf9R4hD0FkPxh1-->✅ 满足 8/8</b><!--pnid:okzeUpPB3GKseyjWN4mgCs--> → Commit，整组转 BindTask</div>
+            <div data-page-node-id="bm89klORbhg9V8iW2wxNWl" style="border-radius:8px; padding:7px 10px; font-size:10px; background:#fff1f2; border:1px solid #fecdd3"><b data-page-node-id="UvoPsszjOvaHWQPMjemPed" style="color:var(--ros)"><!--pnid:Bkud8JWCJyaFlgtWZltfqw-->❌ 不满足 4/8</b><!--pnid:QfSccbHmh9ExakbVAkUj8w--> → Discard，全回滚、一个不占</div>
+          </div>
+          <div data-page-node-id="E5I4Bjl07ff70y8wpbpsjh" style="margin:8px 0 0 12px; border-left:3px solid var(--cyn); padding:5px 0 2px 12px; font-size:10px; color:#0e7490"><!--pnid:H0ZAy1OT1RMzSIcLAzoROf-->⑤ <b data-page-node-id="jYO7LqIc90pL1N1Vsi02KY"><!--pnid:wmebcV553ldZOE5ZDzOkZo-->queues.Push / jobs.Push</b><!--pnid:R39AgS86rmhwDRsQnDCq1T--> 重新入队，下一轮按最新资源重算优先级（跨租户轮转公平）。⟲ 回到 ①。</div>
+        </div>
+
+        <!--pnid:vUQR0hvs56JP3GtRg1t68x--><!-- 横向泳道 -->
+        <div data-page-node-id="q0jmeSeuSOJ7KqNFpOTMtm" class="fig-label" style="color:var(--cyn); font-size:13px; font-weight:800; margin:16px 0 8px"><!--pnid:SrHDrutMQ9urqMXM60FvJJ-->附图 D-2 · 横向泳道：队列为行、阶段为从左到右的时间轴</div>
+        <div data-page-node-id="b0HuCQpCbrNsoIj0OHFZjz" style="overflow-x:auto; padding-bottom:5px">
+          <div data-page-node-id="zuHlZLhkLUwlHbxiUYFfeJ" style="display:grid; grid-template-columns:82px repeat(7,minmax(100px,1fr)); min-width:840px; gap:4px">
+            <div data-page-node-id="2yLok2AubvbGq1mxatjqCm" style="background:#334155; color:#fff; font-weight:800; font-size:10px; text-align:center; padding:7px 2px; border-radius:6px; display:flex; align-items:center; justify-content:center"><!--pnid:I4P4pQ1JyApSLfmESR7Uox-->队列／阶段</div>
+            <div data-page-node-id="AKgHHAPYrmxy1iP6tJp2yJ" style="background:#1e293b; color:#fff; font-weight:800; font-size:10px; text-align:center; padding:7px 2px; border-radius:6px"><!--pnid:i4ed2tNmGUtN44OCv2HcNa-->① 快照</div>
+            <div data-page-node-id="1oVbPQNZs8vBafThkpx6Xv" style="background:#1e293b; color:#fff; font-weight:800; font-size:10px; text-align:center; padding:7px 2px; border-radius:6px"><!--pnid:2s7jlEgnnLovKqi9zOogd6-->② 入队</div>
+            <div data-page-node-id="LjpxZW7Ai9cL6zdbWuXRS6" style="background:#1e293b; color:#fff; font-weight:800; font-size:10px; text-align:center; padding:7px 2px; border-radius:6px"><!--pnid:WjynhrNNg4KjhhGyvE5Vz6-->③ alloc①</div>
+            <div data-page-node-id="a64GoImWhzOngBFXMAaq5t" style="background:#1e293b; color:#fff; font-weight:800; font-size:10px; text-align:center; padding:7px 2px; border-radius:6px"><!--pnid:MBwireQ4fp7IGGv04vjCm3-->④ alloc②</div>
+            <div data-page-node-id="BNhhye8TaWaf2mPsD2PsQ7" style="background:#1e293b; color:#fff; font-weight:800; font-size:10px; text-align:center; padding:7px 2px; border-radius:6px"><!--pnid:UUkjscSiTwKsQ5m2x5QeRW-->⑤ alloc③</div>
+            <div data-page-node-id="qIL6ZzrC07GPfWCfeJOqkI" style="background:#1e293b; color:#fff; font-weight:800; font-size:10px; text-align:center; padding:7px 2px; border-radius:6px"><!--pnid:4caPOhmTfqYF4xKlus9Evy-->⑥ 补救兜底</div>
+            <div data-page-node-id="TsnfaQ7jGLuNfB5PU4dX15" style="background:#1e293b; color:#fff; font-weight:800; font-size:10px; text-align:center; padding:7px 2px; border-radius:6px"><!--pnid:qcQRAXen4RPaSFdli23I97-->⑦ 写回</div>
+
+            <div data-page-node-id="td61v5lE3t1WZHwOrHep5K" style="background:#eef2ff; border:1px solid var(--line); border-left:4px solid var(--ind); border-radius:6px; padding:7px; display:flex; flex-direction:column; justify-content:center"><b data-page-node-id="9Ck7FCPuhWzkHmPrhxT582" style="font-size:11px"><!--pnid:4iJ29XYnhkWjzouD5MR7Vg-->training</b><span data-page-node-id="JVtQvn3feIKaj7Jw4N9lEY" style="font-size:8.5px; color:var(--sub)"><!--pnid:LaTGeA6baMprdJf4PilzwA-->w=5 未超用</span></div>
+            <div data-page-node-id="iNs6Z7aqfegcAl1Tx4b9AL" style="border:1px solid var(--line); border-radius:6px; padding:6px; font-size:9.7px"><b data-page-node-id="ChumOte2SGIt8Dngf051F8"><!--pnid:MTvlX4TJ5rPz2AJGqxvvvL-->job-A</b><!--pnid:KSKVtFlMUdl50kPB8m0Csy--> 8Pod<br data-page-node-id="D3YxGtZwfZG5g61ZuzG3mh"><b data-page-node-id="BWogdDkt5YR7aAgAlYXroC"><!--pnid:bnAWu2Qt85meNfSRWNfj5E-->job-B</b><!--pnid:23NqSPNDklnTffibXBQKKi--> 4Pod</div>
+            <div data-page-node-id="wSmCSmWTt2wZ37Lol2UjRW" style="border:1px solid var(--line); border-radius:6px; padding:6px; font-size:9.7px"><!--pnid:UqOYir1DJhstTq8HlSAHEm-->job-A/B<br data-page-node-id="FC2mEzcC0n7x4bBUglCDZd"><!--pnid:YOo5qZ1Lu2NzOn0AgaScnV-->→ inqueue</div>
+            <div data-page-node-id="m2JkdCH516E6LsXYLEhOIH" style="background:#ecfdf5; border:1px solid #a7f3d0; border-radius:6px; padding:6px; font-size:9.7px"><b data-page-node-id="VAQNWva6q8CDXjvTjUc8wA" style="color:var(--grn)"><!--pnid:rnU9xebuxXFCNxFSI3cSny-->Pop job-A</b><br data-page-node-id="JytAeESW4NVrIzLpmmajBJ"><!--pnid:AAXUkvNTqvvxN6MyZAfQND-->8/8 ✅</div>
+            <div data-page-node-id="nJPUql9UUYGGt4oC1GRARW" style="background:#fff1f2; border:1px solid #fecdd3; border-radius:6px; padding:6px; font-size:9.7px"><b data-page-node-id="y55nU5Asyge54D087Tf9Pa" style="color:var(--ros)"><!--pnid:W6Pqyiw2RC6y0Ck8Id7lDc-->Pop job-B</b><br data-page-node-id="eF9MQWJPBx05AZaIUnDF5b"><!--pnid:fT3Ls4VCQsOKeVCZGvL15X-->不足 ❌</div>
+            <div data-page-node-id="gERo4A41zPhGoKKJFCYoh1" style="background:#fffbeb; border:1px solid #fde68a; border-radius:6px; padding:6px; font-size:9.7px"><!--pnid:alXX6whsOv6gC5AAyev9wc-->job-B 饥饿<br data-page-node-id="A7ZNnZ2ndexwEcWYorWRCT"><!--pnid:r2I9c2P7fPwW9E8VQiIHCg-->转抢占</div>
+            <div data-page-node-id="tw9honjXf3pCLEV0nSkZ28" style="background:#faf5ff; border:1px solid var(--line); border-radius:6px; padding:6px; font-size:9.7px"><!--pnid:O230ebBk3x1GtwXye0tZ6P-->同队列抢占<br data-page-node-id="nk24egu9UgWhM7ftlRXNUF"><!--pnid:sdP5Fhi3ktOaRaNeLSmHUt-->无 victim</div>
+            <div data-page-node-id="5iQarjyvxXXGJH9DYYYM2L" style="background:#ecfdf5; border:1px solid #a7f3d0; border-radius:6px; padding:6px; font-size:9.7px"><b data-page-node-id="YEhKx3zsMcP0oJJSjOdAme" style="color:var(--grn)"><!--pnid:fhqxpkALcWx95SHg4lnbsU-->job-A 8</b><br data-page-node-id="QRiYd05MzLua7P9QXN3E3E"><!--pnid:m9CUlaEafxfNT6mXVELs7Z-->→ BindTask ✅</div>
+
+            <div data-page-node-id="J76eQTXg0PHjKoxisGrOY8" style="background:#ecfdf5; border:1px solid var(--line); border-left:4px solid var(--grn); border-radius:6px; padding:7px; display:flex; flex-direction:column; justify-content:center"><b data-page-node-id="bm9EKxuQmQf3nagDRmjPX6" style="font-size:11px"><!--pnid:qkHGdtRFAXVgknZ8APIX1f-->default</b><span data-page-node-id="pUgY3zBhWemJI57pHi9BXi" style="font-size:8.5px; color:var(--sub)"><!--pnid:19lDyBkvsMD5iDCVPv4IIP-->w=1 未超用</span></div>
+            <div data-page-node-id="BD6LiSIst4x28xoOndXEuI" style="border:1px solid var(--line); border-radius:6px; padding:6px; font-size:9.7px"><b data-page-node-id="iAkacE8p8MDp7bNPVAPNwm"><!--pnid:7euJHEXMYdIhZ9W1Ld1EU6-->job-C</b><!--pnid:XK0KihFWZyOAVcQOaj8g5D--> 2Pod<br data-page-node-id="JGb3anEkFFB5PhkdPGSTA1"><b data-page-node-id="32mke3AN1p48svSRvfT6mT"><!--pnid:YjyYeE7KzqJCLhB7uoVJO9-->job-D</b><!--pnid:bVmoSlk1ONt2ru8Q5GzHVc--> 1Pod·BE</div>
+            <div data-page-node-id="WvcjFCviGaPWJlw9CshCLx" style="border:1px solid var(--line); border-radius:6px; padding:6px; font-size:9.7px"><!--pnid:a7cfqWXoTE4AEaD2LOun2f-->job-C 入队<br data-page-node-id="89I1iaLYi8QjZ1ksme360a"><!--pnid:iOFzk6xHb38NIi5XOjZsjA-->job-D 留回填</div>
+            <div data-page-node-id="16TI94mDFWsH7i3DyDIMx9" style="background:#f1f5f9; border-radius:6px; padding:6px; font-size:9.7px; color:var(--sub)"><!--pnid:ZHjKmpIkEJCIHXtp785E4d-->等待轮转</div>
+            <div data-page-node-id="v1ogsQLxhNQeaWSMWxsqY1" style="background:#ecfdf5; border:1px solid #a7f3d0; border-radius:6px; padding:6px; font-size:9.7px"><b data-page-node-id="tJJdA5tqztdYgwLJumbtco" style="color:var(--grn)"><!--pnid:mDDQw2lMljLhbdXc3358JZ-->Pop job-C</b><br data-page-node-id="JDMuz9yPhnueBEudSaf3W7"><!--pnid:MeO41qTjhwKW83u1bLm3Qh-->2/2 ✅</div>
+            <div data-page-node-id="Rm2dhlVumFlFY7IZCBwTNy" style="background:#f1f5f9; border-radius:6px; padding:6px; font-size:9.7px; color:var(--sub)"><!--pnid:mD7iRTjXaYNN98NfgI3hWN-->job-D 跳过</div>
+            <div data-page-node-id="6bs2SOFPoJEbX2iWD6YUor" style="background:#fffbeb; border:1px solid #fde68a; border-radius:6px; padding:6px; font-size:9.7px"><b data-page-node-id="WqHCnjKC27PrbwWL1aH9ax" style="color:var(--amb)"><!--pnid:Ggr5pk8PHzYg6easRAdAjB-->backfill</b><br data-page-node-id="Ic343uxZhlOtqrRBOp10EE"><!--pnid:3gZqu3QrsGTs1rf6PKTi9q-->调度 job-D ✅</div>
+            <div data-page-node-id="BQSA19V7gSqX00mS2LJIfN" style="background:#ecfdf5; border:1px solid #a7f3d0; border-radius:6px; padding:6px; font-size:9.7px"><b data-page-node-id="l78lz00itvy9wMVUJKJyNE" style="color:var(--grn)"><!--pnid:zN4fUn8Z3ezUD05USW27ih-->C2+D1</b><br data-page-node-id="E4RjYMJeghqfryhEFdpg7h"><!--pnid:7tzl9KuzzeC3Oui2bbEAN2-->→ BindTask ✅</div>
+
+            <div data-page-node-id="vcLGeZ3jSFlhcrCVotP4W9" style="background:#fff1f2; border:1px solid var(--line); border-left:4px solid var(--ros); border-radius:6px; padding:7px; display:flex; flex-direction:column; justify-content:center"><b data-page-node-id="2xAKIW85nwrSDwKYEGz7Ru" style="font-size:11px"><!--pnid:q8Gm7JaWIU7tCVnUAIVx9E-->research</b><span data-page-node-id="MlIbHO2KlY7zkaiGBWHpFj" style="font-size:8.5px; color:var(--sub)"><!--pnid:sRTFaUCque67hIi2hKXy28-->w=2 已超用</span></div>
+            <div data-page-node-id="E3rwGG9qDC19IF97JKvCa2" style="border:1px solid var(--line); border-radius:6px; padding:6px; font-size:9.7px"><b data-page-node-id="tTJVamr7UABsMF00x8z5nL"><!--pnid:PZa0IpDrITD1uRUoUuiyFN-->job-E</b><!--pnid:OXcxMLbYoG5oaiu38T4sfT--> 超配额<br data-page-node-id="23ZSV2CXpyyKLPfN1mJTrF"><b data-page-node-id="Q9qFcN7IB8kGsB8mreSUhJ"><!--pnid:yDWxrBUQd4gBbXzOAYey0m-->job-F</b><!--pnid:3rMKdgWOt9W7JAvoMds2Uv--> 饥饿</div>
+            <div data-page-node-id="VaXipVRNTiHBRhqZxiyQtU" style="background:#fffbeb; border:1px solid #fde68a; border-radius:6px; padding:6px; font-size:9.7px"><!--pnid:JEIBa9clV1ghDWpRNLqQGd-->job-E 受限<br data-page-node-id="KcmFFbqWQ7BBAUCnsMmk2B"><!--pnid:BY9CKANarHByBFOVzEUt4V-->job-F 入队</div>
+            <div data-page-node-id="Fi54KeBHoBjalvWHyCs8GW" style="background:#f1f5f9; border-radius:6px; padding:6px; font-size:9.7px; color:var(--sub)"><!--pnid:ttzPvI0ErnKzFjnJBIxgNo-->排序靠后</div>
+            <div data-page-node-id="m8uddc4T56uWbqkOAWxq4i" style="background:#f1f5f9; border-radius:6px; padding:6px; font-size:9.7px; color:var(--sub)"><!--pnid:vievT6GLymThXwqR1n034o-->等待轮转</div>
+            <div data-page-node-id="mt7Qwa5nKaMQCfSlMAS7j8" style="background:#fff1f2; border:1px solid #fecdd3; border-radius:6px; padding:6px; font-size:9.7px"><b data-page-node-id="6DC92uomJ80SDlviEejEv9" style="color:var(--ros)"><!--pnid:vsFrT6E1yEz6e1E8yvWZ3R-->Pop job-F</b><br data-page-node-id="sqsi8A5qyHFPdOz92Llx9o"><!--pnid:UljvQDLVhExMgDEKuGMqHU-->无空闲 ❌</div>
+            <div data-page-node-id="RK2fF1BxGNcq2aNwV5mp7d" style="background:#fffbeb; border:1px solid #fde68a; border-radius:6px; padding:6px; font-size:9.7px"><b data-page-node-id="X8ailctal826Gnw8QAB4LX" style="color:var(--amb)"><!--pnid:D8HEAwYuZmUylF0WsDnQ7I-->reclaim</b><br data-page-node-id="8Hp6Q4uJD3ymZpAupYmkQm"><!--pnid:T9NA6xj7nWWcbCaVXTvc8d-->本轮未满足</div>
+            <div data-page-node-id="ylFl7vjuvbfMhznE5TpXtq" style="background:#fff1f2; border:1px solid #fecdd3; border-radius:6px; padding:6px; font-size:9.7px"><!--pnid:4ZVxWNC5P2Jo5z3hXoZTzD-->无 Binding<br data-page-node-id="1zTBjkXYaPxDgxfJfMAKGV"><!--pnid:4nT7VbkUi6BuOsXR7Plrpy-->下周期重排</div>
+          </div>
+        </div>
+        <div data-page-node-id="IuToyT5L2Ozbkajno5Y0o2" class="note" style="margin-top:9px"><b data-page-node-id="9f99MHD2nYXu5e425BJLl3"><!--pnid:1CyBo1F82DHzs8hLbdHtag-->读法</b><!--pnid:z5Ue9BPEQhV8RPjInWmjVS-->：纵向图沿主干看每一步判定（Pop→选点→JobReady→Commit/Discard→Push 轮转）；横向图以队列为行、阶段为横轴，看多队列如何并行轮转。本轮结果：job-A(8)+job-C(2)+job-D(1) 共 11 个 task 生成 BindTask，其余 Push 回堆等下轮。</div>
+      </div>
+    </div>
+  </div>
+
+  
+<div style="max-width:1220px;margin:0 auto;padding:0 22px 10px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap">
+  <a href="/scheduler/" style="color:#2563eb;text-decoration:none;font-size:14px">← 返回调度器系列目录</a>
+  <a href="volcano.html" style="color:#2563eb;text-decoration:none;font-size:14px">Volcano 原理详解 →</a>
+</div>
+
+<div data-page-node-id="H0gXasAl8k1krCpd4MTIT1" class="foot"><!--pnid:ZXZeiNDQRGg8NJnJXynep1-->参考来源：Volcano 官方文档 · Volcano master 源码（scheduler.go / allocate.go / session.go / statement.go / cache.go / node_info.go / job_controller_util.go）· K8s Scheduling Framework · 本文档由对话内容整理生成 · 2026-11-18 · 小胖鱼@Think · 调度器系列</div>
+
+</div>
+</body>
+</html>
